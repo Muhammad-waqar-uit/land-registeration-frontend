@@ -1,73 +1,119 @@
-# React + TypeScript + Vite
+# Land Registration Management System (LRMS) - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern React.js frontend for a Blockchain-Based Land Registration Management System.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Authentication**: Login, Register, and Forgot Password
+- **Role-Based Dashboards**: 
+  - Admin Dashboard
+  - Seller Dashboard
+  - Buyer Dashboard
+  - Builder Dashboard
+- **User Profile Management**
+- **Land Management**: View and manage land properties
+- **Document Verification**: IPFS integration for document storage and verification
+- **Payment Management**: Installment tracking and payment processing
+- **Responsive Design**: Mobile-first approach with Tailwind CSS + DaisyUI
 
-## React Compiler
+## 🛠️ Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React 19** with TypeScript
+- **Redux Toolkit** for state management
+- **React Router v6** for routing
+- **Tailwind CSS** + **DaisyUI** for styling
+- **Axios** for API calls
+- **Heroicons** for icons
 
-## Expanding the ESLint configuration
+## 📦 Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Install dependencies:
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Create a `.env` file (optional):
+```env
+VITE_API_BASE_URL=http://localhost:3000/api
 ```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+## 📁 Project Structure
+
+```
+src/
+├── components/          # Reusable components
+│   ├── layouts/        # Layout components (DashboardLayout)
+│   └── ProtectedRoute.tsx
+├── pages/              # Page components
+│   ├── auth/          # Authentication pages
+│   ├── dashboard/     # Role-based dashboards
+│   ├── Profile.tsx
+│   ├── LandDetail.tsx
+│   └── Unauthorized.tsx
+├── services/          # API services
+│   └── api.ts
+├── store/             # Redux store
+│   ├── slices/       # Redux slices
+│   ├── hooks.ts      # Typed hooks
+│   └── index.ts
+├── types/             # TypeScript types
+│   └── index.ts
+├── App.tsx            # Main app component with routing
+└── main.tsx           # Entry point
+```
+
+## 🔐 Authentication Flow
+
+1. User registers/logs in
+2. JWT token stored in localStorage
+3. User redirected to role-based dashboard
+4. Protected routes check authentication and role
+
+## 🎨 Styling
+
+The project uses:
+- **Tailwind CSS** for utility-first styling
+- **DaisyUI** for component library
+- Custom color palette:
+  - Primary: Deep Green (#166534)
+  - Secondary: Gold (#D4AF37)
+
+## 📝 Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
+
+## 🔗 API Integration
+
+The frontend expects a backend API with the following endpoints:
+
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `GET /api/auth/me` - Get current user
+- `GET /api/lands` - Get all lands
+- `GET /api/lands/:id` - Get land by ID
+- `POST /api/payments` - Create payment
+- `GET /api/payments/my-payments` - Get user payments
+- `POST /api/payments/:id/verify` - Verify payment (builder)
+
+## 🚧 TODO
+
+- [ ] Implement payment modal with bank/crypto options
+- [ ] Add IPFS file upload functionality
+- [ ] Integrate wallet connection (Metamask)
+- [ ] Add blockchain transaction handling
+- [ ] Implement document hash verification
+- [ ] Add loading states and error handling
+- [ ] Add unit tests
+- [ ] Add E2E tests with Cypress
+
+## 📄 License
+
+MIT

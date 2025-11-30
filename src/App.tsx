@@ -1,35 +1,141 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from './store/hooks';
+import { fetchCurrentUser } from './store/slices/authSlice';
+
+// Auth Pages
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+
+// Dashboard Pages
+import AdminDashboard from './pages/dashboard/AdminDashboard';
+import SellerDashboard from './pages/dashboard/SellerDashboard';
+import BuyerDashboard from './pages/dashboard/BuyerDashboard';
+import BuilderDashboard from './pages/dashboard/BuilderDashboard';
+
+// Other Pages
+import Home from './pages/Home';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Profile from './pages/Profile';
+import LandDetail from './pages/LandDetail';
+import Unauthorized from './pages/Unauthorized';
+import ProtectedRoute from './components/ProtectedRoute';
+import type { UserRole } from './types';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const dispatch = useAppDispatch();
+  const { token } = useAppSelector((state) => state.auth);
+
+  useEffect(() => {
+    // Fetch current user if token exists
+    if (token) {
+      dispatch(fetchCurrentUser());
+    }
+  }, [dispatch, token]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <BrowserRouter>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* Protected Routes - Admin */}
+        <Route
+          path="/dashboard/admin"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Routes - Seller */}
+        <Route
+          path="/dashboard/seller"
+          element={
+            <ProtectedRoute allowedRoles={['seller']}>
+              <SellerDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Routes - Buyer */}
+        <Route
+          path="/dashboard/buyer"
+          element={
+            <ProtectedRoute allowedRoles={['buyer']}>
+              <BuyerDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Routes - Builder */}
+        <Route
+          path="/dashboard/builder"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <BuilderDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Common protected routes */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/lands/:id"
+          element={
+            <ProtectedRoute>
+              <LandDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardRedirect />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Default redirect */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+// Component to redirect to role-based dashboard
+function DashboardRedirect() {
+  const { user } = useAppSelector((state) => state.auth);
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const roleRoutes: Record<UserRole, string> = {
+    admin: '/dashboard/admin',
+    seller: '/dashboard/seller',
+    buyer: '/dashboard/buyer',
+    builder: '/dashboard/builder',
+  };
+
+  return <Navigate to={roleRoutes[user.role] || '/login'} replace />;
+}
+
+export default App;
