@@ -78,7 +78,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={{ borderRadius: '8px' }}
+              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
             />
           </div>
 
@@ -94,7 +94,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              style={{ borderRadius: '8px' }}
+              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
             />
           </div>
 

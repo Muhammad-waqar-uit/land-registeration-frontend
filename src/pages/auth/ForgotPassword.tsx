@@ -62,7 +62,7 @@ export default function ForgotPassword() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              style={{ borderRadius: '8px' }}
+              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
             />
           </div>
 

@@ -71,23 +71,32 @@ export default function Register() {
       }}
     >
       <div 
-        className="w-full max-w-md bg-white p-10 rounded-xl shadow-2xl"
-        style={{ boxShadow: '0 0 20px rgba(0,0,0,0.1)' }}
+        className="w-full max-w-md bg-white rounded-xl shadow-2xl flex flex-col"
+        style={{ 
+          boxShadow: '0 0 20px rgba(0,0,0,0.1)',
+          maxHeight: '90vh',
+          overflow: 'hidden'
+        }}
       >
-        <h3 
-          className="text-center font-bold text-2xl mb-8"
-          style={{ color: '#0d6efd' }}
-        >
-          Create Account
-        </h3>
+        <div className="p-6 pb-4 flex-shrink-0">
+          <h3 
+            className="text-center font-bold text-2xl"
+            style={{ color: '#0d6efd' }}
+          >
+            Create Account
+          </h3>
+        </div>
         
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
+        <div className="px-6 pb-4 flex-shrink-0">
+          {error && (
+            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="flex-1 overflow-y-auto px-6 custom-scrollbar">
+          <form onSubmit={handleSubmit} className="space-y-5 pb-4">
           <div>
             <label className="block mb-2 font-medium text-gray-700">
               <FaUser className="inline mr-2" />
@@ -101,7 +110,7 @@ export default function Register() {
               value={formData.name}
               onChange={handleChange}
               required
-              style={{ borderRadius: '8px' }}
+              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
             />
           </div>
 
@@ -118,7 +127,7 @@ export default function Register() {
               value={formData.email}
               onChange={handleChange}
               required
-              style={{ borderRadius: '8px' }}
+              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
             />
           </div>
 
@@ -129,21 +138,21 @@ export default function Register() {
             </label>
             <select
               name="role"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-black text-white appearance-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none"
               value={formData.role}
               onChange={handleChange}
               required
               style={{ 
                 borderRadius: '8px',
-                color: '#ffffff',
-                backgroundColor: '#000000',
+                color: '#111827',
+                backgroundColor: '#ffffff',
                 cursor: 'pointer'
               }}
             >
-              <option value="buyer" className="bg-black text-white">Buyer</option>
-              <option value="seller" className="bg-black text-white">Seller</option>
-              <option value="builder" className="bg-black text-white">Builder</option>
-              <option value="admin" className="bg-black text-white">Admin</option>
+              <option value="buyer">Buyer</option>
+              <option value="seller">Seller</option>
+              <option value="builder">Builder</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
 
@@ -161,7 +170,7 @@ export default function Register() {
               onChange={handleChange}
               required
               minLength={6}
-              style={{ borderRadius: '8px' }}
+              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
             />
           </div>
 
@@ -179,7 +188,7 @@ export default function Register() {
               onChange={handleChange}
               required
               minLength={6}
-              style={{ borderRadius: '8px' }}
+              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
             />
           </div>
 
@@ -190,17 +199,20 @@ export default function Register() {
           >
             Sign Up
           </button>
-        </form>
+          </form>
+        </div>
 
-        <p className="text-center mt-6 mb-0 text-gray-600">
-          Already have an account?{' '}
-          <Link 
-            to="/login" 
-            className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
-          >
-            Login
-          </Link>
-        </p>
+        <div className="p-6 pt-4 flex-shrink-0 border-t border-gray-200">
+          <p className="text-center mb-0 text-gray-600">
+            Already have an account?{' '}
+            <Link 
+              to="/login" 
+              className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
+            >
+              Login
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
