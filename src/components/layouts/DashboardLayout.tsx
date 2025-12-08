@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { logoutUser } from '../../store/slices/authSlice';
+import { logoutUser, clearAuth } from '../../store/slices/authSlice';
 import {
   UserIcon,
   ArrowRightOnRectangleIcon,
@@ -27,9 +27,19 @@ export default function DashboardLayout({ children, navItems = [] }: DashboardLa
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = async () => {
-    await dispatch(logoutUser());
-    navigate('/login');
+  const handleLogout = () => {
+    // Clear auth state immediately for instant logout
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    dispatch(clearAuth()); // Clear Redux state immediately
+    
+    // Navigate immediately - use setTimeout to ensure state update propagates
+    setTimeout(() => {
+      navigate('/login', { replace: true });
+    }, 0);
+    
+    // Call API in background (non-blocking)
+    dispatch(logoutUser());
   };
 
   return (
@@ -86,7 +96,10 @@ export default function DashboardLayout({ children, navItems = [] }: DashboardLa
         </li>
         <li>
           <a 
-            onClick={handleLogout} 
+            onClick={(e) => {
+              e.preventDefault();
+              handleLogout();
+            }}
             className="text-base-content flex justify-between cursor-pointer"
           >
             Logout

@@ -2,20 +2,29 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { FaEnvelope, FaKey } from 'react-icons/fa';
+import { authAPI } from '../../services/api';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setError('');
+    setMessage('');
     setIsLoading(true);
-    // TODO: Implement forgot password API call
-    setTimeout(() => {
-      setMessage('Password reset link has been sent to your email (if implemented)');
+    
+    try {
+      const response = await authAPI.forgotPassword(email);
+      setMessage(response.message || 'If the email exists, a password reset link has been sent to your email.');
+      setEmail(''); // Clear form on success
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to send reset email. Please try again.');
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -43,8 +52,13 @@ export default function ForgotPassword() {
           </p>
         </div>
         
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
         {message && (
-          <div className="mb-4 p-3 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg text-sm">
+          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
             {message}
           </div>
         )}

@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
@@ -5,8 +7,9 @@ import {
   CreditCardIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { landAPI, paymentAPI } from '../../services/api';
+import { useAppSelector } from '../../store/hooks';
+import type { Land, Payment } from '../../types';
 
 const navItems = [
   { name: 'Overview', path: '/dashboard/buyer', icon: HomeIcon },
@@ -16,114 +19,206 @@ const navItems = [
 ];
 
 export default function BuyerDashboard() {
-  const [reservations] = useState([
-    {
-      id: '1',
-      landTitle: 'Plot A-123',
-      location: 'Mumbai',
-      price: 500000,
-      installmentsPaid: 2,
-      totalInstallments: 5,
-      nextDueDate: '2025-12-01',
-      nextAmount: 100000,
-    },
-  ]);
+  const { user } = useAppSelector((state) => state.auth);
+  const [loading, setLoading] = useState(true);
+  const [availableLands, setAvailableLands] = useState<Land[]>([]);
+  const [reservedLands, setReservedLands] = useState<Land[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [stats, setStats] = useState({
+    activeReservations: 0,
+    totalPaid: 0,
+    pendingPayments: 0,
+  });
 
-  const [availableLands] = useState([
-    { id: '1', title: 'Plot B-456', location: 'Delhi', price: 750000, image: '' },
-    { id: '2', title: 'Plot C-789', location: 'Bangalore', price: 600000, image: '' },
-  ]);
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user?.id) return;
+
+      try {
+        setLoading(true);
+        const [landsData, paymentsData] = await Promise.all([
+          landAPI.getAll().catch(() => []),
+          paymentAPI.getByBuyer().catch(() => []),
+        ]);
+
+        // Filter available lands (status = 'available')
+        const available = (landsData || []).filter((land) => land.status === 'available');
+        setAvailableLands(available);
+
+        // Filter reserved lands (status = 'locked' where buyer has payments)
+        const buyerPayments = (paymentsData || []).filter((p) => p.buyerId === user.id);
+        setPayments(buyerPayments);
+
+        const reservedLandIds = [...new Set(buyerPayments.map((p) => p.landId))];
+        const reserved = (landsData || []).filter(
+          (land) => land.status === 'locked' && reservedLandIds.includes(land.id)
+        );
+        setReservedLands(reserved);
+
+        // Calculate stats
+        const verifiedPayments = buyerPayments.filter((p) => p.status === 'verified');
+        const pendingPayments = buyerPayments.filter((p) => p.status === 'pending');
+        const totalPaid = verifiedPayments.reduce((sum, p) => sum + p.amount, 0);
+
+        setStats({
+          activeReservations: reserved.length,
+          totalPaid,
+          pendingPayments: pendingPayments.length,
+        });
+      } catch (error) {
+        console.error('Failed to fetch buyer dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user?.id]);
+
+  if (loading) {
+    return (
+      <DashboardLayout navItems={navItems}>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout navItems={navItems}>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Buyer Dashboard</h1>
+        <h1 className="text-3xl font-bold text-base-content">Buyer Dashboard</h1>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="stat bg-base-100 rounded-lg shadow">
-            <div className="stat-title">Active Reservations</div>
-            <div className="stat-value text-primary">{reservations.length}</div>
-            <div className="stat-desc">Lands locked to you</div>
+          <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
+            <div className="stat-title text-base-content/70">Active Reservations</div>
+            <div className="stat-value text-primary">{stats.activeReservations}</div>
+            <div className="stat-desc text-base-content/60">Lands locked to you</div>
           </div>
 
-          <div className="stat bg-base-100 rounded-lg shadow">
-            <div className="stat-title">Total Paid</div>
-            <div className="stat-value text-success">₹200,000</div>
-            <div className="stat-desc">Installments completed</div>
+          <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
+            <div className="stat-title text-base-content/70">Total Paid</div>
+            <div className="stat-value text-success">₹{stats.totalPaid.toLocaleString()}</div>
+            <div className="stat-desc text-base-content/60">Installments completed</div>
           </div>
 
-          <div className="stat bg-base-100 rounded-lg shadow">
-            <div className="stat-title">Pending Payments</div>
-            <div className="stat-value text-warning">1</div>
-            <div className="stat-desc">Due soon</div>
+          <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
+            <div className="stat-title text-base-content/70">Pending Payments</div>
+            <div className="stat-value text-warning">{stats.pendingPayments}</div>
+            <div className="stat-desc text-base-content/60">Due soon</div>
           </div>
         </div>
 
         {/* My Reservations */}
-        <div className="card bg-base-100 shadow-xl">
-          <div className="card-body">
-            <div className="flex justify-between items-center">
-              <h2 className="card-title">My Reservations</h2>
-              <Link to="/dashboard/buyer/reservations" className="btn btn-ghost btn-sm">
-                View All
-              </Link>
-            </div>
-            <div className="space-y-4 mt-4">
-              {reservations.map((reservation) => (
-                <div key={reservation.id} className="p-4 bg-base-200 rounded-lg">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-semibold text-lg">{reservation.landTitle}</h3>
-                      <p className="text-sm text-base-content/70">{reservation.location}</p>
-                      <p className="text-sm mt-2">
-                        Installments: {reservation.installmentsPaid}/{reservation.totalInstallments}
-                      </p>
-                      <progress
-                        className="progress progress-primary w-48 mt-2"
-                        value={(reservation.installmentsPaid / reservation.totalInstallments) * 100}
-                        max="100"
-                      ></progress>
+        {reservedLands.length > 0 && (
+          <div className="card bg-base-100 shadow-xl border border-base-300">
+            <div className="card-body">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="card-title text-base-content">My Reservations</h2>
+                <Link to="/dashboard/buyer/reservations" className="btn btn-ghost btn-sm text-base-content">
+                  View All
+                </Link>
+              </div>
+              <div className="space-y-4">
+                {reservedLands.slice(0, 3).map((land) => {
+                  const landPayments = payments.filter((p) => p.landId === land.id);
+                  const verifiedPayments = landPayments.filter((p) => p.status === 'verified');
+                  const pendingPayments = landPayments.filter((p) => p.status === 'pending');
+                  const totalInstallments = 5; // This should come from backend
+                  const paidInstallments = verifiedPayments.length;
+                  const progress = (paidInstallments / totalInstallments) * 100;
+                  const nextPayment = pendingPayments[0];
+
+                  return (
+                    <div
+                      key={land.id}
+                      className="p-4 bg-base-200 rounded-lg border border-base-300"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold text-lg text-base-content">{land.title}</h3>
+                          <p className="text-sm text-base-content/70">{land.location}</p>
+                          <p className="text-sm mt-2 text-base-content">
+                            Installments: {paidInstallments}/{totalInstallments}
+                          </p>
+                          <progress
+                            className="progress progress-primary w-48 mt-2"
+                            value={progress}
+                            max="100"
+                          ></progress>
+                        </div>
+                        <div className="text-right">
+                          {nextPayment ? (
+                            <>
+                              <p className="text-sm text-base-content">Next Payment</p>
+                              <p className="font-semibold text-base-content">
+                                ₹{nextPayment.amount.toLocaleString()}
+                              </p>
+                              <p className="text-xs text-base-content/70">
+                                Due: {nextPayment.dueDate ? new Date(nextPayment.dueDate).toLocaleDateString() : 'N/A'}
+                              </p>
+                              <Link
+                                to={`/dashboard/buyer/payments/${nextPayment.id}`}
+                                className="btn btn-primary btn-sm mt-2"
+                              >
+                                Pay Now
+                              </Link>
+                            </>
+                          ) : (
+                            <p className="text-sm text-base-content/70">No pending payments</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm">Next Payment</p>
-                      <p className="font-semibold">₹{reservation.nextAmount.toLocaleString()}</p>
-                      <p className="text-xs text-base-content/70">Due: {reservation.nextDueDate}</p>
-                      <button className="btn btn-primary btn-sm mt-2">Pay Now</button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Available Lands */}
-        <div className="card bg-base-100 shadow-xl">
+        <div className="card bg-base-100 shadow-xl border border-base-300">
           <div className="card-body">
-            <div className="flex justify-between items-center">
-              <h2 className="card-title">Available Lands</h2>
-              <Link to="/dashboard/buyer/lands" className="btn btn-ghost btn-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="card-title text-base-content">Available Lands</h2>
+              <Link to="/dashboard/buyer/lands" className="btn btn-ghost btn-sm text-base-content">
                 Browse All
               </Link>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              {availableLands.map((land) => (
-                <div key={land.id} className="card bg-base-200 shadow">
-                  <div className="card-body">
-                    <h3 className="card-title">{land.title}</h3>
-                    <p className="text-sm text-base-content/70">{land.location}</p>
-                    <p className="text-2xl font-bold text-primary">₹{land.price.toLocaleString()}</p>
-                    <div className="card-actions justify-end">
-                      <Link to={`/lands/${land.id}`} className="btn btn-primary btn-sm">
-                        View Details
-                      </Link>
-                      <button className="btn btn-secondary btn-sm">Reserve Now</button>
+            {availableLands.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-base-content/70">No available lands at the moment.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {availableLands.slice(0, 2).map((land) => (
+                  <div key={land.id} className="card bg-base-200 shadow border border-base-300">
+                    <div className="card-body">
+                      <h3 className="card-title text-base-content">{land.title}</h3>
+                      <p className="text-sm text-base-content/70">{land.location}</p>
+                      <p className="text-2xl font-bold text-primary">₹{land.price.toLocaleString()}</p>
+                      <div className="card-actions justify-end mt-4">
+                        <Link
+                          to={`/lands/${land.id}`}
+                          className="btn btn-primary btn-sm"
+                        >
+                          View Details
+                        </Link>
+                        <Link
+                          to={`/lands/${land.id}`}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          Reserve Now
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

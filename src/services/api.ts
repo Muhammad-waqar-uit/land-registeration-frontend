@@ -4,7 +4,6 @@ import type { LoginCredentials, RegisterData, User, Land, Payment } from '../typ
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 // Log API URL on startup for debugging
-console.log('🔗 API Base URL:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -81,6 +80,18 @@ export const authAPI = {
   updatePassword: async (data: { currentPassword: string; newPassword: string }): Promise<void> => {
     const response = await api.patch('/auth/password', data);
     // Handle backend response structure: { data: {...}, success: true }
+    return response.data.data || response.data;
+  },
+
+  forgotPassword: async (email: string): Promise<{ message: string }> => {
+    const response = await api.post('/auth/forgot-password', { email });
+    // Handle backend response structure: { data: {...}, success: true } or direct response
+    return response.data.data || response.data;
+  },
+
+  resetPassword: async (data: { token: string; newPassword: string }): Promise<{ message: string }> => {
+    const response = await api.post('/auth/reset-password', data);
+    // Handle backend response structure: { data: {...}, success: true } or direct response
     return response.data.data || response.data;
   },
 };
