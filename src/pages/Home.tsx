@@ -1,4 +1,7 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAppSelector } from '../store/hooks';
+import type { UserRole } from '../types';
 
 interface Property {
   img: string;
@@ -85,6 +88,22 @@ const properties: Property[] = [
 ];
 
 export default function Home() {
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const roleRoutes: Record<UserRole, string> = {
+        admin: '/dashboard/admin',
+        seller: '/dashboard/seller',
+        buyer: '/dashboard/buyer',
+        builder: '/dashboard/builder',
+      };
+      navigate(roleRoutes[user.role] || '/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
+
   return (
     <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
       {/* Navbar */}

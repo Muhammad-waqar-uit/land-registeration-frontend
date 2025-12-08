@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -12,8 +12,21 @@ export default function Login() {
   const [error, setError] = useState('');
   
   const dispatch = useAppDispatch();
-  const { isLoading } = useAppSelector((state) => state.auth);
+  const { isLoading, isAuthenticated, user } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const roleRoutes: Record<UserRole, string> = {
+        admin: '/dashboard/admin',
+        seller: '/dashboard/seller',
+        buyer: '/dashboard/buyer',
+        builder: '/dashboard/builder',
+      };
+      navigate(roleRoutes[user.role] || '/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -35,8 +48,8 @@ export default function Login() {
       } else {
         setError(result.payload as string || 'Login failed');
       }
-    } catch (err) {
-      setError('An unexpected error occurred');
+    } catch (err: any) {
+      setError(err?.message || 'An unexpected error occurred');
     }
   };
 

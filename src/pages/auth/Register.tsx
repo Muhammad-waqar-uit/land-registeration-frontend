@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { registerUser } from '../../store/slices/authSlice';
 import type { UserRole } from '../../types';
 import { FaUser, FaLock, FaEnvelope, FaUserTag } from 'react-icons/fa';
@@ -15,9 +15,24 @@ export default function Register() {
     role: 'buyer' as UserRole,
   });
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   
   const dispatch = useAppDispatch();
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const roleRoutes: Record<UserRole, string> = {
+        admin: '/dashboard/admin',
+        seller: '/dashboard/seller',
+        buyer: '/dashboard/buyer',
+        builder: '/dashboard/builder',
+      };
+      navigate(roleRoutes[user.role] || '/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -35,11 +50,12 @@ export default function Register() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
 
+    setIsLoading(true);
     try {
       const { confirmPassword, ...registerData } = formData;
       const result = await dispatch(registerUser(registerData));
@@ -57,8 +73,10 @@ export default function Register() {
       } else {
         setError(result.payload as string || 'Registration failed');
       }
-    } catch (err) {
-      setError('An unexpected error occurred');
+    } catch (err: any) {
+      setError(err?.message || 'An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -194,10 +212,18 @@ export default function Register() {
 
           <button
             type="submit"
-            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            disabled={isLoading}
             style={{ borderRadius: '8px' }}
           >
-            Sign Up
+            {isLoading ? (
+              <>
+                <span className="loading loading-spinner loading-sm mr-2"></span>
+                Signing up...
+              </>
+            ) : (
+              'Sign Up'
+            )}
           </button>
           </form>
         </div>

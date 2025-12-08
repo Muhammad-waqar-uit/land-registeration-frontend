@@ -3,12 +3,30 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { authAPI } from '../../services/api';
 import type { AuthState, LoginCredentials, RegisterData, User } from '../../types';
 
-const initialState: AuthState = {
-  user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: false,
-  isLoading: false,
+// Load initial state from localStorage
+const loadStateFromStorage = () => {
+  try {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    
+    return {
+      user: user,
+      token: token,
+      isAuthenticated: !!token,
+      isLoading: !!token && !user, // Only loading if token exists but user not loaded
+    };
+  } catch (error) {
+    return {
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+    };
+  }
 };
+
+const initialState: AuthState = loadStateFromStorage();
 
 // Async thunks
 export const loginUser = createAsyncThunk(
@@ -51,6 +69,30 @@ export const logoutUser = createAsyncThunk('auth/logout', async () => {
   await authAPI.logout();
 });
 
+export const updateProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (data: { name: string; email: string }, { rejectWithValue }) => {
+    try {
+      const user = await authAPI.updateProfile(data);
+      return user;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update profile');
+    }
+  }
+);
+
+export const updatePassword = createAsyncThunk(
+  'auth/updatePassword',
+  async (data: { currentPassword: string; newPassword: string }, { rejectWithValue }) => {
+    try {
+      await authAPI.updatePassword(data);
+      return;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update password');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -58,12 +100,14 @@ const authSlice = createSlice({
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
       state.isAuthenticated = true;
+      localStorage.setItem('user', JSON.stringify(action.payload));
     },
     clearAuth: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
     },
   },
   extraReducers: (builder) => {
@@ -77,6 +121,9 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
+        // Persist to localStorage
+        localStorage.setItem('token', action.payload.token);
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
       })
       .addCase(loginUser.rejected, (state) => {
         state.isLoading = false;
@@ -93,6 +140,9 @@ const authSlice = createSlice({
         state.user = action.payload.user;
         state.token = action.payload.token;
         state.isAuthenticated = true;
+        // Persist to localStorage
+        localStorage.setItem('token', action.payload.token);
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
       })
       .addCase(registerUser.rejected, (state) => {
         state.isLoading = false;
@@ -101,15 +151,23 @@ const authSlice = createSlice({
 
     // Fetch current user
     builder
+      .addCase(fetchCurrentUser.pending, (state) => {
+        state.isLoading = true;
+      })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.user = action.payload;
         state.isAuthenticated = true;
+        // Persist user to localStorage
+        localStorage.setItem('user', JSON.stringify(action.payload));
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
+        state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
         state.token = null;
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
       });
 
     // Logout
@@ -117,7 +175,24 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     });
+
+    // Update profile
+    builder
+      .addCase(updateProfile.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload;
+        // Update localStorage with new user data
+        localStorage.setItem('user', JSON.stringify(action.payload));
+      })
+      .addCase(updateProfile.rejected, (state) => {
+        state.isLoading = false;
+      });
   },
 });
 

@@ -26,14 +26,15 @@ import type { UserRole } from './types';
 
 function App() {
   const dispatch = useAppDispatch();
-  const { token } = useAppSelector((state) => state.auth);
+  const { token, user, isLoading } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    // Fetch current user if token exists
-    if (token) {
+    // Fetch current user if token exists but user is not loaded
+    // This ensures we have the latest user data from the server
+    if (token && !user && !isLoading) {
       dispatch(fetchCurrentUser());
     }
-  }, [dispatch, token]);
+  }, [dispatch, token, user, isLoading]);
 
   return (
     <BrowserRouter>

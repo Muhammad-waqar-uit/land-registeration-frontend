@@ -3,9 +3,12 @@ import type { LoginCredentials, RegisterData, User, Land, Payment } from '../typ
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
+// Log API URL on startup for debugging
+console.log('🔗 API Base URL:', API_BASE_URL);
+
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // For httpOnly cookies
+  withCredentials: false, // Disable if CORS is blocking
   headers: {
     'Content-Type': 'application/json',
   },
@@ -20,22 +23,42 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Add error interceptor for debugging
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+      console.error('❌ Network Error - Backend not reachable:', API_BASE_URL);
+      console.error('Make sure backend is running and CORS is enabled');
+    } else if (error.response) {
+      console.error('❌ API Error:', error.response.status, error.response.data);
+    } else {
+      console.error('❌ Request Error:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth API
 export const authAPI = {
   login: async (credentials: LoginCredentials): Promise<{ user: User; token: string }> => {
     const response = await api.post('/auth/login', credentials);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
+    // Handle backend response structure: { data: { user, token }, success: true }
+    const responseData = response.data.data || response.data;
+    if (responseData.token) {
+      localStorage.setItem('token', responseData.token);
     }
-    return response.data;
+    return responseData;
   },
 
   register: async (data: RegisterData): Promise<{ user: User; token: string }> => {
     const response = await api.post('/auth/register', data);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
+    // Handle backend response structure: { data: { user, token }, success: true }
+    const responseData = response.data.data || response.data;
+    if (responseData.token) {
+      localStorage.setItem('token', responseData.token);
     }
-    return response.data;
+    return responseData;
   },
 
   logout: async (): Promise<void> => {
@@ -45,7 +68,20 @@ export const authAPI = {
 
   getCurrentUser: async (): Promise<User> => {
     const response = await api.get('/auth/me');
-    return response.data;
+    // Handle backend response structure: { data: { user }, success: true }
+    return response.data.data || response.data;
+  },
+
+  updateProfile: async (data: { name: string; email: string }): Promise<User> => {
+    const response = await api.patch('/auth/profile', data);
+    // Handle backend response structure: { data: { user }, success: true }
+    return response.data.data || response.data;
+  },
+
+  updatePassword: async (data: { currentPassword: string; newPassword: string }): Promise<void> => {
+    const response = await api.patch('/auth/password', data);
+    // Handle backend response structure: { data: {...}, success: true }
+    return response.data.data || response.data;
   },
 };
 
@@ -53,24 +89,28 @@ export const authAPI = {
 export const landAPI = {
   getAll: async (): Promise<Land[]> => {
     const response = await api.get('/lands');
-    return response.data;
+    // Handle backend response structure: { data: [...], success: true }
+    return response.data.data || response.data;
   },
 
   getById: async (id: string): Promise<Land> => {
     const response = await api.get(`/lands/${id}`);
-    return response.data;
+    // Handle backend response structure: { data: {...}, success: true }
+    return response.data.data || response.data;
   },
 
   create: async (landData: FormData): Promise<Land> => {
     const response = await api.post('/lands', landData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return response.data;
+    // Handle backend response structure: { data: {...}, success: true }
+    return response.data.data || response.data;
   },
 
   update: async (id: string, landData: Partial<Land>): Promise<Land> => {
     const response = await api.put(`/lands/${id}`, landData);
-    return response.data;
+    // Handle backend response structure: { data: {...}, success: true }
+    return response.data.data || response.data;
   },
 };
 
@@ -80,22 +120,26 @@ export const paymentAPI = {
     const response = await api.post('/payments', paymentData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return response.data;
+    // Handle backend response structure: { data: {...}, success: true }
+    return response.data.data || response.data;
   },
 
   getByBuyer: async (): Promise<Payment[]> => {
     const response = await api.get('/payments/my-payments');
-    return response.data;
+    // Handle backend response structure: { data: [...], success: true }
+    return response.data.data || response.data;
   },
 
   verify: async (paymentId: string, verified: boolean, remarks?: string): Promise<Payment> => {
     const response = await api.post(`/payments/${paymentId}/verify`, { verified, remarks });
-    return response.data;
+    // Handle backend response structure: { data: {...}, success: true }
+    return response.data.data || response.data;
   },
 
   getPending: async (): Promise<Payment[]> => {
     const response = await api.get('/payments/pending');
-    return response.data;
+    // Handle backend response structure: { data: [...], success: true }
+    return response.data.data || response.data;
   },
 };
 
