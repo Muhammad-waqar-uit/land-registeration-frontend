@@ -97,11 +97,37 @@ export const authAPI = {
 };
 
 // Land API
+export interface LandQueryParams {
+  status?: 'available' | 'locked' | 'sold';
+  ownerId?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface LandListResponse {
+  data: Land[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export const landAPI = {
-  getAll: async (): Promise<Land[]> => {
-    const response = await api.get('/lands');
-    // Handle backend response structure: { data: [...], success: true }
-    return response.data.data || response.data;
+  getAll: async (params?: LandQueryParams): Promise<Land[] | LandListResponse> => {
+    const response = await api.get('/lands', { params });
+    // Handle backend response structure: { data: [...], success: true } or { data: [...], total, page, limit }
+    const responseData = response.data.data || response.data;
+    // If pagination data exists, return full response
+    if (response.data.total !== undefined) {
+      return {
+        data: responseData,
+        total: response.data.total,
+        page: response.data.page || 1,
+        limit: response.data.limit || 10,
+      };
+    }
+    return responseData;
   },
 
   getById: async (id: string): Promise<Land> => {
@@ -118,9 +144,38 @@ export const landAPI = {
     return response.data.data || response.data;
   },
 
-  update: async (id: string, landData: Partial<Land>): Promise<Land> => {
-    const response = await api.put(`/lands/${id}`, landData);
+  update: async (id: string, landData: FormData): Promise<Land> => {
+    const response = await api.patch(`/lands/${id}`, landData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     // Handle backend response structure: { data: {...}, success: true }
+    return response.data.data || response.data;
+  },
+
+  delete: async (id: string): Promise<{ message: string }> => {
+    const response = await api.delete(`/lands/${id}`);
+    // Handle backend response structure: { data: {...}, success: true } or direct response
+    return response.data.data || response.data;
+  },
+
+  verify: async (id: string): Promise<{
+    verified: boolean;
+    message: string;
+    document?: {
+      verified: boolean;
+      message: string;
+      storedHash: string;
+      calculatedHash: string;
+    };
+    image?: {
+      verified: boolean;
+      message: string;
+      storedHash: string;
+      calculatedHash: string;
+    };
+  }> => {
+    const response = await api.post(`/lands/${id}/verify`);
+    // Handle backend response structure: { data: {...}, success: true } or direct response
     return response.data.data || response.data;
   },
 };

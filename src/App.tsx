@@ -14,6 +14,8 @@ import AdminDashboard from './pages/dashboard/AdminDashboard';
 import SellerDashboard from './pages/dashboard/SellerDashboard';
 import BuyerDashboard from './pages/dashboard/BuyerDashboard';
 import BuilderDashboard from './pages/dashboard/BuilderDashboard';
+import RegisterLand from './pages/dashboard/RegisterLand';
+import UpdateLand from './pages/dashboard/UpdateLand';
 
 // Other Pages
 import Home from './pages/Home';
@@ -66,6 +68,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['seller']}>
               <SellerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/seller/register-land"
+          element={
+            <ProtectedRoute allowedRoles={['seller']}>
+              <RegisterLand />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/seller/update-land/:id"
+          element={
+            <ProtectedRoute allowedRoles={['seller', 'admin']}>
+              <UpdateLand />
             </ProtectedRoute>
           }
         />

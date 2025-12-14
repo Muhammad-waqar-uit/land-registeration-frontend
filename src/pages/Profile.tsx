@@ -18,6 +18,7 @@ export default function Profile() {
     name: user?.name || '',
     email: user?.email || '',
     role: user?.role || '',
+    walletAddress: user?.walletAddress || '',
   });
   const [error, setError] = useState<string | null>(null);
   const [passwordData, setPasswordData] = useState({
@@ -206,7 +207,15 @@ export default function Profile() {
                   <div className="flex-1">
                     <h3 className="text-2xl font-bold text-base-content mb-1">{user?.name}</h3>
                     <p className="text-base-content/70 mb-2 text-white">{user?.email}</p>
-                    <span className="badge badge-primary items-center p-2 justify-center capitalize">{user?.role}</span>
+                    <span className="badge badge-primary items-center p-2 justify-center capitalize mb-2">{user?.role}</span>
+                    {user?.walletAddress && (
+                      <div className="mt-2">
+                        <p className="text-xs text-base-content/60 text-white mb-1">Wallet Address:</p>
+                        <p className="text-sm font-mono text-base-content/80 text-white break-all bg-base-200 p-2 rounded">
+                          {user.walletAddress}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

@@ -5,7 +5,9 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  walletAddress?: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AuthState {
@@ -35,9 +37,22 @@ export interface Land {
   price: number;
   status: 'available' | 'locked' | 'sold';
   ownerId: string;
+  owner?: {
+    id: string;
+    name: string;
+    email: string;
+    walletAddress?: string;
+  };
   documentHash?: string;
   documentCID?: string;
+  documentUrl?: string;
+  documentIPFSHash?: string;
+  imageCID?: string;
+  imageUrl?: string;
+  imageIPFSHash?: string;
+  imageHash?: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Payment {

@@ -6,10 +6,13 @@ import {
   DocumentTextIcon,
   UserGroupIcon,
   CreditCardIcon,
+  PencilIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import { landAPI, paymentAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
-import type { Land, Payment } from '../../types';
+import type { Land, Payment, Reservation } from '../../types';
+import { canUpdate, canDelete, getDeleteErrorMessage } from '../../utils/landPermissions';
 
 const navItems = [
   { name: 'Overview', path: '/dashboard/seller', icon: HomeIcon },
@@ -23,6 +26,9 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true);
   const [myLands, setMyLands] = useState<Land[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalLands: 0,
     activeReservations: 0,
@@ -40,8 +46,13 @@ export default function SellerDashboard() {
           paymentAPI.getByBuyer().catch(() => []), // This might need to be seller-specific endpoint
         ]);
 
+        // Handle paginated or array response
+        const landsArray: Land[] = Array.isArray(landsData) 
+          ? landsData 
+          : ((landsData as any)?.data || []);
+
         // Filter lands owned by current seller
-        const sellerLands = (landsData || []).filter((land) => land.ownerId === user.id);
+        const sellerLands = landsArray.filter((land) => land.ownerId === user.id);
         setMyLands(sellerLands);
 
         // Filter payments for seller's lands
@@ -50,6 +61,10 @@ export default function SellerDashboard() {
           sellerLandIds.includes(payment.landId)
         );
         setPayments(sellerPayments);
+
+        // Note: Reservations API not available yet, using empty array
+        // When available, fetch reservations here
+        setReservations([]);
 
         // Calculate stats
         const lockedLands = sellerLands.filter((l) => l.status === 'locked').length;
@@ -70,6 +85,48 @@ export default function SellerDashboard() {
 
     fetchData();
   }, [user?.id]);
+
+  const handleDelete = async (landId: string) => {
+    if (!user) return;
+    
+    const land = myLands.find((l) => l.id === landId);
+    if (!land) return;
+
+    // Check permissions
+    if (!canDelete(land, user, reservations, payments)) {
+      const errorMsg = getDeleteErrorMessage(land, user, reservations, payments);
+      setDeleteError(errorMsg || 'Cannot delete this land.');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete "${land.title}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingId(landId);
+    setDeleteError(null);
+
+    try {
+      await landAPI.delete(landId);
+      // Refresh the list
+      const landsData = await landAPI.getAll();
+      const landsArray: Land[] = Array.isArray(landsData) 
+        ? landsData 
+        : ((landsData as any)?.data || []);
+      const sellerLands = landsArray.filter(
+        (land) => land.ownerId === user.id
+      );
+      setMyLands(sellerLands);
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to delete land. Please try again.';
+      setDeleteError(errorMessage);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -116,6 +173,17 @@ export default function SellerDashboard() {
                 Register New Land
               </Link>
             </div>
+            {deleteError && (
+              <div className="alert alert-error mb-4">
+                <span className="text-white">{deleteError}</span>
+                <button
+                  className="btn btn-sm btn-ghost"
+                  onClick={() => setDeleteError(null)}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
             {myLands.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-base-content/70">No lands registered yet.</p>
@@ -124,9 +192,9 @@ export default function SellerDashboard() {
                 </Link>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto ">
                 <table className="table">
-                  <thead>
+                  <thead className="bg-transparent">
                     <tr>
                       <th className="text-base-content">Title</th>
                       <th className="text-base-content">Location</th>
@@ -155,12 +223,37 @@ export default function SellerDashboard() {
                           </span>
                         </td>
                         <td>
-                          <Link
-                            to={`/lands/${land.id}`}
-                            className="btn btn-ghost btn-xs text-base-content"
-                          >
-                            View
-                          </Link>
+                          <div className="flex gap-2 items-center justify-center">
+                            <Link
+                              to={`/lands/${land.id}`}
+                                className="btn btn-xs btn-primary h-7 w-20"
+                            >
+                              View
+                            </Link>
+                            {canUpdate(land, user, reservations, payments) && (
+                              <Link
+                                to={`/dashboard/seller/update-land/${land.id}`}
+                                className="btn btn-xs btn-secondary h-7 w-10"
+                                title="Update Land"
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                              </Link>
+                            )}
+                            {canDelete(land, user, reservations, payments) && (
+                              <button
+                                onClick={() => handleDelete(land.id)}
+                                className="btn btn-xs btn-error h-7 w-10"
+                                disabled={deletingId === land.id}
+                                title="Delete Land"
+                              >
+                                {deletingId === land.id ? (
+                                  <span className="loading loading-spinner loading-xs"></span>
+                                ) : (
+                                  <TrashIcon className="h-4 w-4" />
+                                )}
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
