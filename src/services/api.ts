@@ -154,5 +154,14 @@ export const paymentAPI = {
   },
 };
 
+// Contact API
+export const contactAPI = {
+  sendMessage: async (data: { name: string; email: string; message: string }): Promise<{ message: string }> => {
+    const response = await api.post('/contact', data);
+    // Handle backend response structure: { data: {...}, success: true } or direct response
+    return response.data.data || response.data;
+  },
+};
+
 export default api;
 
