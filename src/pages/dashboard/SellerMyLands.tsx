@@ -1,0 +1,454 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import DashboardLayout from '../../components/layouts/DashboardLayout';
+import {
+  HomeIcon,
+  DocumentTextIcon,
+  UserGroupIcon,
+  CreditCardIcon,
+  PencilIcon,
+  TrashIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
+import { landAPI, paymentAPI, reservationAPI } from '../../services/api';
+import { useAppSelector } from '../../store/hooks';
+import type { Land, Payment, Reservation } from '../../types';
+import { canUpdate, canDelete, getDeleteErrorMessage } from '../../utils/landPermissions';
+
+const navItems = [
+  { name: 'Overview', path: '/dashboard/seller', icon: HomeIcon },
+  { name: 'My Lands', path: '/dashboard/seller/lands', icon: DocumentTextIcon },
+  { name: 'Buyer Progress', path: '/dashboard/seller/buyers', icon: UserGroupIcon },
+  { name: 'Payments', path: '/dashboard/seller/payments', icon: CreditCardIcon },
+];
+
+export default function SellerMyLands() {
+  const { user } = useAppSelector((state) => state.auth);
+  const [loading, setLoading] = useState(true);
+  const [myLands, setMyLands] = useState<Land[]>([]);
+  const [filteredLands, setFilteredLands] = useState<Land[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'locked' | 'sold'>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+
+  const fetchData = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLoading(true);
+      const [landsData, paymentsData, reservationsData] = await Promise.all([
+        landAPI.getAll().catch(() => []),
+        paymentAPI.getByBuyer().catch(() => []),
+        reservationAPI.getAll().catch(() => []),
+      ]);
+
+      // Handle paginated or array response
+      const landsArray: Land[] = Array.isArray(landsData) 
+        ? landsData 
+        : ((landsData as any)?.data || []);
+
+      // Filter lands owned by current seller
+      const sellerLands = landsArray.filter((land) => land.ownerId === user.id);
+      setMyLands(sellerLands);
+      setFilteredLands(sellerLands);
+
+      // Filter payments for seller's lands
+      const sellerLandIds = sellerLands.map((land) => land.id);
+      const sellerPayments = (paymentsData || []).filter((payment) =>
+        sellerLandIds.includes(payment.landId)
+      );
+      setPayments(sellerPayments);
+
+      // Filter reservations for seller's lands
+      const sellerReservations = (reservationsData || []).filter((reservation) =>
+        sellerLandIds.includes(reservation.landId)
+      );
+      setReservations(sellerReservations);
+    } catch (error) {
+      console.error('Failed to fetch seller lands data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [user?.id]);
+
+  // Filter lands based on search and status
+  useEffect(() => {
+    let filtered = [...myLands];
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((land) => land.status === statusFilter);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (land) =>
+          land.title.toLowerCase().includes(query) ||
+          land.location.toLowerCase().includes(query) ||
+          land.id.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredLands(filtered);
+  }, [myLands, searchQuery, statusFilter]);
+
+  const handleDelete = async (landId: string) => {
+    if (!user) return;
+    
+    const land = myLands.find((l) => l.id === landId);
+    if (!land) return;
+
+    // Check permissions
+    if (!canDelete(land, user, reservations, payments)) {
+      const errorMsg = getDeleteErrorMessage(land, user, reservations, payments);
+      setDeleteError(errorMsg || 'Cannot delete this land.');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete "${land.title}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingId(landId);
+    setDeleteError(null);
+
+    try {
+      await landAPI.delete(landId);
+      await fetchData();
+    } catch (err: any) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to delete land. Please try again.';
+      setDeleteError(errorMessage);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'available':
+        return 'badge-success';
+      case 'locked':
+        return 'badge-warning';
+      case 'sold':
+        return 'badge-error';
+      default:
+        return 'badge-ghost';
+    }
+  };
+
+  const getLandPaymentInfo = (landId: string) => {
+    const landPayments = payments.filter((p) => p.landId === landId);
+    const verifiedPayments = landPayments.filter((p) => p.status === 'verified');
+    const totalPaid = verifiedPayments.reduce((sum, p) => sum + p.amount, 0);
+    return { totalPayments: landPayments.length, totalPaid, verifiedPayments: verifiedPayments.length };
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout navItems={navItems}>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout navItems={navItems}>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-base-content">My Lands</h1>
+          <Link to="/dashboard/seller/register-land" className="btn btn-primary">
+            Register New Land
+          </Link>
+        </div>
+
+        {/* Filters and Search */}
+        <div className="card bg-base-100 shadow border border-base-300">
+          <div className="card-body">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              {/* Search */}
+                <label className="input input-bordered flex items-center gap-2 border-white border-2">
+                  <MagnifyingGlassIcon className="w-4 h-4 opacity-70" />
+                  <input
+                    type="text"
+                    className="grow text-white "
+                    placeholder="Search by title, location, or ID..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </label>
+
+              {/* Status Filter */}
+                <select
+                  className="select select-bordered text-white border-2 border-white"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                >
+                  <option value="all">All Status</option>
+                  <option value="available">Available</option>
+                  <option value="locked">Locked</option>
+                  <option value="sold">Sold</option>
+                </select>
+
+              {/* View Mode Toggle */}
+              <div className="btn-group">
+                <button
+                  className={`btn ${viewMode === 'grid' ? 'btn-active' : ''} text-white border-2 border-white`}
+                  onClick={() => setViewMode('grid')}
+                >
+                  Grid
+                </button>
+                <button
+                  className={`btn ${viewMode === 'table' ? 'btn-active' : ''} text-white border-2 border-white`}
+                  onClick={() => setViewMode('table')}
+                >
+                  Table
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {deleteError && (
+          <div className="alert alert-error">
+            <span className="text-white">{deleteError}</span>
+            <button
+              className="btn btn-sm btn-ghost text-white"
+              onClick={() => setDeleteError(null)}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Results Count */}
+        <div className="text-sm text-base-content/70 text-white">
+          Showing {filteredLands.length} of {myLands.length} lands
+        </div>
+
+        {/* Lands Display */}
+        {filteredLands.length === 0 ? (
+          <div className="card bg-base-100 shadow-xl border border-base-300">
+            <div className="card-body text-center py-12">
+              {myLands.length === 0 ? (
+                <>
+                  <p className="text-base-content/70 text-lg">No lands registered yet.</p>
+                  <Link to="/dashboard/seller/register-land" className="btn btn-primary btn-sm mt-4">
+                    Register Your First Land
+                  </Link>
+                </>
+              ) : (
+                <p className="text-base-content/70 text-lg">No lands match your search criteria.</p>
+              )}
+            </div>
+          </div>
+        ) : viewMode === 'grid' ? (
+          /* Grid View */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredLands.map((land) => {
+              const paymentInfo = getLandPaymentInfo(land.id);
+              const landReservations = reservations.filter((r) => r.landId === land.id && r.status === 'active');
+
+              return (
+                <div key={land.id} className="card bg-base-100 shadow-xl border border-base-300 hover:shadow-2xl transition-shadow">
+                  <div className="card-body">
+                    <div className="flex justify-between items-start mb-2">
+                      <h2 className="card-title text-base-content">{land.title}</h2>
+                      <span className={`badge ${getStatusBadgeClass(land.status)}`}>
+                        {land.status}
+                      </span>
+                    </div>
+                    
+                    <p className="text-base-content/70 text-sm mb-4 text-white">
+                      <span className="font-semibold">Location:</span> {land.location}
+                    </p>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex text-sm text-white">
+                        <span className="text-base-content/70 mr-2">Size:</span>
+                        <span className="text-base-content font-semibold">{land.size} sq ft</span>
+                      </div>
+                      <div className="flex  text-sm text-white">
+                        <span className="text-base-content/70 mr-2">Price:</span>
+                        <span className="text-base-content font-semibold text-primary">
+                          ₹{land.price.toLocaleString()}
+                        </span>
+                      </div>
+                      {land.status === 'locked' && paymentInfo.totalPayments > 0 && (
+                        <>
+                          <div className="flex text-sm">
+                            <span className="text-base-content/70 mr-2">Payments Received:</span>
+                            <span className="text-base-content font-semibold text-success">
+                              {paymentInfo.verifiedPayments}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm text-white">
+                            <span className="text-base-content/70">Total Paid:</span>
+                            <span className="text-base-content font-semibold text-success">
+                              ₹{paymentInfo.totalPaid.toLocaleString()}
+                            </span>
+                          </div>
+                          {landReservations.length > 0 && (
+                            <div className="flex justify-between text-sm text-white">
+                              <span className="text-base-content/70">Active Reservations:</span>
+                              <span className="text-base-content font-semibold">
+                                {landReservations.length}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {land.createdAt && (
+                      <p className="text-xs text-base-content/50 mb-4 text-white">
+                        Registered: {new Date(land.createdAt).toLocaleDateString()}
+                      </p>
+                    )}
+
+                    <div className="card-actions justify-end gap-2">
+                      <Link
+                        to={`/lands/${land.id}`}
+                        className="btn btn-primary btn-sm"
+                      >
+                        View
+                      </Link>
+                      {canUpdate(land, user, reservations, payments) && (
+                        <Link
+                          to={`/dashboard/seller/update-land/${land.id}`}
+                          className="btn btn-secondary btn-sm"
+                          title="Update Land"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </Link>
+                      )}
+                      {canDelete(land, user, reservations, payments) && (
+                        <button
+                          onClick={() => handleDelete(land.id)}
+                          className="btn btn-error btn-sm btn-secondary"
+                          disabled={deletingId === land.id}
+                          title="Delete Land"
+                        >
+                          {deletingId === land.id ? (
+                            <span className="loading loading-spinner loading-xs"></span>
+                          ) : (
+                            <TrashIcon className="h-4 w-4" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* Table View */
+          <div className="card bg-base-100 shadow-xl border border-base-300">
+            <div className="card-body p-0">
+              <div className="overflow-x-auto">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th className="text-base-content">Title</th>
+                      <th className="text-base-content">Location</th>
+                      <th className="text-base-content">Size</th>
+                      <th className="text-base-content">Price</th>
+                      <th className="text-base-content">Status</th>
+                      <th className="text-base-content">Payment Info</th>
+                      <th className="text-base-content">Created</th>
+                      <th className="text-base-content">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredLands.map((land) => {
+                      const paymentInfo = getLandPaymentInfo(land.id);
+
+                      return (
+                        <tr key={land.id} className="hover">
+                          <td className="text-base-content font-semibold">{land.title}</td>
+                          <td className="text-base-content">{land.location}</td>
+                          <td className="text-base-content">{land.size} sq ft</td>
+                          <td className="text-base-content">₹{land.price.toLocaleString()}</td>
+                          <td>
+                            <span className={`badge ${getStatusBadgeClass(land.status)}`}>
+                              {land.status}
+                            </span>
+                          </td>
+                          <td className="text-base-content text-sm">
+                            {land.status === 'locked' && paymentInfo.totalPayments > 0 ? (
+                              <div>
+                                <div>Paid: ₹{paymentInfo.totalPaid.toLocaleString()}</div>
+                                <div className="text-xs text-base-content/70">
+                                  ({paymentInfo.verifiedPayments} verified)
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-base-content/50">-</span>
+                            )}
+                          </td>
+                          <td className="text-base-content text-sm">
+                            {land.createdAt ? new Date(land.createdAt).toLocaleDateString() : '-'}
+                          </td>
+                          <td>
+                            <div className="flex gap-2 items-center">
+                              <Link
+                                to={`/lands/${land.id}`}
+                                className="btn btn-xs btn-primary"
+                              >
+                                View
+                              </Link>
+                              {canUpdate(land, user, reservations, payments) && (
+                                <Link
+                                  to={`/dashboard/seller/update-land/${land.id}`}
+                                  className="btn btn-xs btn-secondary"
+                                  title="Update Land"
+                                >
+                                  <PencilIcon className="h-4 w-4" />
+                                </Link>
+                              )}
+                              {canDelete(land, user, reservations, payments) && (
+                                <button
+                                  onClick={() => handleDelete(land.id)}
+                                  className="btn btn-xs btn-error"
+                                  disabled={deletingId === land.id}
+                                  title="Delete Land"
+                                >
+                                  {deletingId === land.id ? (
+                                    <span className="loading loading-spinner loading-xs"></span>
+                                  ) : (
+                                    <TrashIcon className="h-4 w-4" />
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}
+

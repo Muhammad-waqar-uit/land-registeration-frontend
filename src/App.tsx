@@ -12,6 +12,7 @@ import ResetPassword from './pages/auth/ResetPassword';
 // Dashboard Pages
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import SellerDashboard from './pages/dashboard/SellerDashboard';
+import SellerMyLands from './pages/dashboard/SellerMyLands';
 import BuyerDashboard from './pages/dashboard/BuyerDashboard';
 import BuilderDashboard from './pages/dashboard/BuilderDashboard';
 import RegisterLand from './pages/dashboard/RegisterLand';
@@ -68,6 +69,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['seller']}>
               <SellerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/seller/lands"
+          element={
+            <ProtectedRoute allowedRoles={['seller']}>
+              <SellerMyLands />
             </ProtectedRoute>
           }
         />
