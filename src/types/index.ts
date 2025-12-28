@@ -5,7 +5,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  walletAddress?: string;
+  walletAddress: string | null; // Backend returns null if not set, string if set
   createdAt?: string;
   updatedAt?: string;
 }
@@ -13,6 +13,7 @@ export interface User {
 export interface AuthState {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -41,7 +42,7 @@ export interface Land {
     id: string;
     name: string;
     email: string;
-    walletAddress?: string;
+    walletAddress: string | null;
   };
   documentHash?: string;
   documentCID?: string;
@@ -51,6 +52,8 @@ export interface Land {
   imageUrl?: string;
   imageIPFSHash?: string;
   imageHash?: string;
+  blockchainLandId?: number;
+  blockchainTxHash?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -64,9 +67,22 @@ export interface Payment {
   status: 'pending' | 'verified' | 'rejected';
   paymentMode: 'bank' | 'crypto';
   proofCID?: string;
-  transactionHash?: string;
-  remarks?: string;
+  transactionHash?: string | null;
+  remarks?: string | null;
   createdAt?: string;
+  updatedAt?: string;
+  land?: {
+    id: string;
+    title: string;
+    location: string;
+    price?: number;
+  };
+  buyer?: {
+    id: string;
+    name: string;
+    email: string;
+    walletAddress: string | null;
+  };
 }
 
 export interface Reservation {
@@ -75,5 +91,18 @@ export interface Reservation {
   buyerId: string;
   status: 'active' | 'cancelled';
   createdAt?: string;
+  updatedAt?: string;
+  land?: {
+    id: string;
+    title: string;
+    location: string;
+    price: number;
+  };
+  buyer?: {
+    id: string;
+    name: string;
+    email: string;
+    walletAddress: string | null;
+  };
 }
 

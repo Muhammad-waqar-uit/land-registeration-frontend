@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
@@ -9,7 +9,7 @@ import {
   PencilIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
-import { landAPI, paymentAPI } from '../../services/api';
+import { landAPI, paymentAPI, reservationAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Land, Payment, Reservation } from '../../types';
 import { canUpdate, canDelete, getDeleteErrorMessage } from '../../utils/landPermissions';
@@ -23,6 +23,7 @@ const navItems = [
 
 export default function SellerDashboard() {
   const { user } = useAppSelector((state) => state.auth);
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [myLands, setMyLands] = useState<Land[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -35,55 +36,76 @@ export default function SellerDashboard() {
     totalRevenue: 0,
   });
 
+      const fetchData = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLoading(true);
+      const [landsData, paymentsData, reservationsData] = await Promise.all([
+        landAPI.getAll().catch(() => []),
+        paymentAPI.getByBuyer().catch(() => []), // This might need to be seller-specific endpoint
+        reservationAPI.getAll().catch(() => []),
+      ]);
+
+      // Handle paginated or array response
+      const landsArray: Land[] = Array.isArray(landsData) 
+        ? landsData 
+        : ((landsData as any)?.data || []);
+
+      // Filter lands owned by current seller
+      const sellerLands = landsArray.filter((land) => land.ownerId === user.id);
+      setMyLands(sellerLands);
+
+      // Filter payments for seller's lands
+      const sellerLandIds = sellerLands.map((land) => land.id);
+      const sellerPayments = (paymentsData || []).filter((payment) =>
+        sellerLandIds.includes(payment.landId)
+      );
+      setPayments(sellerPayments);
+
+      // Filter reservations for seller's lands
+      const sellerReservations = (reservationsData || []).filter((reservation) =>
+        sellerLandIds.includes(reservation.landId)
+      );
+      setReservations(sellerReservations);
+
+      // Calculate stats
+      const lockedLands = sellerLands.filter((l) => l.status === 'locked').length;
+      const verifiedPayments = sellerPayments.filter((p) => p.status === 'verified');
+      const totalRevenue = verifiedPayments.reduce((sum, p) => sum + p.amount, 0);
+
+      setStats({
+        totalLands: sellerLands.length,
+        activeReservations: lockedLands,
+        totalRevenue,
+      });
+    } catch (error) {
+      console.error('Failed to fetch seller dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user?.id) return;
-      
-      try {
-        setLoading(true);
-        const [landsData, paymentsData] = await Promise.all([
-          landAPI.getAll().catch(() => []),
-          paymentAPI.getByBuyer().catch(() => []), // This might need to be seller-specific endpoint
-        ]);
-
-        // Handle paginated or array response
-        const landsArray: Land[] = Array.isArray(landsData) 
-          ? landsData 
-          : ((landsData as any)?.data || []);
-
-        // Filter lands owned by current seller
-        const sellerLands = landsArray.filter((land) => land.ownerId === user.id);
-        setMyLands(sellerLands);
-
-        // Filter payments for seller's lands
-        const sellerLandIds = sellerLands.map((land) => land.id);
-        const sellerPayments = (paymentsData || []).filter((payment) =>
-          sellerLandIds.includes(payment.landId)
-        );
-        setPayments(sellerPayments);
-
-        // Note: Reservations API not available yet, using empty array
-        // When available, fetch reservations here
-        setReservations([]);
-
-        // Calculate stats
-        const lockedLands = sellerLands.filter((l) => l.status === 'locked').length;
-        const verifiedPayments = sellerPayments.filter((p) => p.status === 'verified');
-        const totalRevenue = verifiedPayments.reduce((sum, p) => sum + p.amount, 0);
-
-        setStats({
-          totalLands: sellerLands.length,
-          activeReservations: lockedLands,
-          totalRevenue,
-        });
-      } catch (error) {
-        console.error('Failed to fetch seller dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
+  }, [user?.id]);
+
+  // Refresh when navigating back from register/update land
+  useEffect(() => {
+    if (location.state?.refresh) {
+      fetchData();
+      // Clear the refresh flag
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  // Refresh when component comes into focus (e.g., after navigation back from register/update land)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchData();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [user?.id]);
 
   const handleDelete = async (landId: string) => {
@@ -108,15 +130,8 @@ export default function SellerDashboard() {
 
     try {
       await landAPI.delete(landId);
-      // Refresh the list
-      const landsData = await landAPI.getAll();
-      const landsArray: Land[] = Array.isArray(landsData) 
-        ? landsData 
-        : ((landsData as any)?.data || []);
-      const sellerLands = landsArray.filter(
-        (land) => land.ownerId === user.id
-      );
-      setMyLands(sellerLands);
+      // Refresh all data after successful delete
+      await fetchData();
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message ||

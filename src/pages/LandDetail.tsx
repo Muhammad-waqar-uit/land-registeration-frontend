@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
-import { landAPI, paymentAPI } from '../services/api';
+import { landAPI, paymentAPI, reservationAPI } from '../services/api';
 import type { Land, Payment, Reservation } from '../types';
 import DashboardLayout from '../components/layouts/DashboardLayout';
 import { HomeIcon, DocumentTextIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -61,33 +61,48 @@ export default function LandDetail() {
     };
   } | null>(null);
   const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [blockchainVerificationStatus, setBlockchainVerificationStatus] = useState<'checking' | 'completed' | null>(null);
+  const [blockchainVerificationResult, setBlockchainVerificationResult] = useState<{
+    verified: boolean;
+    message: string;
+    databaseHash?: string;
+    blockchainHash?: string;
+    blockchainLandId?: number;
+    error?: string | null;
+  } | null>(null);
+  const [blockchainVerificationError, setBlockchainVerificationError] = useState<string | null>(null);
+  const [reserving, setReserving] = useState(false);
   
   // Get IPFS URLs from hash JSON
   const imageIPFSUrl = land?.imageIPFSHash ? getIPFSUrl(land.imageIPFSHash) : null;
   const documentIPFSUrl = land?.documentIPFSHash ? getIPFSUrl(land.documentIPFSHash) : null;
 
+  const fetchData = async () => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      const [landData, paymentsData, reservationsData] = await Promise.all([
+        landAPI.getById(id),
+        paymentAPI.getByBuyer().catch(() => []),
+        reservationAPI.getAll().catch(() => []),
+      ]);
+      setLand(landData);
+      
+      // Filter payments for this land
+      const landPayments = (paymentsData || []).filter((p) => p.landId === id);
+      setPayments(landPayments);
+      
+      // Filter reservations for this land
+      const landReservations = (reservationsData || []).filter((r) => r.landId === id);
+      setReservations(landReservations);
+    } catch (error) {
+      console.error('Failed to fetch land:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      if (!id) return;
-      try {
-        const [landData, paymentsData] = await Promise.all([
-          landAPI.getById(id),
-          paymentAPI.getByBuyer().catch(() => []),
-        ]);
-        setLand(landData);
-        
-        // Filter payments for this land
-        const landPayments = (paymentsData || []).filter((p) => p.landId === id);
-        setPayments(landPayments);
-        
-        // Note: Reservations API not available yet
-        setReservations([]);
-      } catch (error) {
-        console.error('Failed to fetch land:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, [id]);
 
@@ -110,7 +125,7 @@ export default function LandDetail() {
 
     try {
       await landAPI.delete(land.id);
-      // Redirect to appropriate dashboard
+      // Redirect to appropriate dashboard (data will refresh automatically on navigation)
       if (user.role === 'admin') {
         navigate('/dashboard/admin');
       } else if (user.role === 'seller') {
@@ -150,6 +165,8 @@ export default function LandDetail() {
       const response = await landAPI.verify(land.id);
       setVerificationResult(response);
       setVerificationStatus('completed');
+      // Refresh land data after verification
+      await fetchData();
     } catch (error: any) {
       console.error('Verification failed:', error);
       setVerificationError(
@@ -161,9 +178,100 @@ export default function LandDetail() {
     }
   };
 
-  const handleReserve = () => {
-    // TODO: Implement reservation logic
-    console.log('Reserve land:', id);
+  /**
+   * Verify Blockchain Hash
+   * 
+   * Calls POST /api/lands/:id/verify-blockchain to verify document hash against blockchain record.
+   */
+  const handleVerifyBlockchain = async () => {
+    if (!land?.id) return;
+    
+    setBlockchainVerificationStatus('checking');
+    setBlockchainVerificationResult(null);
+    setBlockchainVerificationError(null);
+    
+    try {
+      const response = await landAPI.verifyBlockchain(land.id);
+      setBlockchainVerificationResult(response);
+      setBlockchainVerificationStatus('completed');
+      // Refresh land data after blockchain verification
+      await fetchData();
+    } catch (error: any) {
+      console.error('Blockchain verification failed:', error);
+      setBlockchainVerificationError(
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to verify blockchain. Please try again.'
+      );
+      setBlockchainVerificationStatus('completed');
+    }
+  };
+
+  const handleReserve = async () => {
+    if (!land?.id || !user) {
+      alert('Please login to reserve a land');
+      return;
+    }
+
+    if (user.role !== 'buyer') {
+      alert('Only buyers can reserve lands');
+      return;
+    }
+
+    if (land.status !== 'available') {
+      alert('This land is not available for reservation');
+      return;
+    }
+
+    // Check if user already has an active reservation for this land
+    const existingReservation = reservations.find(
+      (r) => r.buyerId === user.id && r.status === 'active'
+    );
+    if (existingReservation) {
+      alert('You already have an active reservation for this land');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to reserve "${land.title}"?`)) {
+      return;
+    }
+
+    setReserving(true);
+    try {
+      await reservationAPI.create(land.id);
+      // Refresh data after successful reservation
+      await fetchData();
+      alert('Land reserved successfully!');
+    } catch (error: any) {
+      console.error('Failed to reserve land:', error);
+      const errorMessage = 
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to reserve land. Please try again.';
+      alert(errorMessage);
+    } finally {
+      setReserving(false);
+    }
+  };
+
+  const handleCancelReservation = async (reservationId: string) => {
+    if (!window.confirm('Are you sure you want to cancel this reservation?')) {
+      return;
+    }
+
+    try {
+      await reservationAPI.cancel(reservationId);
+      // Refresh data after cancellation
+      await fetchData();
+      alert('Reservation cancelled successfully!');
+    } catch (error: any) {
+      console.error('Failed to cancel reservation:', error);
+      const errorMessage = 
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to cancel reservation. Please try again.';
+      alert(errorMessage);
+    }
   };
 
   if (loading) {
@@ -250,9 +358,39 @@ export default function LandDetail() {
 
               <div className="card-actions mt-4 flex gap-2 flex-wrap">
                 {user?.role === 'buyer' && land.status === 'available' && (
-                  <button onClick={handleReserve} className="btn btn-primary">
-                    Reserve Now
-                  </button>
+                  <>
+                    {reservations.some((r) => r.buyerId === user.id && r.status === 'active') ? (
+                      <div className="alert alert-info">
+                        <span>You have an active reservation for this land</span>
+                        {reservations
+                          .filter((r) => r.buyerId === user.id && r.status === 'active')
+                          .map((r) => (
+                            <button
+                              key={r.id}
+                              onClick={() => handleCancelReservation(r.id)}
+                              className="btn btn-sm btn-error ml-2"
+                            >
+                              Cancel Reservation
+                            </button>
+                          ))}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleReserve}
+                        className="btn btn-primary"
+                        disabled={reserving}
+                      >
+                        {reserving ? (
+                          <>
+                            <span className="loading loading-spinner loading-sm"></span>
+                            Reserving...
+                          </>
+                        ) : (
+                          'Reserve Now'
+                        )}
+                      </button>
+                    )}
+                  </>
                 )}
                 {canUpdate(land, user, reservations, payments) && (
                   <Link
@@ -343,8 +481,8 @@ export default function LandDetail() {
                   )}
                 </div>
 
-                {/* Verify Button */}
-                <div className="flex justify-end">
+                {/* Verify Buttons */}
+                <div className="flex justify-end gap-2">
                   <button
                     onClick={handleVerifyIntegrity}
                     className="btn btn-outline btn-primary text-white"
@@ -359,6 +497,22 @@ export default function LandDetail() {
                       'Verify Integrity'
                     )}
                   </button>
+                  {land.blockchainLandId && (
+                    <button
+                      onClick={handleVerifyBlockchain}
+                      className="btn btn-outline btn-secondary text-white"
+                      disabled={blockchainVerificationStatus === 'checking' || !land.id}
+                    >
+                      {blockchainVerificationStatus === 'checking' ? (
+                        <>
+                          <span className="loading loading-spinner loading-sm"></span>
+                          Verifying...
+                        </>
+                      ) : (
+                        'Verify Blockchain'
+                      )}
+                    </button>
+                  )}
                 </div>
 
                 {/* Verification Error */}
@@ -442,6 +596,54 @@ export default function LandDetail() {
                     {!verificationResult.document && !verificationResult.image && (
                       <div className="alert alert-info">
                         <span>No files available for verification</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Blockchain Verification Error */}
+                {blockchainVerificationError && (
+                  <div className="alert alert-error">
+                    <ExclamationTriangleIcon className="h-6 w-6" />
+                    <span>{blockchainVerificationError}</span>
+                  </div>
+                )}
+
+                {/* Blockchain Verification Results */}
+                {blockchainVerificationStatus === 'completed' && blockchainVerificationResult && (
+                  <div className="space-y-3">
+                    <div className={`alert ${
+                      blockchainVerificationResult.verified ? 'alert-success' : 'alert-warning'
+                    }`}>
+                      {blockchainVerificationResult.verified ? (
+                        <CheckCircleIcon className="h-6 w-6" />
+                      ) : (
+                        <ExclamationTriangleIcon className="h-6 w-6" />
+                      )}
+                      <span>{blockchainVerificationResult.message}</span>
+                    </div>
+
+                    {blockchainVerificationResult.databaseHash && (
+                      <div className="bg-base-200 p-3 rounded">
+                        <p className="text-sm font-semibold mb-2">Hash Comparison:</p>
+                        <div className="space-y-1 text-xs">
+                          <p>
+                            <span className="font-mono">Database:</span>{' '}
+                            {blockchainVerificationResult.databaseHash.substring(0, 32)}...
+                          </p>
+                          {blockchainVerificationResult.blockchainHash && (
+                            <p>
+                              <span className="font-mono">Blockchain:</span>{' '}
+                              {blockchainVerificationResult.blockchainHash.substring(0, 32)}...
+                            </p>
+                          )}
+                          {blockchainVerificationResult.blockchainLandId && (
+                            <p>
+                              <span className="font-mono">Blockchain Land ID:</span>{' '}
+                              {blockchainVerificationResult.blockchainLandId}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

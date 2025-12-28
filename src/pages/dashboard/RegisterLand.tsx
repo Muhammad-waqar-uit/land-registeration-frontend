@@ -94,8 +94,8 @@ export default function RegisterLand() {
 
       await landAPI.create(landFormData);
 
-      // Success - redirect to seller dashboard
-      navigate('/dashboard/seller');
+      // Success - redirect to seller dashboard (will refresh automatically)
+      navigate('/dashboard/seller', { state: { refresh: true } });
     } catch (err: any) {
       setError(
         err.response?.data?.message ||

@@ -18,7 +18,6 @@ export default function Profile() {
     name: user?.name || '',
     email: user?.email || '',
     role: user?.role || '',
-    walletAddress: user?.walletAddress || '',
   });
   const [error, setError] = useState<string | null>(null);
   const [passwordData, setPasswordData] = useState({
@@ -214,6 +213,11 @@ export default function Profile() {
                         <p className="text-sm font-mono text-base-content/80 text-white break-all bg-base-200 p-2 rounded">
                           {user.walletAddress}
                         </p>
+                      </div>
+                    )}
+                    {!user?.walletAddress && (
+                      <div className="mt-2">
+                        <p className="text-xs text-base-content/60 text-white">No wallet address connected</p>
                       </div>
                     )}
                   </div>

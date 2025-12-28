@@ -29,39 +29,48 @@ export default function AdminDashboard() {
     pendingPayments: 0,
   });
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [landsData, paymentsData] = await Promise.all([
+        landAPI.getAll(),
+        paymentAPI.getPending().catch(() => []), // Handle if endpoint doesn't exist
+      ]);
+
+      setLands(landsData || []);
+      setPendingPayments(paymentsData || []);
+
+      // Calculate stats
+      const totalLands = landsData?.length || 0;
+      const availableLands = landsData?.filter((l) => l.status === 'available').length || 0;
+      const lockedLands = landsData?.filter((l) => l.status === 'locked').length || 0;
+      const soldLands = landsData?.filter((l) => l.status === 'sold').length || 0;
+
+      setStats({
+        totalLands,
+        availableLands,
+        lockedLands,
+        soldLands,
+        pendingPayments: paymentsData?.length || 0,
+      });
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [landsData, paymentsData] = await Promise.all([
-          landAPI.getAll(),
-          paymentAPI.getPending().catch(() => []), // Handle if endpoint doesn't exist
-        ]);
-
-        setLands(landsData || []);
-        setPendingPayments(paymentsData || []);
-
-        // Calculate stats
-        const totalLands = landsData?.length || 0;
-        const availableLands = landsData?.filter((l) => l.status === 'available').length || 0;
-        const lockedLands = landsData?.filter((l) => l.status === 'locked').length || 0;
-        const soldLands = landsData?.filter((l) => l.status === 'sold').length || 0;
-
-        setStats({
-          totalLands,
-          availableLands,
-          lockedLands,
-          soldLands,
-          pendingPayments: paymentsData?.length || 0,
-        });
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
+  }, []);
+
+  // Refresh when component comes into focus (e.g., after navigation back)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchData();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   if (loading) {

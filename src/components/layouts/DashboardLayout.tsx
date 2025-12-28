@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { logoutUser, clearAuth } from '../../store/slices/authSlice';
+import { clearAuth } from '../../store/slices/authSlice';
+import { authAPI } from '../../services/api';
 import {
   UserIcon,
   ArrowRightOnRectangleIcon,
@@ -27,19 +28,27 @@ export default function DashboardLayout({ children, navItems = [] }: DashboardLa
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    
     // Clear auth state immediately for instant logout
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     dispatch(clearAuth()); // Clear Redux state immediately
     
-    // Navigate immediately - use setTimeout to ensure state update propagates
+    // Navigate to home page immediately
     setTimeout(() => {
-      navigate('/login', { replace: true });
+      navigate('/', { replace: true });
     }, 0);
     
-    // Call API in background (non-blocking)
-    dispatch(logoutUser());
+    // Call API in background (non-blocking) to invalidate refresh token on server
+    try {
+      await authAPI.logout(refreshToken || undefined);
+    } catch (error) {
+      // Ignore errors - tokens already cleared locally
+      console.warn('Logout API call failed, but tokens cleared locally');
+    }
   };
 
   return (

@@ -128,8 +128,8 @@ export default function UpdateLand() {
 
       await landAPI.update(id!, landFormData);
 
-      // Success - redirect to seller dashboard
-      navigate('/dashboard/seller');
+      // Success - redirect to seller dashboard (will refresh automatically)
+      navigate('/dashboard/seller', { state: { refresh: true } });
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to update land. Please try again.';
       setError(errorMessage);

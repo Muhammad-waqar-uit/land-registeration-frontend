@@ -7,7 +7,7 @@ import {
   CreditCardIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-import { landAPI, paymentAPI } from '../../services/api';
+import { landAPI, paymentAPI, reservationAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Land, Payment } from '../../types';
 
@@ -30,49 +30,67 @@ export default function BuyerDashboard() {
     pendingPayments: 0,
   });
 
+  const fetchData = async () => {
+    if (!user?.id) return;
+
+    try {
+      setLoading(true);
+      const [landsData, paymentsData, reservationsData] = await Promise.all([
+        landAPI.getAll().catch(() => []),
+        paymentAPI.getByBuyer().catch(() => []),
+        reservationAPI.getAll().catch(() => []),
+      ]);
+
+      // Filter available lands (status = 'available')
+      const available = (landsData || []).filter((land) => land.status === 'available');
+      setAvailableLands(available);
+
+      // Filter buyer's payments
+      const buyerPayments = (paymentsData || []).filter((p) => p.buyerId === user.id);
+      setPayments(buyerPayments);
+
+      // Filter buyer's reservations
+      const buyerReservations = (reservationsData || []).filter((r) => r.buyerId === user.id && r.status === 'active');
+      
+      // Get reserved land IDs from both reservations and payments
+      const reservedLandIdsFromReservations = buyerReservations.map((r) => r.landId);
+      const reservedLandIdsFromPayments = [...new Set(buyerPayments.map((p) => p.landId))];
+      const allReservedLandIds = [...new Set([...reservedLandIdsFromReservations, ...reservedLandIdsFromPayments])];
+      
+      // Filter reserved lands (status = 'locked' where buyer has reservations or payments)
+      const reserved = (landsData || []).filter(
+        (land) => land.status === 'locked' && allReservedLandIds.includes(land.id)
+      );
+      setReservedLands(reserved);
+
+      // Calculate stats
+      const verifiedPayments = buyerPayments.filter((p) => p.status === 'verified');
+      const pendingPayments = buyerPayments.filter((p) => p.status === 'pending');
+      const totalPaid = verifiedPayments.reduce((sum, p) => sum + p.amount, 0);
+
+      setStats({
+        activeReservations: buyerReservations.length,
+        totalPaid,
+        pendingPayments: pendingPayments.length,
+      });
+    } catch (error) {
+      console.error('Failed to fetch buyer dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user?.id) return;
-
-      try {
-        setLoading(true);
-        const [landsData, paymentsData] = await Promise.all([
-          landAPI.getAll().catch(() => []),
-          paymentAPI.getByBuyer().catch(() => []),
-        ]);
-
-        // Filter available lands (status = 'available')
-        const available = (landsData || []).filter((land) => land.status === 'available');
-        setAvailableLands(available);
-
-        // Filter reserved lands (status = 'locked' where buyer has payments)
-        const buyerPayments = (paymentsData || []).filter((p) => p.buyerId === user.id);
-        setPayments(buyerPayments);
-
-        const reservedLandIds = [...new Set(buyerPayments.map((p) => p.landId))];
-        const reserved = (landsData || []).filter(
-          (land) => land.status === 'locked' && reservedLandIds.includes(land.id)
-        );
-        setReservedLands(reserved);
-
-        // Calculate stats
-        const verifiedPayments = buyerPayments.filter((p) => p.status === 'verified');
-        const pendingPayments = buyerPayments.filter((p) => p.status === 'pending');
-        const totalPaid = verifiedPayments.reduce((sum, p) => sum + p.amount, 0);
-
-        setStats({
-          activeReservations: reserved.length,
-          totalPaid,
-          pendingPayments: pendingPayments.length,
-        });
-      } catch (error) {
-        console.error('Failed to fetch buyer dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
+  }, [user?.id]);
+
+  // Refresh when component comes into focus (e.g., after navigation back from payment/reservation)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchData();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [user?.id]);
 
   if (loading) {
