@@ -720,5 +720,93 @@ export const installmentAPI = {
   },
 };
 
+// Resale Request API
+export const resaleRequestAPI = {
+  // Create resale request
+  create: async (data: { propertyId: string; requestedPrice: number }): Promise<any> => {
+    console.log('🔄 Creating resale request:', data);
+    const response = await api.post('/resale-requests', data);
+    console.log('✅ Resale request created:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Get all resale requests (Admin)
+  getAll: async (params?: {
+    status?: 'pending' | 'approved' | 'rejected' | 'listed' | 'sold';
+    propertyId?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<any> => {
+    console.log('📤 Fetching all resale requests with params:', params);
+    const response = await api.get('/resale-requests', { params });
+    console.log('✅ Resale requests fetched:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Get my resale requests
+  getMyRequests: async (): Promise<any> => {
+    console.log('📤 Fetching my resale requests');
+    const response = await api.get('/resale-requests/my-requests');
+    console.log('✅ My resale requests fetched:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Get builder's resale requests
+  getBuilder: async (params?: { status?: string }): Promise<any> => {
+    console.log('📤 Fetching builder resale requests with params:', params);
+    const response = await api.get('/resale-requests/builder', { params });
+    console.log('✅ Builder resale requests fetched:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Get resale request by ID
+  getById: async (id: string): Promise<any> => {
+    console.log(`📤 Fetching resale request ${id}`);
+    const response = await api.get(`/resale-requests/${id}`);
+    console.log('✅ Resale request fetched:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Respond to resale request (Builder)
+  respond: async (id: string, status: 'approved' | 'rejected'): Promise<any> => {
+    console.log(`🔄 Responding to resale request ${id} with status:`, status);
+    const response = await api.post(`/resale-requests/${id}/respond`, { status });
+    console.log('✅ Resale request response sent:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Approve resale request
+  approve: async (id: string): Promise<any> => {
+    console.log(`✅ Approving resale request ${id}`);
+    const response = await api.post(`/resale-requests/${id}/approve`);
+    console.log('✅ Resale request approved:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Reject resale request
+  reject: async (id: string): Promise<any> => {
+    console.log(`❌ Rejecting resale request ${id}`);
+    const response = await api.post(`/resale-requests/${id}/reject`);
+    console.log('✅ Resale request rejected:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // List property as resale
+  list: async (id: string): Promise<any> => {
+    console.log(`📋 Listing resale request ${id}`);
+    const response = await api.post(`/resale-requests/${id}/list`);
+    console.log('✅ Resale request listed:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Mark resale as sold
+  markSold: async (id: string): Promise<any> => {
+    console.log(`💰 Marking resale request ${id} as sold`);
+    const response = await api.post(`/resale-requests/${id}/mark-sold`);
+    console.log('✅ Resale request marked as sold:', response.data);
+    return response.data.data || response.data;
+  },
+};
+
 export default api;
 

@@ -6,6 +6,7 @@ import {
   ExclamationTriangleIcon,
   DocumentTextIcon,
   CurrencyDollarIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -18,6 +19,7 @@ const navItems = [
   { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
   { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
   { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
+  { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
   { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
 ];
 

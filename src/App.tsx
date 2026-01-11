@@ -28,6 +28,8 @@ import CreateAgreement from './pages/dashboard/CreateAgreement';
 import AgreementDetail from './pages/dashboard/AgreementDetail';
 import Installments from './pages/dashboard/Installments';
 import CreateInstallments from './pages/dashboard/CreateInstallments';
+import ResaleRequests from './pages/dashboard/ResaleRequests';
+import CreateResaleRequest from './pages/dashboard/CreateResaleRequest';
 
 // Other Pages
 import Home from './pages/Home';
@@ -172,6 +174,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* Resale Request Routes */}
+        <Route
+          path="/dashboard/builder/resale-requests"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <ResaleRequests />
+            </ProtectedRoute>
+          }
+        />
         {/* Legacy seller routes redirect to builder */}
         <Route
           path="/dashboard/seller"
@@ -220,6 +231,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <AgreementDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/resale-request/create"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <CreateResaleRequest />
             </ProtectedRoute>
           }
         />

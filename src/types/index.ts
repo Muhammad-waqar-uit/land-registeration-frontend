@@ -221,3 +221,29 @@ export interface Installment {
     walletAddress: string | null;
   };
 }
+
+export interface ResaleRequest {
+  id: string;
+  propertyId: string;
+  currentOwnerId: string;
+  builderId: string;
+  requestedPrice: number;
+  status: 'pending' | 'approved' | 'rejected' | 'listed' | 'sold';
+  approvedAt?: string | null;
+  listedAt?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+  property?: Land;
+  currentOwner?: {
+    id: string;
+    name: string;
+    email: string;
+    walletAddress: string | null;
+  };
+  builder?: {
+    id: string;
+    name: string;
+    email: string;
+    companyName?: string;
+  };
+}

@@ -5,9 +5,9 @@ import {
   HomeIcon,
   CreditCardIcon,
 } from '@heroicons/react/24/outline';
-import { landAPI, paymentAPI, reservationAPI, propertyRequestAPI, agreementAPI, installmentAPI } from '../../services/api';
+import { landAPI, paymentAPI, reservationAPI, propertyRequestAPI, agreementAPI, installmentAPI, resaleRequestAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
-import type { Land, Payment, PropertyRequest, Agreement, Installment } from '../../types';
+import type { Land, Payment, PropertyRequest, Agreement, Installment, ResaleRequest } from '../../types';
 
 const navItems = [
   { name: 'Overview', path: '/dashboard/buyer', icon: HomeIcon },
@@ -19,10 +19,12 @@ export default function BuyerDashboard() {
   const [loading, setLoading] = useState(true);
   const [availableLands, setAvailableLands] = useState<Land[]>([]);
   const [reservedLands, setReservedLands] = useState<Land[]>([]);
+  const [ownedProperties, setOwnedProperties] = useState<Land[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [propertyRequests, setPropertyRequests] = useState<PropertyRequest[]>([]);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [installments, setInstallments] = useState<Installment[]>([]);
+  const [resaleRequests, setResaleRequests] = useState<ResaleRequest[]>([]);
   const [stats, setStats] = useState({
     activeReservations: 0,
     totalPaid: 0,
@@ -30,6 +32,7 @@ export default function BuyerDashboard() {
     pendingRequests: 0,
     pendingAgreements: 0,
     upcomingInstallments: 0,
+    ownedProperties: 0,
   });
 
   const fetchData = async () => {
@@ -37,19 +40,21 @@ export default function BuyerDashboard() {
 
     try {
       setLoading(true);
-      const [landsData, paymentsData, reservationsData, requestsData, agreementsData, installmentsData] = await Promise.all([
+      const [landsData, paymentsData, reservationsData, requestsData, agreementsData, installmentsData, resaleRequestsData] = await Promise.all([
         landAPI.getAll().catch(() => []),
         paymentAPI.getByBuyer().catch(() => []),
         reservationAPI.getAll().catch(() => []),
         propertyRequestAPI.getMyRequests().catch(() => []),
         agreementAPI.getAll({ buyerId: user?.id }).catch(() => []),
         installmentAPI.getMyInstallments().catch(() => []),
+        resaleRequestAPI.getMyRequests().catch(() => []),
       ]);
 
-      // Set property requests, agreements, and installments
+      // Set property requests, agreements, installments, and resale requests
       setPropertyRequests(requestsData || []);
       setAgreements(agreementsData || []);
       setInstallments(installmentsData || []);
+      setResaleRequests(resaleRequestsData || []);
 
       // Filter available lands (status = 'available')
       const available = (landsData || []).filter((land) => land.status === 'available');
@@ -73,6 +78,12 @@ export default function BuyerDashboard() {
       );
       setReservedLands(reserved);
 
+      // Filter owned properties (status = 'sold' and owned by user)
+      const owned = (landsData || []).filter(
+        (land) => land.status === 'sold' && land.ownerId === user.id
+      );
+      setOwnedProperties(owned);
+
       // Calculate stats
       const verifiedPayments = buyerPayments.filter((p) => p.status === 'verified');
       const pendingPayments = buyerPayments.filter((p) => p.status === 'pending');
@@ -88,6 +99,7 @@ export default function BuyerDashboard() {
         pendingRequests: pendingRequestsCount,
         pendingAgreements: pendingAgreementsCount,
         upcomingInstallments: upcomingInstallmentsCount,
+        ownedProperties: owned.length,
       });
     } catch (error) {
       console.error('Failed to fetch buyer dashboard data:', error);
@@ -125,7 +137,7 @@ export default function BuyerDashboard() {
         <h1 className="text-3xl font-bold text-white">Buyer Dashboard</h1>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
             <div className="stat-title text-white">Active Reservations</div>
             <div className="stat-value text-primary">{stats.activeReservations}</div>
@@ -148,6 +160,12 @@ export default function BuyerDashboard() {
             <div className="stat-title text-white">Upcoming Payments</div>
             <div className="stat-value text-secondary">{stats.upcomingInstallments}</div>
             <div className="stat-desc text-white">Installments due</div>
+          </div>
+
+          <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
+            <div className="stat-title text-white">Owned Properties</div>
+            <div className="stat-value text-accent">{stats.ownedProperties}</div>
+            <div className="stat-desc text-white">Properties owned</div>
           </div>
 
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
@@ -431,6 +449,86 @@ export default function BuyerDashboard() {
                   );
                 })}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* My Owned Properties */}
+        {ownedProperties.length > 0 && (
+          <div className="card bg-base-100 shadow-xl border border-base-300">
+            <div className="card-body">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="card-title text-white">My Owned Properties</h2>
+                <Link to="/dashboard/buyer/resale-request/create" className="btn btn-primary btn-sm text-white">
+                  Request Resale
+                </Link>
+              </div>
+              <div className="space-y-4">
+                {ownedProperties.slice(0, 3).map((property) => {
+                  const resaleRequest = resaleRequests.find((r) => r.propertyId === property.id);
+                  return (
+                    <div
+                      key={property.id}
+                      className="p-4 bg-base-200 rounded-lg border border-base-300"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg text-white">{property.title}</h3>
+                          <p className="text-sm text-gray-300">{property.location}</p>
+                          <p className="text-sm mt-2 text-white">
+                            Size: {property.size} sq ft
+                          </p>
+                          <p className="text-lg font-bold text-primary mt-1">
+                            ₹{property.price.toLocaleString()}
+                          </p>
+                          {resaleRequest && (
+                            <div className="mt-2">
+                              <span className={`badge ${
+                                resaleRequest.status === 'pending' ? 'badge-warning' :
+                                resaleRequest.status === 'approved' ? 'badge-success' :
+                                resaleRequest.status === 'listed' ? 'badge-info' :
+                                resaleRequest.status === 'sold' ? 'badge-neutral' :
+                                'badge-error'
+                              }`}>
+                                Resale: {resaleRequest.status}
+                              </span>
+                              {resaleRequest.requestedPrice && (
+                                <span className="text-sm text-gray-400 ml-2">
+                                  Requested: ₹{resaleRequest.requestedPrice.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right ml-4">
+                          <div className="badge badge-success mb-2">Owned</div>
+                          <Link
+                            to={`/lands/${property.id}`}
+                            className="btn btn-ghost btn-sm block"
+                          >
+                            View Details
+                          </Link>
+                          {!resaleRequest && (
+                            <Link
+                              to={`/dashboard/buyer/resale-request/create?propertyId=${property.id}`}
+                              className="btn btn-primary btn-sm mt-2 block"
+                            >
+                              Request Resale
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {ownedProperties.length > 3 && (
+                <div className="text-center mt-4">
+                  <button className="btn btn-ghost btn-sm text-white">
+                    View All Properties ({ownedProperties.length})
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
