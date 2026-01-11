@@ -118,3 +118,25 @@ export interface Reservation {
   };
 }
 
+export interface Project {
+  id: string;
+  name: string;
+  location: string;
+  locationDetails?: string;
+  description?: string;
+  status?: string;
+  totalUnits?: number;
+  soldUnits?: number;
+  builderId: string;
+  createdAt: string;
+  updatedAt?: string;
+  approvalDocuments?: any[];
+  approvalDocumentsCID?: string;
+  approvalDocumentsIPFSHash?: string;
+  approvalDocumentsHash?: string;
+  lands?: Land[];
+  _count?: {
+    lands: number;
+  };
+}
+

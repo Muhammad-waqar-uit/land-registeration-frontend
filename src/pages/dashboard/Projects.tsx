@@ -9,24 +9,12 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline';
 import { projectAPI } from '../../services/api';
+import type { Project } from '../../types';
 
 const navItems = [
   { name: 'Dashboard', path: '/dashboard/builder', icon: HomeIcon },
   { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
 ];
-
-interface Project {
-  id: string;
-  name: string;
-  location: string;
-  description?: string;
-  totalUnits?: number;
-  builderId: string;
-  createdAt: string;
-  _count?: {
-    properties: number;
-  };
-}
 
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -80,10 +68,10 @@ export default function Projects() {
           </div>
           <Link
             to="/dashboard/builder/projects/create"
-            className="btn btn-primary gap-2"
+            className="btn btn-primary gap-2 flex items-center justify-center"
           >
-            <PlusIcon className="w-5 h-5" />
-            New Project
+            <PlusIcon className="w-5 h-5 flex-shrink-0" />
+            <span>New Project</span>
           </Link>
         </div>
 
@@ -97,7 +85,7 @@ export default function Projects() {
           <div className="stat bg-base-200 rounded-lg">
             <div className="stat-title text-white">Total Properties</div>
             <div className="stat-value text-secondary">
-              {projects.reduce((sum, p) => sum + (p._count?.properties || 0), 0)}
+              {projects.reduce((sum, p) => sum + (p._count?.lands || 0), 0)}
             </div>
             <div className="stat-desc text-gray-400">Listed properties</div>
           </div>
@@ -106,7 +94,7 @@ export default function Projects() {
             <div className="stat-value text-accent">
               {projects.length > 0
                 ? Math.round(
-                    projects.reduce((sum, p) => sum + (p._count?.properties || 0), 0) /
+                    projects.reduce((sum, p) => sum + (p._count?.lands || 0), 0) /
                       projects.length
                   )
                 : 0}
@@ -135,10 +123,12 @@ export default function Projects() {
             <p className="text-gray-400 mb-6">
               Create your first project to start listing properties
             </p>
-            <Link to="/dashboard/builder/projects/create" className="btn btn-primary">
-              <PlusIcon className="w-5 h-5" />
-              Create Project
-            </Link>
+            <div className="flex justify-center">
+              <Link to="/dashboard/builder/projects/create" className="btn btn-primary gap-2 inline-flex items-center justify-center w-auto">
+                <PlusIcon className="w-5 h-5 flex-shrink-0" />
+                <span>Create Project</span>
+              </Link>
+            </div>
           </div>
         ) : (
           /* Projects Grid */
@@ -151,7 +141,7 @@ export default function Projects() {
                     <div className="flex gap-2">
                       <Link
                         to={`/dashboard/builder/projects/${project.id}/edit`}
-                        className="btn btn-ghost btn-sm btn-square"
+                        className="btn btn-sm btn-square btn-primary"
                         title="Edit"
                       >
                         <PencilIcon className="w-4 h-4" />
@@ -159,7 +149,7 @@ export default function Projects() {
                       <button
                         onClick={() => handleDelete(project.id)}
                         disabled={deleting === project.id}
-                        className="btn btn-ghost btn-sm btn-square text-error"
+                        className="btn btn-primary btn-sm btn-square text-error"
                         title="Delete"
                       >
                         {deleting === project.id ? (
@@ -188,7 +178,7 @@ export default function Projects() {
                     <div className="flex items-center justify-between pt-2">
                       <div className="text-sm">
                         <span className="text-white font-semibold">
-                          {project._count?.properties || 0}
+                          {project._count?.lands || 0}
                         </span>
                         <span className="text-gray-400"> Properties</span>
                       </div>
