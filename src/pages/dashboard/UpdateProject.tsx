@@ -24,6 +24,7 @@ export default function UpdateProject() {
     locationDetails: '',
     description: '',
     totalUnits: '',
+    status: 'draft',
   });
   const [approvalDocs, setApprovalDocs] = useState<FileList | null>(null);
   const [existingDocs, setExistingDocs] = useState<any[]>([]);
@@ -60,6 +61,7 @@ export default function UpdateProject() {
         locationDetails: project.locationDetails || '',
         description: project.description || '',
         totalUnits: project.totalUnits ? String(project.totalUnits) : '',
+        status: project.status || 'draft',
       });
       
       // Store project metadata
@@ -115,30 +117,46 @@ export default function UpdateProject() {
       setIsLoading(true);
       setError(null);
 
-      const data = new FormData();
-      data.append('name', formData.name.trim());
-      data.append('location', formData.location.trim());
+      // Prepare JSON data
+      const projectData: any = {
+        name: formData.name.trim(),
+        location: formData.location.trim(),
+        status: 'draft',
+      };
       
       if (formData.locationDetails.trim()) {
-        data.append('locationDetails', formData.locationDetails.trim());
+        projectData.locationDetails = formData.locationDetails.trim();
       }
       
       if (formData.description.trim()) {
-        data.append('description', formData.description.trim());
+        projectData.description = formData.description.trim();
       }
       
       if (formData.totalUnits && parseInt(formData.totalUnits) > 0) {
-        data.append('totalUnits', formData.totalUnits);
+        projectData.totalUnits = parseInt(formData.totalUnits);
       }
+
+      // Debug: Log what we're sending
+      console.log('=== UPDATE PROJECT REQUEST ===' );
+      console.log('Project ID:', id);
+      console.log('JSON payload:', projectData);
+      console.log('- Files to upload:', approvalDocs ? approvalDocs.length : 0);
+      console.log('==============================');
+
+      // Update project with JSON
+      await projectAPI.update(id!, projectData);
+      console.log('✅ Project updated');
 
       // Upload new approval documents if provided
       if (approvalDocs && approvalDocs.length > 0) {
+        console.log('📤 Uploading', approvalDocs.length, 'new approval documents...');
+        const docsFormData = new FormData();
         for (let i = 0; i < approvalDocs.length; i++) {
-          data.append('approvalDocuments', approvalDocs[i]);
+          docsFormData.append('approvalDocuments', approvalDocs[i]);
         }
+        await projectAPI.uploadDocs(id!, docsFormData);
+        console.log('✅ Documents uploaded successfully');
       }
-
-      await projectAPI.update(id!, data);
       
       // Success - navigate to projects list
       navigate('/dashboard/builder/projects');
@@ -166,28 +184,6 @@ export default function UpdateProject() {
       setVerificationResult({
         verified: false,
         message: err.response?.data?.message || 'Verification failed',
-      });
-    } finally {
-      setVerifying(false);
-    }
-  };
-
-  const handleBlockchainVerify = async () => {
-    if (!projectMetadata.approvalDocumentsHash) {
-      alert('No document hash found to verify');
-      return;
-    }
-
-    try {
-      setVerifying(true);
-      setVerificationResult(null);
-      const result = await projectAPI.verifyBlockchain(id!);
-      setVerificationResult(result);
-    } catch (err: any) {
-      console.error('Blockchain verification failed:', err);
-      setVerificationResult({
-        verified: false,
-        message: err.response?.data?.message || 'Blockchain verification failed',
       });
     } finally {
       setVerifying(false);

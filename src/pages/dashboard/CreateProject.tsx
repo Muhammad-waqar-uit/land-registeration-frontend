@@ -21,6 +21,7 @@ export default function CreateProject() {
     locationDetails: '',
     description: '',
     totalUnits: '',
+    status: 'draft',
   });
   const [approvalDocs, setApprovalDocs] = useState<FileList | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -58,30 +59,45 @@ export default function CreateProject() {
       setIsLoading(true);
       setError(null);
 
-      const data = new FormData();
-      data.append('name', formData.name.trim());
-      data.append('location', formData.location.trim());
+      // Prepare JSON data
+      const projectData: any = {
+        name: formData.name.trim(),
+        location: formData.location.trim(),
+        status: 'draft',
+      };
       
       if (formData.locationDetails.trim()) {
-        data.append('locationDetails', formData.locationDetails.trim());
+        projectData.locationDetails = formData.locationDetails.trim();
       }
       
       if (formData.description.trim()) {
-        data.append('description', formData.description.trim());
+        projectData.description = formData.description.trim();
       }
       
       if (formData.totalUnits && parseInt(formData.totalUnits) > 0) {
-        data.append('totalUnits', formData.totalUnits);
+        projectData.totalUnits = parseInt(formData.totalUnits);
       }
+
+      // Debug: Log what we're sending
+      console.log('=== CREATE PROJECT REQUEST ===');
+      console.log('JSON payload:', projectData);
+      console.log('- Files to upload:', approvalDocs ? approvalDocs.length : 0);
+      console.log('==============================');
+
+      // Create project with JSON
+      const createdProject = await projectAPI.create(projectData);
+      console.log('✅ Project created:', createdProject.id);
 
       // Upload approval documents if provided
-      if (approvalDocs && approvalDocs.length > 0) {
+      if (approvalDocs && approvalDocs.length > 0 && createdProject.id) {
+        console.log('📤 Uploading', approvalDocs.length, 'approval documents...');
+        const docsFormData = new FormData();
         for (let i = 0; i < approvalDocs.length; i++) {
-          data.append('approvalDocuments', approvalDocs[i]);
+          docsFormData.append('approvalDocuments', approvalDocs[i]);
         }
+        await projectAPI.uploadDocs(createdProject.id, docsFormData);
+        console.log('✅ Documents uploaded successfully');
       }
-
-      await projectAPI.create(data);
       
       // Success - navigate to projects list
       navigate('/dashboard/builder/projects');

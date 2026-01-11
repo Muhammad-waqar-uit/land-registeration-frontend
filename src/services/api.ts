@@ -449,12 +449,8 @@ export const contactAPI = {
 
 // Project API
 export const projectAPI = {
-  create: async (data: FormData): Promise<any> => {
-    const response = await api.post('/projects', data, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+  create: async (data: any): Promise<any> => {
+    const response = await api.post('/projects', data);
     return response.data.data || response.data;
   },
 
@@ -468,12 +464,8 @@ export const projectAPI = {
     return response.data.data || response.data;
   },
 
-  update: async (id: string, data: FormData): Promise<any> => {
-    const response = await api.patch(`/projects/${id}`, data, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+  update: async (id: string, data: any): Promise<any> => {
+    const response = await api.patch(`/projects/${id}`, data);
     return response.data.data || response.data;
   },
 
