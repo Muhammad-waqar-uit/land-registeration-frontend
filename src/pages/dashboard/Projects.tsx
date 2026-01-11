@@ -7,6 +7,9 @@ import {
   PlusIcon,
   PencilIcon,
   TrashIcon,
+  CheckCircleIcon,
+  DocumentTextIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { projectAPI } from '../../services/api';
 import type { Project } from '../../types';
@@ -21,6 +24,11 @@ export default function Projects() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState<string | null>(null);
+  const [verificationResults, setVerificationResults] = useState<Record<string, {
+    verified: boolean;
+    message: string;
+  }>>({});
 
   useEffect(() => {
     loadProjects();
@@ -54,6 +62,37 @@ export default function Projects() {
       alert(err.response?.data?.message || 'Failed to delete project');
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const handleVerify = async (projectId: string, useBlockchain = false) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project?.approvalDocumentsHash) {
+      alert('No document hash found to verify');
+      return;
+    }
+
+    try {
+      setVerifying(projectId);
+      const result = useBlockchain 
+        ? await projectAPI.verifyBlockchain(projectId)
+        : await projectAPI.verify(projectId);
+      
+      setVerificationResults(prev => ({
+        ...prev,
+        [projectId]: result,
+      }));
+    } catch (err: any) {
+      console.error('Verification failed:', err);
+      setVerificationResults(prev => ({
+        ...prev,
+        [projectId]: {
+          verified: false,
+          message: err.response?.data?.message || 'Verification failed',
+        },
+      }));
+    } finally {
+      setVerifying(null);
     }
   };
 
@@ -137,7 +176,18 @@ export default function Projects() {
               <div key={project.id} className="card bg-base-200 shadow-xl">
                 <div className="card-body">
                   <div className="flex items-start justify-between">
-                    <FolderIcon className="w-8 h-8 text-primary" />
+                    <div className="flex items-center gap-2">
+                      <FolderIcon className="w-8 h-8 text-primary" />
+                      {/* Status Badge */}
+                      <span className={`badge badge-sm ${
+                        project.status === 'active' ? 'badge-success' :
+                        project.status === 'draft' ? 'badge-warning' :
+                        project.status === 'completed' ? 'badge-info' :
+                        'badge-ghost'
+                      }`}>
+                        {project.status || 'draft'}
+                      </span>
+                    </div>
                     <div className="flex gap-2">
                       <Link
                         to={`/dashboard/builder/projects/${project.id}/edit`}
@@ -169,10 +219,116 @@ export default function Projects() {
                       {project.location}
                     </p>
                     
+                    {project.locationDetails && (
+                      <p className="text-xs text-gray-500">
+                        {project.locationDetails}
+                      </p>
+                    )}
+                    
                     {project.description && (
                       <p className="text-sm text-gray-400 line-clamp-2">
                         {project.description}
                       </p>
+                    )}
+                    
+                    {/* Approval Documents */}
+                    {project.approvalDocuments && project.approvalDocuments.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-500 mb-1">Documents:</p>
+                        <div className="space-y-1">
+                          {project.approvalDocuments.slice(0, 2).map((doc: any, index: number) => (
+                            <div key={index} className="flex items-center gap-1 text-xs">
+                              <DocumentTextIcon className="w-3 h-3 text-blue-400 flex-shrink-0" />
+                              <a
+                                href={doc.url || doc.path}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:text-blue-300 truncate underline"
+                              >
+                                {doc.filename || doc.name || `Document ${index + 1}`}
+                              </a>
+                            </div>
+                          ))}
+                          {project.approvalDocuments.length > 2 && (
+                            <p className="text-xs text-gray-500">+{project.approvalDocuments.length - 2} more</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Document Hash */}
+                    {project.approvalDocumentsHash && (
+                      <div className="flex items-start gap-1 mt-2 p-2 bg-base-300 rounded">
+                        <DocumentTextIcon className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                            <p className="text-xs text-gray-500">Document Hash:</p>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleVerify(project.id);
+                              }}
+                              disabled={verifying === project.id}
+                              className="btn btn-xs btn-success gap-1 inline-flex items-center justify-center"
+                              title="Verify document"
+                            >
+                              {verifying === project.id ? (
+                                <span className="loading loading-spinner loading-xs"></span>
+                              ) : (
+                                <ShieldCheckIcon className="w-3 h-3 flex-shrink-0" />
+                              )}
+                              <span>Verify</span>
+                            </button>
+                          </div>
+                          <p className="text-xs text-success font-mono break-all" title={project.approvalDocumentsHash}>
+                            {project.approvalDocumentsHash}
+                          </p>
+                          
+                          {/* IPFS Hash */}
+                          {project.approvalDocumentsIPFSHash && (
+                            <div className="mt-2">
+                              <p className="text-xs text-gray-500 mb-1">IPFS:</p>
+                              {(() => {
+                                try {
+                                  const ipfsData = JSON.parse(project.approvalDocumentsIPFSHash);
+                                  return (
+                                    <div className="space-y-1">
+                                      <p className="text-xs text-blue-400 font-mono break-all">
+                                        {ipfsData.hash}
+                                      </p>
+                                      {ipfsData.gateway && (
+                                        <a
+                                          href={`${ipfsData.gateway}${ipfsData.hash}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-xs text-blue-400 hover:text-blue-300 underline inline-block"
+                                        >
+                                          View on IPFS →
+                                        </a>
+                                      )}
+                                    </div>
+                                  );
+                                } catch {
+                                  return <p className="text-xs text-blue-400 font-mono break-all">{project.approvalDocumentsIPFSHash}</p>;
+                                }
+                              })()}
+                            </div>
+                          )}
+                          
+                          {/* Verification Result */}
+                          {verificationResults[project.id] && (
+                            <div className={`mt-2 p-1.5 rounded text-xs flex items-center gap-1 ${
+                              verificationResults[project.id].verified
+                                ? 'bg-green-900/20 text-green-300'
+                                : 'bg-red-900/20 text-red-300'
+                            }`}>
+                              <ShieldCheckIcon className="w-3 h-3 flex-shrink-0" />
+                              {verificationResults[project.id].message}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     )}
                     
                     <div className="flex items-center justify-between pt-2">
@@ -186,9 +342,9 @@ export default function Projects() {
                       {project.totalUnits && (
                         <div className="text-sm">
                           <span className="text-white font-semibold">
-                            {project.totalUnits}
+                            {project.soldUnits || 0}/{project.totalUnits}
                           </span>
-                          <span className="text-gray-400"> Total Units</span>
+                          <span className="text-gray-400"> Sold</span>
                         </div>
                       )}
                     </div>

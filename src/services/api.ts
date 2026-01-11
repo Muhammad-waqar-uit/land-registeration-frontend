@@ -494,6 +494,28 @@ export const projectAPI = {
     });
     return response.data.data || response.data;
   },
+
+  verify: async (id: string): Promise<{
+    verified: boolean;
+    message: string;
+    calculatedHash?: string;
+    storedHash?: string;
+    ipfsHash?: string;
+  }> => {
+    const response = await api.get(`/projects/${id}/verify`);
+    return response.data.data || response.data;
+  },
+
+  verifyBlockchain: async (id: string): Promise<{
+    verified: boolean;
+    message: string;
+    databaseHash?: string;
+    blockchainHash?: string;
+    error?: string | null;
+  }> => {
+    const response = await api.post(`/projects/${id}/verify-blockchain`);
+    return response.data.data || response.data;
+  },
 };
 
 export default api;

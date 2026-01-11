@@ -6,6 +6,7 @@ import {
   FolderIcon,
   ArrowLeftIcon,
   DocumentIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { projectAPI } from '../../services/api';
 
@@ -26,9 +27,21 @@ export default function UpdateProject() {
   });
   const [approvalDocs, setApprovalDocs] = useState<FileList | null>(null);
   const [existingDocs, setExistingDocs] = useState<any[]>([]);
+  const [projectMetadata, setProjectMetadata] = useState<{
+    status?: string;
+    approvalDocumentsHash?: string;
+    approvalDocumentsIPFSHash?: string;
+    approvalDocumentsCID?: string;
+    soldUnits?: number;
+  }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<{
+    verified: boolean;
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -47,6 +60,15 @@ export default function UpdateProject() {
         locationDetails: project.locationDetails || '',
         description: project.description || '',
         totalUnits: project.totalUnits ? String(project.totalUnits) : '',
+      });
+      
+      // Store project metadata
+      setProjectMetadata({
+        status: project.status,
+        approvalDocumentsHash: project.approvalDocumentsHash,
+        approvalDocumentsIPFSHash: project.approvalDocumentsIPFSHash,
+        approvalDocumentsCID: project.approvalDocumentsCID,
+        soldUnits: project.soldUnits,
       });
       
       // Store existing approval documents
@@ -128,6 +150,50 @@ export default function UpdateProject() {
     }
   };
 
+  const handleVerify = async () => {
+    if (!projectMetadata.approvalDocumentsHash) {
+      alert('No document hash found to verify');
+      return;
+    }
+
+    try {
+      setVerifying(true);
+      setVerificationResult(null);
+      const result = await projectAPI.verify(id!);
+      setVerificationResult(result);
+    } catch (err: any) {
+      console.error('Verification failed:', err);
+      setVerificationResult({
+        verified: false,
+        message: err.response?.data?.message || 'Verification failed',
+      });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleBlockchainVerify = async () => {
+    if (!projectMetadata.approvalDocumentsHash) {
+      alert('No document hash found to verify');
+      return;
+    }
+
+    try {
+      setVerifying(true);
+      setVerificationResult(null);
+      const result = await projectAPI.verifyBlockchain(id!);
+      setVerificationResult(result);
+    } catch (err: any) {
+      console.error('Blockchain verification failed:', err);
+      setVerificationResult({
+        verified: false,
+        message: err.response?.data?.message || 'Blockchain verification failed',
+      });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout navItems={navItems}>
@@ -158,6 +224,123 @@ export default function UpdateProject() {
         {error && (
           <div className="alert alert-error mb-6">
             <span className="text-black">{error}</span>
+          </div>
+        )}
+
+        {/* Project Metadata */}
+        {(projectMetadata.status || projectMetadata.approvalDocumentsHash) && (
+          <div className="card bg-blue-950/50 shadow-xl border border-blue-800 mb-6">
+            <div className="card-body p-4">
+              <h3 className="text-lg font-semibold text-blue-100 mb-3">Project Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Status */}
+                {projectMetadata.status && (
+                  <div>
+                    <p className="text-xs text-blue-300 mb-1">Status</p>
+                    <span className={`badge ${
+                      projectMetadata.status === 'active' ? 'badge-success' :
+                      projectMetadata.status === 'draft' ? 'badge-warning' :
+                      projectMetadata.status === 'completed' ? 'badge-info' :
+                      'badge-ghost'
+                    }`}>
+                      {projectMetadata.status}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Sold Units */}
+                {formData.totalUnits && (
+                  <div>
+                    <p className="text-xs text-blue-300 mb-1">Sales Progress</p>
+                    <p className="text-sm text-blue-50">
+                      <span className="font-semibold">{projectMetadata.soldUnits || 0}</span> / {formData.totalUnits} units sold
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Document Hash */}
+              {projectMetadata.approvalDocumentsHash && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                    <p className="text-xs text-blue-300">Document Hash (SHA-256)</p>
+                    <button
+                      type="button"
+                      onClick={handleVerify}
+                      disabled={verifying}
+                      className="btn btn-xs btn-success gap-1 inline-flex items-center justify-center"
+                      title="Verify document integrity"
+                    >
+                      {verifying ? (
+                        <span className="loading loading-spinner loading-xs"></span>
+                      ) : (
+                        <ShieldCheckIcon className="w-3 h-3 flex-shrink-0" />
+                      )}
+                      <span>Verify</span>
+                    </button>
+                  </div>
+                  <div className="bg-blue-900/40 p-2 rounded border border-blue-700">
+                    <p className="text-xs text-green-400 font-mono break-all">
+                      {projectMetadata.approvalDocumentsHash}
+                    </p>
+                  </div>
+                  
+                  {/* Verification Result */}
+                  {verificationResult && (
+                    <div className={`mt-2 p-2 rounded border ${
+                      verificationResult.verified
+                        ? 'bg-green-900/20 border-green-700'
+                        : 'bg-red-900/20 border-red-700'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        <ShieldCheckIcon className={`w-4 h-4 ${
+                          verificationResult.verified ? 'text-green-400' : 'text-red-400'
+                        }`} />
+                        <p className={`text-xs font-medium ${
+                          verificationResult.verified ? 'text-green-300' : 'text-red-300'
+                        }`}>
+                          {verificationResult.message}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* IPFS Hash */}
+              {projectMetadata.approvalDocumentsIPFSHash && (
+                <div className="mt-3">
+                  <p className="text-xs text-blue-300 mb-1">IPFS Hash</p>
+                  <div className="bg-blue-900/40 p-2 rounded border border-blue-700">
+                    {(() => {
+                      try {
+                        const ipfsData = JSON.parse(projectMetadata.approvalDocumentsIPFSHash);
+                        return (
+                          <div className="space-y-1">
+                            <p className="text-xs text-blue-50">
+                              <span className="text-blue-300">Hash:</span>{' '}
+                              <span className="font-mono">{ipfsData.hash}</span>
+                            </p>
+                            {ipfsData.gateway && (
+                              <a
+                                href={`${ipfsData.gateway}${ipfsData.hash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-400 hover:text-blue-300 underline inline-block"
+                              >
+                                View on IPFS →
+                              </a>
+                            )}
+                          </div>
+                        );
+                      } catch {
+                        return <p className="text-xs text-blue-50 font-mono break-all">{projectMetadata.approvalDocumentsIPFSHash}</p>;
+                      }
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
