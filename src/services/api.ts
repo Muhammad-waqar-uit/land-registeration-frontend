@@ -385,7 +385,7 @@ export const paymentAPI = {
   getPending: async (): Promise<Payment[]> => {
     const response = await api.get('/payments/pending');
     // Backend returns: Payment[] array directly (includes land and buyer objects)
-    // Note: This endpoint is for Seller role - returns pending payments for seller's lands
+    // Note: This endpoint is for Builder role - returns pending payments for builder's lands
     return response.data.data || response.data;
   },
 };

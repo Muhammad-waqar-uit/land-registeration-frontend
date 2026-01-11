@@ -18,25 +18,25 @@ export const canUpdate = (
 ): boolean => {
   if (!user) return false;
   
-  // Only ADMIN and SELLER can update
-  if (user.role !== 'admin' && user.role !== 'seller') return false;
+  // Only ADMIN and BUILDER can update
+  if (user.role !== 'admin' && user.role !== 'builder') return false;
   
   // Admin can update any land
   if (user.role === 'admin') return true;
   
-  // Seller must be the owner
+  // Builder must be the owner
   if (land.ownerId !== user.id) return false;
   
-  // For sellers: land must be available
+  // For builders: land must be available
   if (land.status !== 'available') return false;
   
-  // For sellers: check for active reservations
+  // For builders: check for active reservations
   const activeReservations = reservations.filter(
     (r) => r.landId === land.id && r.status === 'active'
   );
   if (activeReservations.length > 0) return false;
   
-  // For sellers: check for pending payments
+  // For builders: check for pending payments
   const pendingPayments = payments.filter(
     (p) => p.landId === land.id && p.status === 'pending'
   );
@@ -63,23 +63,23 @@ export const canDelete = (
 ): boolean => {
   if (!user) return false;
   
-  // Only ADMIN and SELLER can delete
-  if (user.role !== 'admin' && user.role !== 'seller') return false;
+  // Only ADMIN and BUILDER can delete
+  if (user.role !== 'admin' && user.role !== 'builder') return false;
   
   // Admin can delete any land
   if (user.role === 'admin') return true;
   
-  // Seller must be the owner
+  // Builder must be the owner
   if (land.ownerId !== user.id) return false;
   
-  // For sellers: land must be available
+  // For builders: land must be available
   if (land.status !== 'available') return false;
   
-  // For sellers: check for any reservations
+  // For builders: check for any reservations
   const landReservations = reservations.filter((r) => r.landId === land.id);
   if (landReservations.length > 0) return false;
   
-  // For sellers: check for any payments
+  // For builders: check for any payments
   const landPayments = payments.filter((p) => p.landId === land.id);
   if (landPayments.length > 0) return false;
   
@@ -97,8 +97,8 @@ export const getUpdateErrorMessage = (
 ): string | null => {
   if (!user) return 'You must be logged in to update lands.';
   
-  if (user.role !== 'admin' && user.role !== 'seller') {
-    return 'Only administrators and sellers can update lands.';
+  if (user.role !== 'admin' && user.role !== 'builder') {
+    return 'Only administrators and builders can update lands.';
   }
   
   if (user.role === 'admin') return null; // Admin can always update
@@ -139,8 +139,8 @@ export const getDeleteErrorMessage = (
 ): string | null => {
   if (!user) return 'You must be logged in to delete lands.';
   
-  if (user.role !== 'admin' && user.role !== 'seller') {
-    return 'Only administrators and sellers can delete lands.';
+  if (user.role !== 'admin' && user.role !== 'builder') {
+    return 'Only administrators and builders can delete lands.';
   }
   
   if (user.role === 'admin') return null; // Admin can always delete

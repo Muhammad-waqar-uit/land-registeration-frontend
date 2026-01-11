@@ -28,8 +28,8 @@ export default function BuilderDashboard() {
     try {
       setLoading(true);
       setError(null);
-      // Note: According to backend guide, /payments/pending is for Seller role
-      // Builder should use the same endpoint or a different one - using pending for now
+      // Note: According to backend guide, /payments/pending is for Builder role
+      // to get pending payments for builder's lands
       const payments = await paymentAPI.getPending();
       setPendingPayments(payments);
     } catch (err: any) {

@@ -63,11 +63,19 @@ function App() {
           }
         />
 
-        {/* Protected Routes - Seller */}
+        {/* Protected Routes - Builder */}
+        <Route
+          path="/dashboard/builder"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <BuilderDashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/dashboard/seller"
           element={
-            <ProtectedRoute allowedRoles={['seller']}>
+            <ProtectedRoute allowedRoles={['builder']}>
               <SellerDashboard />
             </ProtectedRoute>
           }
@@ -75,7 +83,7 @@ function App() {
         <Route
           path="/dashboard/seller/lands"
           element={
-            <ProtectedRoute allowedRoles={['seller']}>
+            <ProtectedRoute allowedRoles={['builder']}>
               <SellerMyLands />
             </ProtectedRoute>
           }
@@ -83,7 +91,7 @@ function App() {
         <Route
           path="/dashboard/seller/register-land"
           element={
-            <ProtectedRoute allowedRoles={['seller']}>
+            <ProtectedRoute allowedRoles={['builder']}>
               <RegisterLand />
             </ProtectedRoute>
           }
@@ -91,28 +99,18 @@ function App() {
         <Route
           path="/dashboard/seller/update-land/:id"
           element={
-            <ProtectedRoute allowedRoles={['seller', 'admin']}>
+            <ProtectedRoute allowedRoles={['builder', 'admin']}>
               <UpdateLand />
             </ProtectedRoute>
           }
         />
 
-        {/* Protected Routes - Buyer */}
+        {/* Protected Routes - User (Buyer) */}
         <Route
           path="/dashboard/buyer"
           element={
-            <ProtectedRoute allowedRoles={['buyer']}>
+            <ProtectedRoute allowedRoles={['user']}>
               <BuyerDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Protected Routes - Builder */}
-        <Route
-          path="/dashboard/builder"
-          element={
-            <ProtectedRoute allowedRoles={['builder']}>
-              <BuilderDashboard />
             </ProtectedRoute>
           }
         />

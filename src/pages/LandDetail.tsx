@@ -128,8 +128,8 @@ export default function LandDetail() {
       // Redirect to appropriate dashboard (data will refresh automatically on navigation)
       if (user.role === 'admin') {
         navigate('/dashboard/admin');
-      } else if (user.role === 'seller') {
-        navigate('/dashboard/seller');
+      } else if (user.role === 'builder') {
+        navigate('/dashboard/builder');
       } else {
         navigate('/dashboard');
       }
@@ -213,8 +213,8 @@ export default function LandDetail() {
       return;
     }
 
-    if (user.role !== 'buyer') {
-      alert('Only buyers can reserve lands');
+    if (user.role !== 'user') {
+      alert('Only users can reserve lands');
       return;
     }
 
@@ -357,7 +357,7 @@ export default function LandDetail() {
               </div>
 
               <div className="card-actions mt-4 flex gap-2 flex-wrap">
-                {user?.role === 'buyer' && land.status === 'available' && (
+                {user?.role === 'user' && land.status === 'available' && (
                   <>
                     {reservations.some((r) => r.buyerId === user.id && r.status === 'active') ? (
                       <div className="alert alert-info">

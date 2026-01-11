@@ -78,9 +78,18 @@ export default function DashboardLayout({ children, navItems = [] }: DashboardLa
         </div>
 
         {/* Right Side Icons - Aligned in Row */}
-        <div className="flex-none flex items-center gap-2">
-          {/* Notification */}
-          
+        <div className="flex-none flex items-center gap-3">
+          {/* Wallet Address Display */}
+          {user?.walletAddress && (
+            <div className="hidden md:flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+              <span className="text-white text-sm font-mono">
+                {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
+              </span>
+            </div>
+          )}
 
           {/* User Menu */}
           <div className="dropdown dropdown-end">
@@ -97,6 +106,14 @@ export default function DashboardLayout({ children, navItems = [] }: DashboardLa
         tabIndex={0}
         className="menu menu-sm dropdown-content mt-3 z-[50] p-2 shadow bg-base-100 rounded-box w-52"
       >
+    <li className="menu-title">
+      <span className="text-xs">{user?.name}</span>
+      {user?.walletAddress && (
+        <span className="text-xs font-mono text-base-content/60">
+          {user.walletAddress.slice(0, 8)}...{user.walletAddress.slice(-6)}
+        </span>
+      )}
+    </li>
     <li>
           <Link to="/profile" className="text-base-content flex justify-between">
             Profile

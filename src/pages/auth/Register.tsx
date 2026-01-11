@@ -12,13 +12,26 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'buyer' as UserRole,
+    role: 'user' as UserRole,
+    cnic: '',
+    fatherName: '',
+    phoneNumber: '',
+    // Builder-specific fields
+    companyName: '',
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
   const dispatch = useAppDispatch();
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  interface AuthState {
+    isAuthenticated: boolean;
+    user: {
+      role: UserRole;
+      [key: string]: any;
+    } | null;
+  }
+
+  const { isAuthenticated, user } = useAppSelector((state: { auth: AuthState }) => state.auth);
   const navigate = useNavigate();
 
   // Redirect if already logged in
@@ -26,19 +39,43 @@ export default function Register() {
     if (isAuthenticated && user) {
       const roleRoutes: Record<UserRole, string> = {
         admin: '/dashboard/admin',
-        seller: '/dashboard/seller',
-        buyer: '/dashboard/buyer',
+        user: '/dashboard/buyer',
         builder: '/dashboard/builder',
       };
-      navigate(roleRoutes[user.role] || '/dashboard', { replace: true });
+      navigate(roleRoutes[user.role as UserRole] || '/dashboard', { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    
+    // Format CNIC as user types
+    if (name === 'cnic') {
+      // Remove all non-digit characters
+      const digitsOnly = value.replace(/\D/g, '');
+      
+      // Limit to 13 digits
+      const limitedDigits = digitsOnly.slice(0, 13);
+      
+      // Format as 42201-3541356-7
+      let formatted = limitedDigits;
+      if (limitedDigits.length > 5) {
+        formatted = limitedDigits.slice(0, 5) + '-' + limitedDigits.slice(5);
+      }
+      if (limitedDigits.length > 12) {
+        formatted = limitedDigits.slice(0, 5) + '-' + limitedDigits.slice(5, 12) + '-' + limitedDigits.slice(12);
+      }
+      
+      setFormData({
+        ...formData,
+        [name]: formatted,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -55,9 +92,40 @@ export default function Register() {
       return;
     }
 
+    // Validate builder-specific fields
+    if (formData.role === 'builder') {
+      if (!formData.companyName) {
+        setError('Company Name is required for builders');
+        return;
+      }
+    }
+
+    // Validate CNIC format if provided
+    if (formData.cnic) {
+      const cnicDigits = formData.cnic.replace(/\D/g, '');
+      if (cnicDigits.length !== 13) {
+        setError('CNIC must be exactly 13 digits');
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
-      const { confirmPassword, ...registerData } = formData;
+      const { confirmPassword, ...data } = formData;
+      // Remove empty optional fields
+      const registerData: any = {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        role: data.role,
+      };
+      if (data.cnic) registerData.cnic = data.cnic;
+      if (data.fatherName) registerData.fatherName = data.fatherName;
+      if (data.phoneNumber) registerData.phoneNumber = data.phoneNumber;
+      if (data.role === 'builder') {
+        registerData.companyName = data.companyName;
+        registerData.licenseNumber = 'AUTO-GENERATED-LICENSE';
+      }
       const result = await dispatch(registerUser(registerData));
       
       if (registerUser.fulfilled.match(result)) {
@@ -65,11 +133,10 @@ export default function Register() {
         // Redirect based on role
         const roleRoutes: Record<UserRole, string> = {
           admin: '/dashboard/admin',
-          seller: '/dashboard/seller',
-          buyer: '/dashboard/buyer',
+          user: '/dashboard/buyer',
           builder: '/dashboard/builder',
         };
-        navigate(roleRoutes[user.role] || '/dashboard');
+        navigate(roleRoutes[user.role as UserRole] || '/dashboard');
       } else {
         setError(result.payload as string || 'Registration failed');
       }
@@ -167,12 +234,81 @@ export default function Register() {
                 cursor: 'pointer'
               }}
             >
-              <option value="buyer">Buyer</option>
-              <option value="seller">Seller</option>
+              <option value="user">User (Buyer)</option>
               <option value="builder">Builder</option>
-              <option value="admin">Admin</option>
             </select>
           </div>
+
+          {/* Optional User Fields */}
+          <div>
+            <label className="block mb-2 font-medium text-gray-700">
+              CNIC (Optional)
+            </label>
+            <input
+              type="text"
+              name="cnic"
+              placeholder="40000-000000-0"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              value={formData.cnic}
+              onChange={handleChange}
+              maxLength={15}
+              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+            />
+            {formData.cnic && formData.cnic.replace(/\D/g, '').length > 0 && formData.cnic.replace(/\D/g, '').length !== 13 && (
+              <p className="text-xs text-red-500 mt-1">CNIC must be 13 digits ({formData.cnic.replace(/\D/g, '').length}/13)</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block mb-2 font-medium text-gray-700">
+              Father's Name (Optional)
+            </label>
+            <input
+              type="text"
+              name="fatherName"
+              placeholder="Enter father's name"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              value={formData.fatherName}
+              onChange={handleChange}
+              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2 font-medium text-gray-700">
+              Phone Number (Optional)
+            </label>
+            <input
+              type="tel"
+              name="phoneNumber"
+              placeholder="+923001234567"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+            />
+          </div>
+
+          {/* Builder-specific Fields */}
+          {formData.role === 'builder' && (
+            <>
+              <div>
+                <label className="block mb-2 font-medium text-gray-700">
+                  Company Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="companyName"
+                  placeholder="ABC Construction Ltd."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  value={formData.companyName}
+                  onChange={handleChange}
+                  required
+                  style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+                />
+              </div>
+            </>
+          )}
 
           <div>
             <label className="block mb-2 font-medium text-gray-700">

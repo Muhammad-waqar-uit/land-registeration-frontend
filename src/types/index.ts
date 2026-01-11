@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'seller' | 'buyer' | 'builder';
+export type UserRole = 'admin' | 'user' | 'builder';
 
 export interface User {
   id: string;
@@ -28,6 +28,12 @@ export interface RegisterData {
   email: string;
   password: string;
   role: UserRole;
+  cnic?: string;
+  fatherName?: string;
+  phoneNumber?: string;
+  // Builder-specific fields (required if role is "builder")
+  companyName?: string;
+  licenseNumber?: string;
 }
 
 export interface Land {

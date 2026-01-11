@@ -20,8 +20,7 @@ export default function Login() {
     if (isAuthenticated && user) {
       const roleRoutes: Record<UserRole, string> = {
         admin: '/dashboard/admin',
-        seller: '/dashboard/seller',
-        buyer: '/dashboard/buyer',
+        user: '/dashboard/buyer',
         builder: '/dashboard/builder',
       };
       navigate(roleRoutes[user.role] || '/dashboard', { replace: true });
@@ -40,8 +39,7 @@ export default function Login() {
         // Redirect based on role
         const roleRoutes: Record<UserRole, string> = {
           admin: '/dashboard/admin',
-          seller: '/dashboard/seller',
-          buyer: '/dashboard/buyer',
+          user: '/dashboard/buyer',
           builder: '/dashboard/builder',
         };
         navigate(roleRoutes[user.role] || '/dashboard');
