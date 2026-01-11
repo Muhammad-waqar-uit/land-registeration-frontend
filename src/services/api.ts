@@ -272,6 +272,32 @@ export const authAPI = {
   },
 };
 
+// Builder API
+export const builderAPI = {
+  getAll: async (verifiedOnly?: boolean): Promise<User[]> => {
+    const params = verifiedOnly ? { verifiedOnly: true } : {};
+    const response = await api.get('/builders', { params });
+    // Backend returns array directly according to API docs
+    return Array.isArray(response.data) ? response.data : (response.data.data || response.data);
+  },
+
+  getById: async (id: string): Promise<User> => {
+    const response = await api.get(`/builders/${id}`);
+    return response.data.data || response.data;
+  },
+
+  getMe: async (): Promise<User> => {
+    const response = await api.get('/builders/me');
+    return response.data.data || response.data;
+  },
+
+  verify: async (id: string, remarks?: string): Promise<User> => {
+    const response = await api.post(`/auth/builders/${id}/verify`, remarks ? { remarks } : {});
+    // Backend returns object directly according to API docs
+    return response.data;
+  },
+};
+
 // Land API
 export interface LandQueryParams {
   status?: 'available' | 'locked' | 'sold';
@@ -417,6 +443,55 @@ export const contactAPI = {
   sendMessage: async (data: { name: string; email: string; message: string }): Promise<{ message: string }> => {
     const response = await api.post('/contact', data);
     // Backend returns: { message: string }
+    return response.data.data || response.data;
+  },
+};
+
+// Project API
+export const projectAPI = {
+  create: async (data: FormData): Promise<any> => {
+    const response = await api.post('/projects', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data || response.data;
+  },
+
+  getAll: async (): Promise<any[]> => {
+    const response = await api.get('/projects');
+    return response.data.data || response.data;
+  },
+
+  getById: async (id: string): Promise<any> => {
+    const response = await api.get(`/projects/${id}`);
+    return response.data.data || response.data;
+  },
+
+  update: async (id: string, data: FormData): Promise<any> => {
+    const response = await api.patch(`/projects/${id}`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.data || response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/projects/${id}`);
+  },
+
+  getProperties: async (id: string): Promise<any[]> => {
+    const response = await api.get(`/projects/${id}/properties`);
+    return response.data.data || response.data;
+  },
+
+  uploadDocs: async (id: string, formData: FormData): Promise<any> => {
+    const response = await api.post(`/projects/${id}/approval-documents`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data.data || response.data;
   },
 };
