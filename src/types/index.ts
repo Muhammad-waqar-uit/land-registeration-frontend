@@ -6,6 +6,12 @@ export interface User {
   email: string;
   role: UserRole;
   walletAddress: string | null; // Backend returns null if not set, string if set
+  // Builder-specific fields
+  isBuilderVerified?: boolean;
+  builderVerifiedAt?: string | null;
+  companyName?: string;
+  licenseNumber?: string;
+  verifiedBy?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

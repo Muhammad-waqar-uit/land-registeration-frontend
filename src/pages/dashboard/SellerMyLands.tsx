@@ -170,7 +170,7 @@ export default function SellerMyLands() {
     <DashboardLayout navItems={navItems}>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-base-content">My Lands</h1>
+          <h1 className="text-3xl font-bold text-white">My Lands</h1>
           <Link to="/dashboard/seller/register-land" className="btn btn-primary">
             Register New Land
           </Link>
@@ -226,9 +226,9 @@ export default function SellerMyLands() {
         {/* Error Message */}
         {deleteError && (
           <div className="alert alert-error">
-            <span className="text-white">{deleteError}</span>
+            <span className="text-black">{deleteError}</span>
             <button
-              className="btn btn-sm btn-ghost text-white"
+              className="btn btn-sm btn-ghost text-black"
               onClick={() => setDeleteError(null)}
             >
               ✕
@@ -237,7 +237,7 @@ export default function SellerMyLands() {
         )}
 
         {/* Results Count */}
-        <div className="text-sm text-base-content/70 text-white">
+        <div className="text-sm text-white">
           Showing {filteredLands.length} of {myLands.length} lands
         </div>
 
@@ -247,13 +247,13 @@ export default function SellerMyLands() {
             <div className="card-body text-center py-12">
               {myLands.length === 0 ? (
                 <>
-                  <p className="text-base-content/70 text-lg">No lands registered yet.</p>
+                  <p className="text-white text-lg">No lands registered yet.</p>
                   <Link to="/dashboard/seller/register-land" className="btn btn-primary btn-sm mt-4">
                     Register Your First Land
                   </Link>
                 </>
               ) : (
-                <p className="text-base-content/70 text-lg">No lands match your search criteria.</p>
+                <p className="text-white text-lg">No lands match your search criteria.</p>
               )}
             </div>
           </div>
@@ -268,45 +268,45 @@ export default function SellerMyLands() {
                 <div key={land.id} className="card bg-base-100 shadow-xl border border-base-300 hover:shadow-2xl transition-shadow">
                   <div className="card-body">
                     <div className="flex justify-between items-start mb-2">
-                      <h2 className="card-title text-base-content">{land.title}</h2>
+                      <h2 className="card-title text-white">{land.title}</h2>
                       <span className={`badge ${getStatusBadgeClass(land.status)}`}>
                         {land.status}
                       </span>
                     </div>
                     
-                    <p className="text-base-content/70 text-sm mb-4 text-white">
+                    <p className="text-white text-sm mb-4">
                       <span className="font-semibold">Location:</span> {land.location}
                     </p>
 
                     <div className="space-y-2 mb-4">
                       <div className="flex text-sm text-white">
-                        <span className="text-base-content/70 mr-2">Size:</span>
-                        <span className="text-base-content font-semibold">{land.size} sq ft</span>
+                        <span className="text-white mr-2">Size:</span>
+                        <span className="text-white font-semibold">{land.size} sq ft</span>
                       </div>
                       <div className="flex  text-sm text-white">
-                        <span className="text-base-content/70 mr-2">Price:</span>
-                        <span className="text-base-content font-semibold text-primary">
+                        <span className="text-white mr-2">Price:</span>
+                        <span className="text-white font-semibold text-primary">
                           ₹{land.price.toLocaleString()}
                         </span>
                       </div>
                       {land.status === 'locked' && paymentInfo.totalPayments > 0 && (
                         <>
                           <div className="flex text-sm">
-                            <span className="text-base-content/70 mr-2">Payments Received:</span>
-                            <span className="text-base-content font-semibold text-success">
+                            <span className="text-white mr-2">Payments Received:</span>
+                            <span className="text-white font-semibold text-success">
                               {paymentInfo.verifiedPayments}
                             </span>
                           </div>
                           <div className="flex justify-between text-sm text-white">
-                            <span className="text-base-content/70">Total Paid:</span>
-                            <span className="text-base-content font-semibold text-success">
+                            <span className="text-white">Total Paid:</span>
+                            <span className="text-white font-semibold text-success">
                               ₹{paymentInfo.totalPaid.toLocaleString()}
                             </span>
                           </div>
                           {landReservations.length > 0 && (
                             <div className="flex justify-between text-sm text-white">
-                              <span className="text-base-content/70">Active Reservations:</span>
-                              <span className="text-base-content font-semibold">
+                              <span className="text-white">Active Reservations:</span>
+                              <span className="text-white font-semibold">
                                 {landReservations.length}
                               </span>
                             </div>
@@ -316,7 +316,7 @@ export default function SellerMyLands() {
                     </div>
 
                     {land.createdAt && (
-                      <p className="text-xs text-base-content/50 mb-4 text-white">
+                      <p className="text-xs text-white mb-4">
                         Registered: {new Date(land.createdAt).toLocaleDateString()}
                       </p>
                     )}
@@ -364,15 +364,15 @@ export default function SellerMyLands() {
               <div className="overflow-x-auto">
                 <table className="table">
                   <thead>
-                    <tr>
-                      <th className="text-base-content">Title</th>
-                      <th className="text-base-content">Location</th>
-                      <th className="text-base-content">Size</th>
-                      <th className="text-base-content">Price</th>
-                      <th className="text-base-content">Status</th>
-                      <th className="text-base-content">Payment Info</th>
-                      <th className="text-base-content">Created</th>
-                      <th className="text-base-content">Actions</th>
+                    <tr className="text-black">
+                      <th className="text-black">Title</th>
+                      <th className="text-black">Location</th>
+                      <th className="text-black">Size</th>
+                      <th className="text-black">Price</th>
+                      <th className="text-black">Status</th>
+                      <th className="text-black">Payment Info</th>
+                      <th className="text-black">Created</th>
+                      <th className="text-black">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -380,29 +380,29 @@ export default function SellerMyLands() {
                       const paymentInfo = getLandPaymentInfo(land.id);
 
                       return (
-                        <tr key={land.id} className="hover">
-                          <td className="text-base-content font-semibold">{land.title}</td>
-                          <td className="text-base-content">{land.location}</td>
-                          <td className="text-base-content">{land.size} sq ft</td>
-                          <td className="text-base-content">₹{land.price.toLocaleString()}</td>
+                        <tr key={land.id} className="hover text-black">
+                          <td className="text-black font-semibold">{land.title}</td>
+                          <td className="text-black">{land.location}</td>
+                          <td className="text-black">{land.size} sq ft</td>
+                          <td className="text-black">₹{land.price.toLocaleString()}</td>
                           <td>
                             <span className={`badge ${getStatusBadgeClass(land.status)}`}>
                               {land.status}
                             </span>
                           </td>
-                          <td className="text-base-content text-sm">
+                          <td className="text-black text-sm">
                             {land.status === 'locked' && paymentInfo.totalPayments > 0 ? (
                               <div>
                                 <div>Paid: ₹{paymentInfo.totalPaid.toLocaleString()}</div>
-                                <div className="text-xs text-base-content/70">
+                                <div className="text-xs text-gray-600">
                                   ({paymentInfo.verifiedPayments} verified)
                                 </div>
                               </div>
                             ) : (
-                              <span className="text-base-content/50">-</span>
+                              <span className="text-black">-</span>
                             )}
                           </td>
-                          <td className="text-base-content text-sm">
+                          <td className="text-black text-sm">
                             {land.createdAt ? new Date(land.createdAt).toLocaleDateString() : '-'}
                           </td>
                           <td>

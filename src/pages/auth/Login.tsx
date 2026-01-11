@@ -71,14 +71,14 @@ export default function Login() {
         </h3>
         
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+          <div className="mb-4 p-3 bg-red-900/30 border border-red-500 text-red-200 rounded-lg text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block mb-2 font-medium text-gray-700">
+            <label className="block mb-2 font-medium text-white">
               <FaUser className="inline mr-2" />
               Email
             </label>
@@ -94,7 +94,7 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium text-gray-700">
+            <label className="block mb-2 font-medium text-white">
               <FaLock className="inline mr-2" />
               Password
             </label>
@@ -135,11 +135,11 @@ export default function Login() {
           </Link>
         </div>
 
-        <p className="text-center mt-4 mb-0 text-gray-600">
+        <p className="text-center mt-4 mb-0 text-gray-300">
           Don't have an account?{' '}
           <Link 
             to="/register" 
-            className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
+            className="text-blue-400 hover:text-blue-300 font-semibold hover:underline"
           >
             Sign Up
           </Link>

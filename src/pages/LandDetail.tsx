@@ -288,7 +288,7 @@ export default function LandDetail() {
     return (
       <DashboardLayout navItems={navItems}>
         <div className="alert alert-error">
-          <span className="text-white">Land not found</span>
+          <span className="text-black">Land not found</span>
         </div>
       </DashboardLayout>
     );
@@ -361,7 +361,7 @@ export default function LandDetail() {
                   <>
                     {reservations.some((r) => r.buyerId === user.id && r.status === 'active') ? (
                       <div className="alert alert-info">
-                        <span>You have an active reservation for this land</span>
+                        <span className="text-black">You have an active reservation for this land</span>
                         {reservations
                           .filter((r) => r.buyerId === user.id && r.status === 'active')
                           .map((r) => (
@@ -424,9 +424,9 @@ export default function LandDetail() {
               {deleteError && (
                 <div className="alert alert-error mt-4">
                   <ExclamationTriangleIcon className="h-6 w-6" />
-                  <span>{deleteError}</span>
+                  <span className="text-black">{deleteError}</span>
                   <button
-                    className="btn btn-sm btn-ghost"
+                    className="btn btn-sm btn-ghost text-black"
                     onClick={() => setDeleteError(null)}
                   >
                     ✕
@@ -519,7 +519,7 @@ export default function LandDetail() {
                 {verificationError && (
                   <div className="alert alert-error">
                     <ExclamationTriangleIcon className="h-6 w-6" />
-                    <span>{verificationError}</span>
+                    <span className="text-black">{verificationError}</span>
                   </div>
                 )}
 
@@ -595,7 +595,7 @@ export default function LandDetail() {
                     {/* No Files Available */}
                     {!verificationResult.document && !verificationResult.image && (
                       <div className="alert alert-info">
-                        <span>No files available for verification</span>
+                        <span className="text-black">No files available for verification</span>
                       </div>
                     )}
                   </div>
@@ -605,7 +605,7 @@ export default function LandDetail() {
                 {blockchainVerificationError && (
                   <div className="alert alert-error">
                     <ExclamationTriangleIcon className="h-6 w-6" />
-                    <span>{blockchainVerificationError}</span>
+                    <span className="text-black">{blockchainVerificationError}</span>
                   </div>
                 )}
 
@@ -671,7 +671,7 @@ export default function LandDetail() {
 
             {!land.documentCID && !land.documentIPFSHash && !land.imageIPFSHash && (
               <div className="alert alert-info">
-                <span>No files available for verification. This land has no document or image uploaded.</span>
+                <span className="text-black">No files available for verification. This land has no document or image uploaded.</span>
               </div>
             )}
           </div>

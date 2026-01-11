@@ -96,8 +96,7 @@ export default function Home() {
     if (isAuthenticated && user) {
       const roleRoutes: Record<UserRole, string> = {
         admin: '/dashboard/admin',
-        seller: '/dashboard/seller',
-        buyer: '/dashboard/buyer',
+        user: '/dashboard/buyer',
         builder: '/dashboard/builder',
       };
       navigate(roleRoutes[user.role] || '/dashboard', { replace: true });
@@ -105,17 +104,17 @@ export default function Home() {
   }, [isAuthenticated, user, navigate]);
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#111827', minHeight: '100vh' }}>
       {/* Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4">
-        <Link to="/" className="navbar-brand text-primary fw-bold" style={{ fontSize: '26px', fontWeight: 'bold' }}>
+      <nav className="navbar navbar-expand-lg navbar-light shadow-sm px-4" style={{ backgroundColor: '#1f2937' }}>
+        <Link to="/" className="navbar-brand fw-bold" style={{ fontSize: '26px', fontWeight: 'bold', color: '#60a5fa' }}>
           Land Registry
         </Link>
         <div className="ms-auto d-flex gap-2 align-items-center">
-          <Link to="/about" className="btn btn-link text-decoration-none">About</Link>
-          <Link to="/contact" className="btn btn-link text-decoration-none">Contact</Link>
-          <Link to="/login" className="btn btn-outline-primary me-2">Login</Link>
-          <Link to="/register" className="btn btn-primary">Sign Up</Link>
+          <Link to="/about" className="btn btn-link text-decoration-none" style={{ color: '#d1d5db' }}>About</Link>
+          <Link to="/contact" className="btn btn-link text-decoration-none" style={{ color: '#d1d5db' }}>Contact</Link>
+          <Link to="/login" className="btn me-2" style={{ backgroundColor: 'transparent', border: '2px solid #60a5fa', color: '#60a5fa' }}>Login</Link>
+          <Link to="/register" className="btn" style={{ backgroundColor: '#2563eb', color: 'white', border: 'none' }}>Sign Up</Link>
         </div>
       </nav>
 
@@ -135,11 +134,11 @@ export default function Home() {
 
       {/* Featured Listings */}
       <section className="container py-5">
-        <h2 className="text-center mb-4 fw-bold">Featured Listings</h2>
+        <h2 className="text-center mb-4 fw-bold" style={{ color: '#ffffff' }}>Featured Listings</h2>
         <div className="row g-4">
           {properties.map((property, index) => (
             <div key={index} className="col-md-4">
-              <div className="card shadow-sm h-100">
+              <div className="card shadow-sm h-100" style={{ backgroundColor: '#1f2937', border: '1px solid #374151' }}>
                 <img 
                   src={property.img} 
                   className="card-img-top" 
@@ -147,10 +146,10 @@ export default function Home() {
                   style={{ height: '180px', objectFit: 'cover' }}
                 />
                 <div className="card-body">
-                  <h5 className="card-title" style={{ fontSize: '18px', fontWeight: 600 }}>
+                  <h5 className="card-title" style={{ fontSize: '18px', fontWeight: 600, color: '#ffffff' }}>
                     {property.title}
                   </h5>
-                  <p className="card-text text-muted">{property.price}</p>
+                  <p className="card-text" style={{ color: '#9ca3af' }}>{property.price}</p>
                 </div>
               </div>
             </div>
@@ -159,7 +158,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-dark text-light text-center py-3 mt-5">
+      <footer className="text-center py-3 mt-5" style={{ backgroundColor: '#0f172a', color: '#d1d5db' }}>
         <small>© 2025 Land Registry — All rights reserved</small>
       </footer>
     </div>

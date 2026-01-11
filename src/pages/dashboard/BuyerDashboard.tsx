@@ -106,26 +106,26 @@ export default function BuyerDashboard() {
   return (
     <DashboardLayout navItems={navItems}>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-base-content">Buyer Dashboard</h1>
+        <h1 className="text-3xl font-bold text-white">Buyer Dashboard</h1>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-base-content/70">Active Reservations</div>
+            <div className="stat-title text-white">Active Reservations</div>
             <div className="stat-value text-primary">{stats.activeReservations}</div>
-            <div className="stat-desc text-base-content/60">Lands locked to you</div>
+            <div className="stat-desc text-white">Lands locked to you</div>
           </div>
 
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-base-content/70">Total Paid</div>
+            <div className="stat-title text-white">Total Paid</div>
             <div className="stat-value text-success">₹{stats.totalPaid.toLocaleString()}</div>
-            <div className="stat-desc text-base-content/60">Installments completed</div>
+            <div className="stat-desc text-white">Installments completed</div>
           </div>
 
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-base-content/70">Pending Payments</div>
+            <div className="stat-title text-white">Pending Payments</div>
             <div className="stat-value text-warning">{stats.pendingPayments}</div>
-            <div className="stat-desc text-base-content/60">Due soon</div>
+            <div className="stat-desc text-white">Due soon</div>
           </div>
         </div>
 
@@ -134,8 +134,8 @@ export default function BuyerDashboard() {
           <div className="card bg-base-100 shadow-xl border border-base-300">
             <div className="card-body">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="card-title text-base-content">My Reservations</h2>
-                <Link to="/dashboard/buyer/reservations" className="btn btn-ghost btn-sm text-base-content">
+                <h2 className="card-title text-white">My Reservations</h2>
+                <Link to="/dashboard/buyer/reservations" className="btn btn-ghost btn-sm text-white">
                   View All
                 </Link>
               </div>
@@ -156,9 +156,9 @@ export default function BuyerDashboard() {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-semibold text-lg text-base-content">{land.title}</h3>
-                          <p className="text-sm text-base-content/70">{land.location}</p>
-                          <p className="text-sm mt-2 text-base-content">
+                          <h3 className="font-semibold text-lg text-white">{land.title}</h3>
+                          <p className="text-sm text-gray-300">{land.location}</p>
+                          <p className="text-sm mt-2 text-white">
                             Installments: {paidInstallments}/{totalInstallments}
                           </p>
                           <progress
@@ -170,11 +170,11 @@ export default function BuyerDashboard() {
                         <div className="text-right">
                           {nextPayment ? (
                             <>
-                              <p className="text-sm text-base-content">Next Payment</p>
-                              <p className="font-semibold text-base-content">
+                              <p className="text-sm text-white">Next Payment</p>
+                              <p className="font-semibold text-white">
                                 ₹{nextPayment.amount.toLocaleString()}
                               </p>
-                              <p className="text-xs text-base-content/70">
+                              <p className="text-xs text-gray-300">
                                 Due: {nextPayment.dueDate ? new Date(nextPayment.dueDate).toLocaleDateString() : 'N/A'}
                               </p>
                               <Link
@@ -185,7 +185,7 @@ export default function BuyerDashboard() {
                               </Link>
                             </>
                           ) : (
-                            <p className="text-sm text-base-content/70">No pending payments</p>
+                            <p className="text-sm text-gray-300">No pending payments</p>
                           )}
                         </div>
                       </div>
@@ -201,22 +201,22 @@ export default function BuyerDashboard() {
         <div className="card bg-base-100 shadow-xl border border-base-300">
           <div className="card-body">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="card-title text-base-content">Available Lands</h2>
-              <Link to="/dashboard/buyer/lands" className="btn btn-ghost btn-sm text-base-content">
+              <h2 className="card-title text-white">Available Lands</h2>
+              <Link to="/dashboard/buyer/lands" className="btn btn-ghost btn-sm text-white">
                 Browse All
               </Link>
             </div>
             {availableLands.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-base-content/70">No available lands at the moment.</p>
+                <p className="text-gray-300">No available lands at the moment.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {availableLands.slice(0, 2).map((land) => (
                   <div key={land.id} className="card bg-base-200 shadow border border-base-300">
                     <div className="card-body">
-                      <h3 className="card-title text-base-content">{land.title}</h3>
-                      <p className="text-sm text-base-content/70">{land.location}</p>
+                      <h3 className="card-title text-white">{land.title}</h3>
+                      <p className="text-sm text-gray-300">{land.location}</p>
                       <p className="text-2xl font-bold text-primary">₹{land.price.toLocaleString()}</p>
                       <div className="card-actions justify-end mt-4">
                         <Link

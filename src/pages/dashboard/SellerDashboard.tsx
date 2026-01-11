@@ -156,26 +156,26 @@ export default function SellerDashboard() {
   return (
     <DashboardLayout navItems={navItems}>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-base-content">Seller Dashboard</h1>
+        <h1 className="text-3xl font-bold text-white">Seller Dashboard</h1>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-base-content/70">My Lands</div>
+            <div className="stat-title text-white">My Lands</div>
             <div className="stat-value text-primary">{stats.totalLands}</div>
-            <div className="stat-desc text-base-content/60">Total properties</div>
+            <div className="stat-desc text-white">Total properties</div>
           </div>
 
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-base-content/70">Active Reservations</div>
+            <div className="stat-title text-white">Active Reservations</div>
             <div className="stat-value text-secondary">{stats.activeReservations}</div>
-            <div className="stat-desc text-base-content/60">Lands with buyers</div>
+            <div className="stat-desc text-white">Lands with buyers</div>
           </div>
 
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-base-content/70">Total Revenue</div>
+            <div className="stat-title text-white">Total Revenue</div>
             <div className="stat-value text-success">₹{stats.totalRevenue.toLocaleString()}</div>
-            <div className="stat-desc text-base-content/60">From sales</div>
+            <div className="stat-desc text-white">From sales</div>
           </div>
         </div>
 
@@ -183,16 +183,16 @@ export default function SellerDashboard() {
         <div className="card bg-base-100 shadow-xl border border-base-300">
           <div className="card-body">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="card-title text-base-content">My Lands</h2>
+              <h2 className="card-title text-white">My Lands</h2>
               <Link to="/dashboard/seller/register-land" className="btn btn-primary w-content flex flex-col items-center justify-center">
                 Register New Land
               </Link>
             </div>
             {deleteError && (
               <div className="alert alert-error mb-4">
-                <span className="text-white">{deleteError}</span>
+                <span className="text-black">{deleteError}</span>
                 <button
-                  className="btn btn-sm btn-ghost"
+                  className="btn btn-sm btn-ghost text-black"
                   onClick={() => setDeleteError(null)}
                 >
                   ✕
@@ -201,7 +201,7 @@ export default function SellerDashboard() {
             )}
             {myLands.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-base-content/70">No lands registered yet.</p>
+                <p className="text-white">No lands registered yet.</p>
                 <Link to="/dashboard/seller/register-land" className="btn btn-primary btn-sm mt-4">
                   Register Your First Land
                 </Link>
@@ -211,19 +211,19 @@ export default function SellerDashboard() {
                 <table className="table">
                   <thead className="bg-transparent">
                     <tr>
-                      <th className="text-base-content">Title</th>
-                      <th className="text-base-content">Location</th>
-                      <th className="text-base-content">Price</th>
-                      <th className="text-base-content">Status</th>
-                      <th className="text-base-content">Actions</th>
+                      <th className="text-black">Title</th>
+                      <th className="text-black">Location</th>
+                      <th className="text-black">Price</th>
+                      <th className="text-black">Status</th>
+                      <th className="text-black">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {myLands.map((land) => (
-                      <tr key={land.id}>
-                        <td className="text-base-content">{land.title}</td>
-                        <td className="text-base-content">{land.location}</td>
-                        <td className="text-base-content">₹{land.price.toLocaleString()}</td>
+                      <tr key={land.id} className="text-black">
+                        <td className="text-black">{land.title}</td>
+                        <td className="text-black">{land.location}</td>
+                        <td className="text-black">₹{land.price.toLocaleString()}</td>
                         <td>
                           <span
                             className={`badge ${
@@ -283,7 +283,7 @@ export default function SellerDashboard() {
         {myLands.filter((l) => l.status === 'locked').length > 0 && (
           <div className="card bg-base-100 shadow-xl border border-base-300">
             <div className="card-body">
-              <h2 className="card-title text-base-content">Buyer Progress</h2>
+              <h2 className="card-title text-white">Buyer Progress</h2>
               <div className="space-y-4 mt-4">
                 {myLands
                   .filter((land) => land.status === 'locked')
@@ -300,15 +300,15 @@ export default function SellerDashboard() {
                         className="flex items-center justify-between p-4 bg-base-200 rounded-lg border border-base-300"
                       >
                         <div>
-                          <p className="font-semibold text-base-content">{land.title}</p>
-                          <p className="text-sm text-base-content/70">
+                          <p className="font-semibold text-white">{land.title}</p>
+                          <p className="text-sm text-white">
                             {landPayments.length > 0
                               ? `Payments: ${paidInstallments}/${totalInstallments}`
                               : 'No payments yet'}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm text-base-content">
+                          <p className="text-sm text-white">
                             Installments Paid: {paidInstallments}/{totalInstallments}
                           </p>
                           <progress
@@ -321,7 +321,7 @@ export default function SellerDashboard() {
                     );
                   })}
                 {myLands.filter((l) => l.status === 'locked').length === 0 && (
-                  <p className="text-base-content/70 text-center py-4">
+                  <p className="text-white text-center py-4">
                     No active reservations
                   </p>
                 )}

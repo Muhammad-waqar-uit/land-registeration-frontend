@@ -11,12 +11,16 @@ import ResetPassword from './pages/auth/ResetPassword';
 
 // Dashboard Pages
 import AdminDashboard from './pages/dashboard/AdminDashboard';
+import BuilderVerification from './pages/dashboard/BuilderVerification';
 import SellerDashboard from './pages/dashboard/SellerDashboard';
 import SellerMyLands from './pages/dashboard/SellerMyLands';
 import BuyerDashboard from './pages/dashboard/BuyerDashboard';
 import BuilderDashboard from './pages/dashboard/BuilderDashboard';
 import RegisterLand from './pages/dashboard/RegisterLand';
 import UpdateLand from './pages/dashboard/UpdateLand';
+import Projects from './pages/dashboard/Projects';
+import CreateProject from './pages/dashboard/CreateProject';
+import UpdateProject from './pages/dashboard/UpdateProject';
 
 // Other Pages
 import Home from './pages/Home';
@@ -62,6 +66,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/admin/builders"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <BuilderVerification />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Protected Routes - Builder */}
         <Route
@@ -72,6 +84,31 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/builder/projects"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <Projects />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/builder/projects/create"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <CreateProject />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/builder/projects/:id/edit"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <UpdateProject />
+            </ProtectedRoute>
+          }
+        />
+        {/* Legacy seller routes redirect to builder */}
         <Route
           path="/dashboard/seller"
           element={
@@ -158,8 +195,7 @@ function DashboardRedirect() {
 
   const roleRoutes: Record<UserRole, string> = {
     admin: '/dashboard/admin',
-    seller: '/dashboard/seller',
-    buyer: '/dashboard/buyer',
+    user: '/dashboard/buyer',
     builder: '/dashboard/builder',
   };
 

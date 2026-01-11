@@ -174,7 +174,7 @@ export default function Register() {
         
         <div className="px-6 pb-4 flex-shrink-0">
           {error && (
-            <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+            <div className="p-3 bg-red-900/30 border border-red-500 text-red-200 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -183,7 +183,7 @@ export default function Register() {
         <div className="flex-1 overflow-y-auto px-6 custom-scrollbar">
           <form onSubmit={handleSubmit} className="space-y-5 pb-4">
           <div>
-            <label className="block mb-2 font-medium text-gray-700">
+            <label className="block mb-2 font-medium text-white">
               <FaUser className="inline mr-2" />
               Full Name
             </label>
@@ -195,12 +195,12 @@ export default function Register() {
               value={formData.name}
               onChange={handleChange}
               required
-              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+              style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: '#1f2937', borderColor: '#374151' }}
             />
           </div>
 
           <div>
-            <label className="block mb-2 font-medium text-gray-700">
+            <label className="block mb-2 font-medium text-white">
               <FaEnvelope className="inline mr-2" />
               Email
             </label>
@@ -212,12 +212,12 @@ export default function Register() {
               value={formData.email}
               onChange={handleChange}
               required
-              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+              style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: '#1f2937', borderColor: '#374151' }}
             />
           </div>
 
           <div>
-            <label className="block mb-2 font-medium text-gray-700">
+            <label className="block mb-2 font-medium text-white">
               <FaUserTag className="inline mr-2" />
               Role
             </label>
@@ -229,8 +229,9 @@ export default function Register() {
               required
               style={{ 
                 borderRadius: '8px',
-                color: '#111827',
-                backgroundColor: '#ffffff',
+                color: '#ffffff',
+                backgroundColor: '#1f2937',
+                borderColor: '#374151',
                 cursor: 'pointer'
               }}
             >
@@ -241,7 +242,7 @@ export default function Register() {
 
           {/* Optional User Fields */}
           <div>
-            <label className="block mb-2 font-medium text-gray-700">
+            <label className="block mb-2 font-medium text-white">
               CNIC (Optional)
             </label>
             <input
@@ -252,15 +253,15 @@ export default function Register() {
               value={formData.cnic}
               onChange={handleChange}
               maxLength={15}
-              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+              style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: '#1f2937', borderColor: '#374151' }}
             />
             {formData.cnic && formData.cnic.replace(/\D/g, '').length > 0 && formData.cnic.replace(/\D/g, '').length !== 13 && (
-              <p className="text-xs text-red-500 mt-1">CNIC must be 13 digits ({formData.cnic.replace(/\D/g, '').length}/13)</p>
+              <p className="text-xs text-red-400 mt-1">CNIC must be 13 digits ({formData.cnic.replace(/\D/g, '').length}/13)</p>
             )}
           </div>
 
           <div>
-            <label className="block mb-2 font-medium text-gray-700">
+            <label className="block mb-2 font-medium text-white">
               Father's Name (Optional)
             </label>
             <input
@@ -270,12 +271,12 @@ export default function Register() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               value={formData.fatherName}
               onChange={handleChange}
-              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+              style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: '#1f2937', borderColor: '#374151' }}
             />
           </div>
 
           <div>
-            <label className="block mb-2 font-medium text-gray-700">
+            <label className="block mb-2 font-medium text-white">
               Phone Number (Optional)
             </label>
             <input
@@ -285,7 +286,7 @@ export default function Register() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               value={formData.phoneNumber}
               onChange={handleChange}
-              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+              style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: '#1f2937', borderColor: '#374151' }}
             />
           </div>
 
@@ -293,7 +294,7 @@ export default function Register() {
           {formData.role === 'builder' && (
             <>
               <div>
-                <label className="block mb-2 font-medium text-gray-700">
+                <label className="block mb-2 font-medium text-white">
                   Company Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -304,14 +305,14 @@ export default function Register() {
                   value={formData.companyName}
                   onChange={handleChange}
                   required
-                  style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+                  style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: '#1f2937', borderColor: '#374151' }}
                 />
               </div>
             </>
           )}
 
           <div>
-            <label className="block mb-2 font-medium text-gray-700">
+            <label className="block mb-2 font-medium text-white">
               <FaLock className="inline mr-2" />
               Password
             </label>
@@ -324,12 +325,12 @@ export default function Register() {
               onChange={handleChange}
               required
               minLength={6}
-              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+              style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: '#1f2937', borderColor: '#374151' }}
             />
           </div>
 
           <div>
-            <label className="block mb-2 font-medium text-gray-700">
+            <label className="block mb-2 font-medium text-white">
               <FaLock className="inline mr-2" />
               Confirm Password
             </label>
@@ -342,7 +343,7 @@ export default function Register() {
               onChange={handleChange}
               required
               minLength={6}
-              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+              style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: '#1f2937', borderColor: '#374151' }}
             />
           </div>
 
@@ -365,11 +366,11 @@ export default function Register() {
         </div>
 
         <div className="p-6 pt-4 flex-shrink-0 border-t border-gray-200">
-          <p className="text-center mb-0 text-gray-600">
+          <p className="text-center mb-0 text-gray-300">
             Already have an account?{' '}
             <Link 
               to="/login" 
-              className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
+              className="text-blue-400 hover:text-blue-300 font-semibold hover:underline"
             >
               Login
             </Link>

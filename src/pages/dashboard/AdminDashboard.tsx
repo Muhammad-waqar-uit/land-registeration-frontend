@@ -6,14 +6,14 @@ import {
   UserGroupIcon,
   CreditCardIcon,
 } from '@heroicons/react/24/outline';
-import { landAPI, paymentAPI } from '../../services/api';
+import { landAPI, paymentAPI, builderAPI } from '../../services/api';
 import type { Land, Payment } from '../../types';
 import { Link } from 'react-router-dom';
 
 const navItems = [
   { name: 'Overview', path: '/dashboard/admin', icon: HomeIcon },
+  { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
   { name: 'Land Management', path: '/dashboard/admin/lands', icon: DocumentTextIcon },
-  { name: 'User Management', path: '/dashboard/admin/users', icon: UserGroupIcon },
   { name: 'Payment Oversight', path: '/dashboard/admin/payments', icon: CreditCardIcon },
 ];
 
@@ -27,14 +27,17 @@ export default function AdminDashboard() {
     lockedLands: 0,
     soldLands: 0,
     pendingPayments: 0,
+    pendingBuilders: 0,
+    totalBuilders: 0,
   });
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [landsData, paymentsData] = await Promise.all([
+      const [landsData, paymentsData, buildersData] = await Promise.all([
         landAPI.getAll(),
         paymentAPI.getPending().catch(() => []), // Handle if endpoint doesn't exist
+        builderAPI.getAll().catch(() => []),
       ]);
 
       setLands(landsData || []);
@@ -45,6 +48,7 @@ export default function AdminDashboard() {
       const availableLands = landsData?.filter((l) => l.status === 'available').length || 0;
       const lockedLands = landsData?.filter((l) => l.status === 'locked').length || 0;
       const soldLands = landsData?.filter((l) => l.status === 'sold').length || 0;
+      const pendingBuilders = buildersData?.filter((b) => !b.isBuilderVerified).length || 0;
 
       setStats({
         totalLands,
@@ -52,6 +56,8 @@ export default function AdminDashboard() {
         lockedLands,
         soldLands,
         pendingPayments: paymentsData?.length || 0,
+        pendingBuilders,
+        totalBuilders: buildersData?.length || 0,
       });
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -87,34 +93,40 @@ export default function AdminDashboard() {
     <DashboardLayout navItems={navItems}>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-base-content">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-base-content/70">Total Lands</div>
+            <div className="stat-title text-white">Total Lands</div>
             <div className="stat-value text-primary text-3xl">{stats.totalLands}</div>
-            <div className="stat-desc text-base-content/60">Registered properties</div>
+            <div className="stat-desc text-gray-400">Registered properties</div>
           </div>
 
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-base-content/70">Available</div>
+            <div className="stat-title text-white">Available</div>
             <div className="stat-value text-success text-3xl">{stats.availableLands}</div>
-            <div className="stat-desc text-base-content/60">Ready for sale</div>
+            <div className="stat-desc text-gray-400">Ready for sale</div>
           </div>
 
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-base-content/70">Locked</div>
+            <div className="stat-title text-white">Locked</div>
             <div className="stat-value text-warning text-3xl">{stats.lockedLands}</div>
-            <div className="stat-desc text-base-content/60">Reserved by buyers</div>
+            <div className="stat-desc text-gray-400">Reserved by buyers</div>
           </div>
 
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-base-content/70">Pending Payments</div>
+            <div className="stat-title text-white">Pending Payments</div>
             <div className="stat-value text-error text-3xl">{stats.pendingPayments}</div>
-            <div className="stat-desc text-base-content/60">Awaiting verification</div>
+            <div className="stat-desc text-gray-400">Awaiting verification</div>
           </div>
+
+          <Link to="/dashboard/admin/builders" className="stat bg-base-100 rounded-lg shadow border border-base-300 hover:border-warning hover:shadow-lg transition-all cursor-pointer">
+            <div className="stat-title text-white">Pending Builders</div>
+            <div className="stat-value text-warning text-3xl">{stats.pendingBuilders}</div>
+            <div className="stat-desc text-gray-400">{stats.totalBuilders} total builders</div>
+          </Link>
         </div>
 
         {/* Recent Lands */}
@@ -122,7 +134,7 @@ export default function AdminDashboard() {
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               <div className="flex justify-between items-center">
-                <h2 className="card-title text-xl">Recent Land Registrations</h2>
+                <h2 className="card-title text-xl text-white">Recent Land Registrations</h2>
                 <Link to="/dashboard/admin/lands" className="btn btn-ghost btn-sm">
                   View All
                 </Link>
@@ -130,21 +142,21 @@ export default function AdminDashboard() {
               <div className="overflow-x-auto">
                 <table className="table table-zebra">
                   <thead>
-                    <tr>
-                      <th>Title</th>
-                      <th>Location</th>
-                      <th>Size</th>
-                      <th>Price</th>
-                      <th>Status</th>
+                    <tr className="text-black">
+                      <th className="text-black">Title</th>
+                      <th className="text-black">Location</th>
+                      <th className="text-black">Size</th>
+                      <th className="text-black">Price</th>
+                      <th className="text-black">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {lands.slice(0, 5).map((land) => (
-                      <tr key={land.id}>
-                        <td className="font-medium">{land.title}</td>
-                        <td className="text-base-content/70">{land.location}</td>
-                        <td>{land.size} sq ft</td>
-                        <td className="font-semibold">₹{land.price.toLocaleString()}</td>
+                      <tr key={land.id} className="text-black">
+                        <td className="font-medium text-black">{land.title}</td>
+                        <td className="text-gray-600">{land.location}</td>
+                        <td className="text-black">{land.size} sq ft</td>
+                        <td className="font-semibold text-black">₹{land.price.toLocaleString()}</td>
                         <td>
                           <span
                             className={`badge ${
@@ -163,7 +175,7 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
                 {lands.length === 0 && (
-                  <div className="text-center py-8 text-base-content/60">
+                  <div className="text-center py-8 text-gray-400">
                     No lands registered yet
                   </div>
                 )}
@@ -177,7 +189,7 @@ export default function AdminDashboard() {
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               <div className="flex justify-between items-center">
-                <h2 className="card-title text-xl">Pending Payment Verifications</h2>
+                <h2 className="card-title text-xl text-white">Pending Payment Verifications</h2>
                 <Link to="/dashboard/admin/payments" className="btn btn-ghost btn-sm">
                   View All
                 </Link>
@@ -185,17 +197,17 @@ export default function AdminDashboard() {
               <div className="overflow-x-auto">
                 <table className="table table-zebra">
                   <thead>
-                    <tr>
-                      <th>Land ID</th>
-                      <th>Amount</th>
-                      <th>Payment Mode</th>
-                      <th>Due Date</th>
-                      <th>Status</th>
+                    <tr className="text-black">
+                      <th className="text-black">Land ID</th>
+                      <th className="text-black">Amount</th>
+                      <th className="text-black">Payment Mode</th>
+                      <th className="text-black">Due Date</th>
+                      <th className="text-black">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pendingPayments.slice(0, 5).map((payment) => (
-                      <tr key={payment.id}>
+                      <tr key={payment.id} className="text-black">
                         <td className="font-mono text-sm">{payment.landId.slice(0, 8)}...</td>
                         <td className="font-semibold">₹{payment.amount.toLocaleString()}</td>
                         <td>
@@ -218,8 +230,8 @@ export default function AdminDashboard() {
         {lands.length === 0 && pendingPayments.length === 0 && (
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body text-center py-12">
-              <p className="text-base-content/60 text-lg">No data available yet</p>
-              <p className="text-base-content/50 text-sm mt-2">
+              <p className="text-gray-400 text-lg">No data available yet</p>
+              <p className="text-white text-sm mt-2">
                 Start by registering lands or wait for payment submissions
               </p>
             </div>

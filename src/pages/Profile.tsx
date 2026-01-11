@@ -96,12 +96,12 @@ export default function Profile() {
   return (
     <DashboardLayout navItems={navItems}>
       <div className="max-w-4xl mx-auto w-full space-y-6">
-        <h1 className="text-3xl font-bold text-base-content">User Profile</h1>
+        <h1 className="text-3xl font-bold text-white">User Profile</h1>
 
         <div className="card bg-base-100 shadow-xl border border-base-300">
           <div className="card-body">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="card-title text-base-content">Personal Information</h2>
+              <h2 className="card-title text-white">Personal Information</h2>
               {!isEditing && (
                 <button
                   className="btn btn-primary btn-sm"
@@ -116,12 +116,12 @@ export default function Profile() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="form-control bg-transparent">
                   <label className="label">
-                    <span className="label-text text-base-content text-white">Full Name</span>
+                    <span className="label-text text-white">Full Name</span>
                   </label>
                   <input
                     type="text"
                     name="name"
-                    className="input input-bordered w-full bg-base-200 p-1 border-b-2 border-white text-base-content text-white p-2 border-base-300 focus:bg-base-200 focus:border-primary"
+                    className="input input-bordered w-full bg-base-200 p-1 border-b-2 border-white text-white p-2 border-base-300 focus:bg-base-200 focus:border-primary"
                     value={formData.name}
                     onChange={handleChange}
                     required
@@ -130,35 +130,35 @@ export default function Profile() {
 
                 <div className="form-control bg-transparent">
                   <label className="label">
-                    <span className="label-text text-base-content text-white">Email (Read Only)</span>
+                    <span className="label-text text-white">Email (Read Only)</span>
                   </label>
                   <input
                     type="email"
                     name="email"
                     readOnly
                     disabled
-                    className="input input-bordered w-full bg-base-200 text-base-content/70 text-white p-2 border-base-300 cursor-not-allowed"
+                    className="input input-bordered w-full bg-base-200 text-white p-2 border-base-300 cursor-not-allowed"
                     value={formData.email}
                   />
                 </div>
 
                 <div className="form-control bg-transparent">
                   <label className="label">
-                    <span className="label-text text-base-content text-white">Role (Read Only)</span>
+                    <span className="label-text text-white">Role (Read Only)</span>
                   </label>
                   <input
                     type="text"
                     name="role"
                     readOnly
                     disabled
-                      className="input input-bordered w-full bg-base-200 text-base-content text-white p-2 border-base-300 cursor-not-allowed"
+                      className="input input-bordered w-full bg-base-200 text-white p-2 border-base-300 cursor-not-allowed"
                     value={formData.role.toUpperCase()}
                   />
                 </div>
 
                 {error && (
                   <div className="alert alert-error">
-                    <span>{error}</span>
+                    <span className="text-black">{error}</span>
                   </div>
                 )}
                 <div className="flex gap-2 pt-2">
@@ -204,20 +204,20 @@ export default function Profile() {
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-base-content mb-1">{user?.name}</h3>
-                    <p className="text-base-content/70 mb-2 text-white">{user?.email}</p>
+                    <h3 className="text-2xl font-bold text-white mb-1">{user?.name}</h3>
+                    <p className="text-white mb-2">{user?.email}</p>
                     <span className="badge badge-primary items-center p-2 justify-center capitalize mb-2">{user?.role}</span>
                     {user?.walletAddress && (
                       <div className="mt-2">
-                        <p className="text-xs text-base-content/60 text-white mb-1">Wallet Address:</p>
-                        <p className="text-sm font-mono text-base-content/80 text-white break-all bg-base-200 p-2 rounded">
+                        <p className="text-xs text-white mb-1">Wallet Address:</p>
+                        <p className="text-sm font-mono text-white break-all bg-base-200 p-2 rounded">
                           {user.walletAddress}
                         </p>
                       </div>
                     )}
                     {!user?.walletAddress && (
                       <div className="mt-2">
-                        <p className="text-xs text-base-content/60 text-white">No wallet address connected</p>
+                        <p className="text-xs text-white">No wallet address connected</p>
                       </div>
                     )}
                   </div>
@@ -230,17 +230,17 @@ export default function Profile() {
         {/* Security Settings */}
         <div className="card bg-base-100 shadow-xl border border-base-300">
           <div className="card-body">
-            <h2 className="card-title text-base-content mb-4">Security Settings</h2>
+            <h2 className="card-title text-white mb-4">Security Settings</h2>
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div className="form-control bg-transparent">
                 <label className="label">
-                  <span className="label-text text-base-content text-white">Current Password</span>
+                  <span className="label-text text-white">Current Password</span>
                 </label>
                 <input
                   type="password"
                   name="currentPassword"
                   placeholder="Enter current password"
-                  className="input input-bordered w-full bg-base-200 text-base-content text-white p-2 border-base-300 placeholder:text-base-content/50 focus:bg-base-200 focus:border-primary"
+                  className="input input-bordered w-full bg-base-200 text-white p-2 border-base-300 placeholder:text-gray-400 focus:bg-base-200 focus:border-primary"
                   value={passwordData.currentPassword}
                   onChange={handlePasswordChange}
                   required
@@ -248,25 +248,25 @@ export default function Profile() {
               </div>
               <div className="form-control bg-transparent">
                 <label className="label">
-                  <span className="label-text text-base-content text-white">New Password</span>
+                  <span className="label-text text-white">New Password</span>
                 </label>
                 <input
                   type="password"
                   name="newPassword"
                   placeholder="Enter new password"
-                  className="input input-bordered w-full bg-base-200 text-base-content text-white p-2 border-base-300 placeholder:text-base-content/50 focus:bg-base-200 focus:border-primary"
+                  className="input input-bordered w-full bg-base-200 text-white p-2 border-base-300 placeholder:text-gray-400 focus:bg-base-200 focus:border-primary"
                   value={passwordData.newPassword}
                   onChange={handlePasswordChange}
                   required
                   minLength={8}
                 />
                 <label className="label">
-                  <span className="label-text-alt text-base-content/60 text-white">Password must be at least 8 characters</span>
+                  <span className="label-text-alt text-white">Password must be at least 8 characters</span>
                 </label>
               </div>
               {passwordError && (
-                <div className="alert alert-error text-white">
-                  <span className="text-white">{passwordError}</span>
+                <div className="alert alert-error text-black">
+                  <span className="text-black">{passwordError}</span>
                 </div>
               )}
               <div className="flex justify-end">

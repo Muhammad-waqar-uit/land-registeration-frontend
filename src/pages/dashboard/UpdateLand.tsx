@@ -152,7 +152,7 @@ export default function UpdateLand() {
     return (
       <DashboardLayout navItems={navItems}>
         <div className="alert alert-error">
-          <span className="text-white">Land not found</span>
+          <span className="text-black">Land not found</span>
         </div>
       </DashboardLayout>
     );
@@ -177,7 +177,7 @@ export default function UpdateLand() {
 
             {error && (
               <div className="alert alert-error">
-                <span className="text-white">{error}</span>
+                <span className="text-black">{error}</span>
               </div>
             )}
 

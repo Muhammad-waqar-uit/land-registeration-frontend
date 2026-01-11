@@ -1,15 +1,17 @@
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
   DocumentTextIcon,
+  FolderIcon,
 } from '@heroicons/react/24/outline';
-import { landAPI } from '../../services/api';
+import { landAPI, projectAPI } from '../../services/api';
 
 const navItems = [
   { name: 'Dashboard', path: '/dashboard/seller', icon: HomeIcon },
   { name: 'My Lands', path: '/dashboard/seller/lands', icon: DocumentTextIcon },
+  { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
 ];
 
 export default function RegisterLand() {
@@ -19,13 +21,29 @@ export default function RegisterLand() {
     location: '',
     size: '',
     price: '',
+    projectId: '',
   });
   const [document, setDocument] = useState<File | null>(null);
   const [image, setImage] = useState<File | null>(null);
+  const [projects, setProjects] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      const data = await projectAPI.getAll();
+      setProjects(data);
+    } catch (err: any) {
+      console.error('Failed to load projects:', err);
+      // Non-critical error - user can still create property without project
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -91,6 +109,11 @@ export default function RegisterLand() {
       landFormData.append('price', formData.price);
       landFormData.append('document', document);
       landFormData.append('image', image);
+      
+      // Add projectId if selected
+      if (formData.projectId) {
+        landFormData.append('projectId', formData.projectId);
+      }
 
       await landAPI.create(landFormData);
 
@@ -126,11 +149,44 @@ export default function RegisterLand() {
 
             {error && (
               <div className="alert alert-error">
-                <span className="text-white">{error}</span>
+                <span className="text-black">{error}</span>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Project Selection */}
+              <div className="form-control bg-transparent">
+                <label className="label">
+                  <span className="label-text text-white">Project (Optional)</span>
+                </label>
+                <select
+                  name="projectId"
+                  value={formData.projectId}
+                  onChange={handleChange}
+                  className="select select-bordered w-full bg-base-200 text-white border-base-300 focus:bg-base-200 focus:border-primary"
+                  disabled={isLoading}
+                >
+                  <option value="">No Project (Standalone Property)</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name} - {project.location}
+                    </option>
+                  ))}
+                </select>
+                <label className="label">
+                  <span className="label-text-alt text-white/60">
+                    Select a project to organize this property
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/dashboard/builder/projects/create')}
+                    className="label-text-alt text-primary hover:underline"
+                  >
+                    + Create Project
+                  </button>
+                </label>
+              </div>
+
               <div className="form-control bg-transparent">
                 <label className="label">
                   <span className="label-text text-white">Title</span>

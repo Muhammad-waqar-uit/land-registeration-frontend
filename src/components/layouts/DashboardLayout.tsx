@@ -109,13 +109,13 @@ export default function DashboardLayout({ children, navItems = [] }: DashboardLa
     <li className="menu-title">
       <span className="text-xs">{user?.name}</span>
       {user?.walletAddress && (
-        <span className="text-xs font-mono text-base-content/60">
+        <span className="text-xs font-mono text-white">
           {user.walletAddress.slice(0, 8)}...{user.walletAddress.slice(-6)}
         </span>
       )}
     </li>
     <li>
-          <Link to="/profile" className="text-base-content flex justify-between">
+          <Link to="/profile" className="text-white flex justify-between">
             Profile
             <UserIcon className="h-4 w-4" />
           </Link>
@@ -126,7 +126,7 @@ export default function DashboardLayout({ children, navItems = [] }: DashboardLa
               e.preventDefault();
               handleLogout();
             }}
-            className="text-base-content flex justify-between cursor-pointer"
+            className="text-white flex justify-between cursor-pointer"
           >
             Logout
             <ArrowRightOnRectangleIcon className="h-4 w-4" />
@@ -152,8 +152,8 @@ export default function DashboardLayout({ children, navItems = [] }: DashboardLa
         >
           <div className="flex flex-col h-full">
             <div className="p-4 border-b border-base-300 flex-shrink-0">
-              <h2 className="text-xl font-bold text-base-content">Dashboard</h2>
-              <p className="text-sm text-base-content/70 capitalize">{user?.role}</p>
+              <h2 className="text-xl font-bold text-white">Dashboard</h2>
+              <p className="text-sm text-white capitalize">{user?.role}</p>
             </div>
 
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -168,16 +168,16 @@ export default function DashboardLayout({ children, navItems = [] }: DashboardLa
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                       isActive
                         ? 'bg-primary text-primary-content'
-                        : 'text-base-content hover:bg-base-200'
+                        : 'text-white hover:bg-base-200'
                     }`}
                     onClick={() => setSidebarOpen(false)}
                   >
                     <Icon
                       className={`h-5 w-5 ${
-                        isActive ? 'text-primary-content' : 'text-base-content'
+                        isActive ? 'text-primary-content' : 'text-white'
                       }`}
                     />
-                    <span className={isActive ? 'text-primary-content' : 'text-base-content'}>
+                    <span className={isActive ? 'text-primary-content' : 'text-white'}>
                       {item.name}
                     </span>
                   </Link>

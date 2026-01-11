@@ -50,17 +50,17 @@ export default function Contact() {
   };
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#f5f7fa', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#111827', minHeight: '100vh' }}>
       {/* Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4">
-        <Link to="/" className="navbar-brand text-primary fw-bold" style={{ fontSize: '26px', fontWeight: 'bold' }}>
+      <nav className="navbar navbar-expand-lg shadow-sm px-4" style={{ backgroundColor: '#1f2937' }}>
+        <Link to="/" className="navbar-brand fw-bold" style={{ fontSize: '26px', fontWeight: 'bold', color: '#60a5fa' }}>
           Land Registry
         </Link>
         <div className="ms-auto d-flex gap-2 align-items-center">
-          <Link to="/" className="btn btn-link text-decoration-none">Home</Link>
-          <Link to="/about" className="btn btn-link text-decoration-none">About</Link>
-          <Link to="/login" className="btn btn-outline-primary me-2">Login</Link>
-          <Link to="/register" className="btn btn-primary">Sign Up</Link>
+          <Link to="/" className="btn btn-link text-decoration-none" style={{ color: '#d1d5db' }}>Home</Link>
+          <Link to="/about" className="btn btn-link text-decoration-none" style={{ color: '#d1d5db' }}>About</Link>
+          <Link to="/login" className="btn me-2" style={{ backgroundColor: 'transparent', border: '2px solid #60a5fa', color: '#60a5fa' }}>Login</Link>
+          <Link to="/register" className="btn" style={{ backgroundColor: '#2563eb', color: 'white', border: 'none' }}>Sign Up</Link>
         </div>
       </nav>
 
@@ -82,8 +82,8 @@ export default function Contact() {
       <section className="container my-5">
         <div className="row g-4">
           <div className="col-md-8">
-            <div className="bg-white p-5 shadow-sm rounded">
-              <h3 className="mb-4">Send us a Message</h3>
+            <div className="p-5 shadow-sm rounded" style={{ backgroundColor: '#1f2937' }}>
+              <h3 className="mb-4" style={{ color: '#ffffff' }}>Send us a Message</h3>
               
               {error && (
                 <div className="alert alert-danger" role="alert">
@@ -99,7 +99,7 @@ export default function Contact() {
 
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
-                  <label className="form-label">Name</label>
+                  <label className="form-label" style={{ color: '#ffffff' }}>Name</label>
                   <input 
                     type="text" 
                     name="name"
@@ -109,10 +109,11 @@ export default function Contact() {
                     onChange={handleChange}
                     required 
                     disabled={isLoading}
+                    style={{ color: '#ffffff', backgroundColor: '#374151', borderColor: '#4b5563' }}
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Email</label>
+                  <label className="form-label" style={{ color: '#ffffff' }}>Email</label>
                   <input 
                     type="email" 
                     name="email"
@@ -122,10 +123,11 @@ export default function Contact() {
                     onChange={handleChange}
                     required 
                     disabled={isLoading}
+                    style={{ color: '#ffffff', backgroundColor: '#374151', borderColor: '#4b5563' }}
                   />
                 </div>
                 <div className="mb-3">
-                  <label className="form-label">Message</label>
+                  <label className="form-label" style={{ color: '#ffffff' }}>Message</label>
                   <textarea 
                     className="form-control" 
                     name="message"
@@ -135,6 +137,7 @@ export default function Contact() {
                     onChange={handleChange}
                     required 
                     disabled={isLoading}
+                    style={{ color: '#ffffff', backgroundColor: '#374151', borderColor: '#4b5563' }}
                   ></textarea>
                 </div>
                 <button 
@@ -156,22 +159,22 @@ export default function Contact() {
           </div>
 
           <div className="col-md-4">
-            <div className="bg-white p-4 shadow-sm rounded h-100">
-              <h4 className="mb-4">Contact Information</h4>
+            <div className="p-4 shadow-sm rounded h-100" style={{ backgroundColor: '#1f2937' }}>
+              <h4 className="mb-4" style={{ color: '#ffffff' }}>Contact Information</h4>
               <div className="mb-4">
-                <FaEnvelope className="text-primary me-2" />
-                <strong>Email:</strong>
-                <p className="text-muted">abdul1977ghaffar@gmail.com</p>
+                <FaEnvelope className="me-2" style={{ color: '#60a5fa' }} />
+                <strong style={{ color: '#ffffff' }}>Email:</strong>
+                <p style={{ color: '#9ca3af' }}>abdul1977ghaffar@gmail.com</p>
               </div>
               <div className="mb-4">
-                <FaPhone className="text-primary me-2" />
-                <strong>Phone:</strong>
-                <p className="text-muted">+1 (555) 123-4567</p>
+                <FaPhone className="me-2" style={{ color: '#60a5fa' }} />
+                <strong style={{ color: '#ffffff' }}>Phone:</strong>
+                <p style={{ color: '#9ca3af' }}>+1 (555) 123-4567</p>
               </div>
               <div>
-                <FaMapMarkerAlt className="text-primary me-2" />
-                <strong>Address:</strong>
-                <p className="text-muted">123 Property Street<br />City, State 12345</p>
+                <FaMapMarkerAlt className="me-2" style={{ color: '#60a5fa' }} />
+                <strong style={{ color: '#ffffff' }}>Address:</strong>
+                <p style={{ color: '#9ca3af' }}>123 Property Street<br />City, State 12345</p>
               </div>
             </div>
           </div>
@@ -179,7 +182,7 @@ export default function Contact() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-dark text-light text-center py-3 mt-5">
+      <footer className="text-center py-3 mt-5" style={{ backgroundColor: '#0f172a', color: '#d1d5db' }}>
         <small>© 2025 Land Registry — All rights reserved</small>
       </footer>
     </div>

@@ -3,17 +3,17 @@ import { FaHouseUser, FaUsers, FaMapMarkedAlt } from 'react-icons/fa';
 
 export default function About() {
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#f5f7fa', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#111827', minHeight: '100vh' }}>
       {/* Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm px-4">
-        <Link to="/" className="navbar-brand text-primary fw-bold" style={{ fontSize: '26px', fontWeight: 'bold' }}>
+      <nav className="navbar navbar-expand-lg shadow-sm px-4" style={{ backgroundColor: '#1f2937' }}>
+        <Link to="/" className="navbar-brand fw-bold" style={{ fontSize: '26px', fontWeight: 'bold', color: '#60a5fa' }}>
           Land Registry
         </Link>
         <div className="ms-auto d-flex gap-2 align-items-center">
-          <Link to="/" className="btn btn-link text-decoration-none">Home</Link>
-          <Link to="/contact" className="btn btn-link text-decoration-none">Contact</Link>
-          <Link to="/login" className="btn btn-outline-primary me-2">Login</Link>
-          <Link to="/register" className="btn btn-primary">Sign Up</Link>
+          <Link to="/" className="btn btn-link text-decoration-none" style={{ color: '#d1d5db' }}>Home</Link>
+          <Link to="/contact" className="btn btn-link text-decoration-none" style={{ color: '#d1d5db' }}>Contact</Link>
+          <Link to="/login" className="btn me-2" style={{ backgroundColor: 'transparent', border: '2px solid #60a5fa', color: '#60a5fa' }}>Login</Link>
+          <Link to="/register" className="btn" style={{ backgroundColor: '#2563eb', color: 'white', border: 'none' }}>Sign Up</Link>
         </div>
       </nav>
 
@@ -49,14 +49,14 @@ export default function About() {
       {/* About Content */}
       <section className="container my-5">
         <div className="text-center mb-5">
-          <h2 className="fw-bold mb-3">Our Mission</h2>
-          <p className="text-muted">
+          <h2 className="fw-bold mb-3" style={{ color: '#ffffff' }}>Our Mission</h2>
+          <p style={{ color: '#d1d5db' }}>
             To simplify the property market. No more outdated listings, shady brokers, or information gaps. 
             Just verified listings, smart search tools, and a dashboard that makes everything easier for buyers and sellers.
           </p>
 
-          <h2 className="fw-bold mt-5 mb-3">Why Land Registry?</h2>
-          <p className="text-muted">
+          <h2 className="fw-bold mt-5 mb-3" style={{ color: '#ffffff' }}>Why Land Registry?</h2>
+          <p style={{ color: '#d1d5db' }}>
             - Verified, updated listings from across the region<br />
             - Simple, clean interface for posting & browsing<br />
             - A growing network of trusted users & agents<br />
@@ -67,18 +67,19 @@ export default function About() {
         <div className="row g-4">
           <div className="col-md-4">
             <div 
-              className="bg-white p-4 shadow-sm"
+              className="p-4 shadow-sm"
               style={{
                 transition: 'all 0.3s ease',
-                borderLeft: '5px solid #0d6efd',
-                borderRadius: '8px'
+                borderLeft: '5px solid #2563eb',
+                borderRadius: '8px',
+                backgroundColor: '#1f2937'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#e9f2ff';
+                e.currentTarget.style.backgroundColor = '#374151';
                 e.currentTarget.style.transform = 'scale(1.02)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#ffffff';
+                e.currentTarget.style.backgroundColor = '#1f2937';
                 e.currentTarget.style.transform = 'scale(1)';
               }}
             >
@@ -86,7 +87,7 @@ export default function About() {
                 style={{
                   width: '60px',
                   height: '60px',
-                  backgroundColor: '#0d6efd',
+                  backgroundColor: '#2563eb',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -98,8 +99,8 @@ export default function About() {
               >
                 <FaHouseUser />
               </div>
-              <h5>Smart Listings</h5>
-              <p className="text-muted">
+              <h5 style={{ color: '#ffffff' }}>Smart Listings</h5>
+              <p style={{ color: '#9ca3af' }}>
                 Our platform offers detailed and verified property listings that help users explore, compare, and decide with confidence.
               </p>
             </div>
@@ -107,18 +108,19 @@ export default function About() {
 
           <div className="col-md-4">
             <div 
-              className="bg-white p-4 shadow-sm"
+              className="p-4 shadow-sm"
               style={{
                 transition: 'all 0.3s ease',
-                borderLeft: '5px solid #0d6efd',
-                borderRadius: '8px'
+                borderLeft: '5px solid #2563eb',
+                borderRadius: '8px',
+                backgroundColor: '#1f2937'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#e9f2ff';
+                e.currentTarget.style.backgroundColor = '#374151';
                 e.currentTarget.style.transform = 'scale(1.02)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#ffffff';
+                e.currentTarget.style.backgroundColor = '#1f2937';
                 e.currentTarget.style.transform = 'scale(1)';
               }}
             >
@@ -126,7 +128,7 @@ export default function About() {
                 style={{
                   width: '60px',
                   height: '60px',
-                  backgroundColor: '#0d6efd',
+                  backgroundColor: '#2563eb',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -138,8 +140,8 @@ export default function About() {
               >
                 <FaUsers />
               </div>
-              <h5>Trusted Community</h5>
-              <p className="text-muted">
+              <h5 style={{ color: '#ffffff' }}>Trusted Community</h5>
+              <p style={{ color: '#9ca3af' }}>
                 Join thousands of users who trust us to buy, sell, and rent their homes nationwide — with real reviews and secure processes.
               </p>
             </div>
@@ -147,18 +149,19 @@ export default function About() {
 
           <div className="col-md-4">
             <div 
-              className="bg-white p-4 shadow-sm"
+              className="p-4 shadow-sm"
               style={{
                 transition: 'all 0.3s ease',
-                borderLeft: '5px solid #0d6efd',
-                borderRadius: '8px'
+                borderLeft: '5px solid #2563eb',
+                borderRadius: '8px',
+                backgroundColor: '#1f2937'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#e9f2ff';
+                e.currentTarget.style.backgroundColor = '#374151';
                 e.currentTarget.style.transform = 'scale(1.02)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#ffffff';
+                e.currentTarget.style.backgroundColor = '#1f2937';
                 e.currentTarget.style.transform = 'scale(1)';
               }}
             >
@@ -166,7 +169,7 @@ export default function About() {
                 style={{
                   width: '60px',
                   height: '60px',
-                  backgroundColor: '#0d6efd',
+                  backgroundColor: '#2563eb',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -178,8 +181,8 @@ export default function About() {
               >
                 <FaMapMarkedAlt />
               </div>
-              <h5>Nationwide Reach</h5>
-              <p className="text-muted">
+              <h5 style={{ color: '#ffffff' }}>Nationwide Reach</h5>
+              <p style={{ color: '#9ca3af' }}>
                 Whether you're in major cities or smaller towns — we've got listings and leads all across the region.
               </p>
             </div>
@@ -188,7 +191,7 @@ export default function About() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-dark text-light text-center py-3 mt-5">
+      <footer className="text-center py-3 mt-5" style={{ backgroundColor: '#0f172a', color: '#d1d5db' }}>
         <small>© 2025 Land Registry — Built with 💙</small>
       </footer>
     </div>

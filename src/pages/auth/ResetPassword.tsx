@@ -72,18 +72,18 @@ export default function ResetPassword() {
         }}
       >
         <div 
-          className="w-full max-w-md bg-white p-10 rounded-xl shadow-2xl"
-          style={{ boxShadow: '0 0 20px rgba(0,0,0,0.1)' }}
+          className="w-full max-w-md p-10 rounded-xl shadow-2xl"
+          style={{ boxShadow: '0 0 20px rgba(0,0,0,0.3)', backgroundColor: '#1f2937' }}
         >
           <div className="text-center mb-6">
             <FaKey className="mx-auto text-4xl mb-4" style={{ color: '#dc2626' }} />
             <h3 
               className="font-bold text-2xl"
-              style={{ color: '#dc2626' }}
+              style={{ color: '#ef4444' }}
             >
               Invalid Reset Link
             </h3>
-            <p className="text-gray-600 text-sm mt-2">
+            <p className="text-sm mt-2" style={{ color: '#d1d5db' }}>
               This reset link is invalid or has expired. Please request a new password reset.
             </p>
           </div>
@@ -103,7 +103,8 @@ export default function ResetPassword() {
           <div className="text-center mt-4">
             <Link 
               to="/login" 
-              className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              className="text-sm hover:underline"
+              style={{ color: '#60a5fa' }}
             >
               ← Back to Login
             </Link>
@@ -122,18 +123,18 @@ export default function ResetPassword() {
       }}
     >
       <div 
-        className="w-full max-w-md bg-white p-10 rounded-xl shadow-2xl"
-        style={{ boxShadow: '0 0 20px rgba(0,0,0,0.1)' }}
+        className="w-full max-w-md p-10 rounded-xl shadow-2xl"
+        style={{ boxShadow: '0 0 20px rgba(0,0,0,0.3)', backgroundColor: '#1f2937' }}
       >
         <div className="text-center mb-6">
           <FaLock className="mx-auto text-4xl mb-4" style={{ color: '#0d6efd' }} />
           <h3 
             className="font-bold text-2xl"
-            style={{ color: '#0d6efd' }}
+            style={{ color: '#60a5fa' }}
           >
             Reset Password
           </h3>
-          <p className="text-gray-600 text-sm mt-2">
+          <p className="text-sm mt-2" style={{ color: '#d1d5db' }}>
             Enter your new password below.
           </p>
         </div>
@@ -151,7 +152,7 @@ export default function ResetPassword() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block mb-2 font-medium text-gray-700">
+            <label className="block mb-2 font-medium text-white">
               <FaLock className="inline mr-2" />
               New Password
             </label>
@@ -164,13 +165,13 @@ export default function ResetPassword() {
               required
               minLength={8}
               disabled={isLoading}
-              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+              style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: '#1f2937', borderColor: '#374151' }}
             />
-            <p className="text-xs text-gray-500 mt-1">Password must be at least 8 characters</p>
+            <p className="text-xs mt-1" style={{ color: '#9ca3af' }}>Password must be at least 8 characters</p>
           </div>
 
           <div>
-            <label className="block mb-2 font-medium text-gray-700">
+            <label className="block mb-2 font-medium text-white">
               <FaLock className="inline mr-2" />
               Confirm Password
             </label>
@@ -183,7 +184,7 @@ export default function ResetPassword() {
               required
               minLength={8}
               disabled={isLoading}
-              style={{ borderRadius: '8px', color: '#111827', backgroundColor: '#ffffff' }}
+              style={{ borderRadius: '8px', color: '#ffffff', backgroundColor: '#1f2937', borderColor: '#374151' }}
             />
           </div>
 
@@ -207,7 +208,8 @@ export default function ResetPassword() {
         <div className="text-center mt-6">
           <Link 
             to="/login" 
-            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+            className="text-sm hover:underline"
+            style={{ color: '#60a5fa' }}
           >
             ← Back to Login
           </Link>
