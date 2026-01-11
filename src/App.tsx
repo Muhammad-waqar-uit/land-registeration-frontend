@@ -21,6 +21,13 @@ import UpdateLand from './pages/dashboard/UpdateLand';
 import Projects from './pages/dashboard/Projects';
 import CreateProject from './pages/dashboard/CreateProject';
 import UpdateProject from './pages/dashboard/UpdateProject';
+import ProjectDetail from './pages/dashboard/ProjectDetail';
+import PropertyRequests from './pages/dashboard/PropertyRequests';
+import Agreements from './pages/dashboard/Agreements';
+import CreateAgreement from './pages/dashboard/CreateAgreement';
+import AgreementDetail from './pages/dashboard/AgreementDetail';
+import Installments from './pages/dashboard/Installments';
+import CreateInstallments from './pages/dashboard/CreateInstallments';
 
 // Other Pages
 import Home from './pages/Home';
@@ -108,6 +115,63 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/builder/projects/:id"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <ProjectDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/builder/property-requests"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <PropertyRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/builder/agreements"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <Agreements />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/builder/agreements/create"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <CreateAgreement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/builder/agreements/:id"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <AgreementDetail />
+            </ProtectedRoute>
+          }
+        />
+        {/* Installments Routes */}
+        <Route
+          path="/dashboard/builder/installments"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <Installments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/builder/installments/create"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <CreateInstallments />
+            </ProtectedRoute>
+          }
+        />
         {/* Legacy seller routes redirect to builder */}
         <Route
           path="/dashboard/seller"
@@ -148,6 +212,23 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <BuyerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/agreements/:id"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <AgreementDetail />
+            </ProtectedRoute>
+          }
+        />
+        {/* Shared Installments Route - Both buyer and builder can view */}
+        <Route
+          path="/dashboard/installments/:id"
+          element={
+            <ProtectedRoute allowedRoles={['user', 'builder']}>
+              <AgreementDetail />
             </ProtectedRoute>
           }
         />

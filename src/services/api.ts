@@ -510,5 +510,215 @@ export const projectAPI = {
   },
 };
 
+// Property Request API
+export const propertyRequestAPI = {
+  // Create a new property request
+  create: async (data: {
+    propertyId: string;
+    offerPrice?: number;
+    message?: string;
+  }): Promise<any> => {
+    console.log('📤 Creating property request:', data);
+    const response = await api.post('/property-requests', data);
+    console.log('✅ Property request created:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Get all property requests (Admin only)
+  getAll: async (): Promise<any[]> => {
+    const response = await api.get('/property-requests');
+    return response.data.data || response.data;
+  },
+
+  // Get buyer's own requests
+  getMyRequests: async (): Promise<any[]> => {
+    const response = await api.get('/property-requests/my-requests');
+    return response.data.data || response.data;
+  },
+
+  // Get pending requests for builder
+  getPending: async (): Promise<any[]> => {
+    const response = await api.get('/property-requests/pending');
+    return response.data.data || response.data;
+  },
+
+  // Get single request by ID
+  getById: async (id: string): Promise<any> => {
+    const response = await api.get(`/property-requests/${id}`);
+    return response.data.data || response.data;
+  },
+
+  // Respond to request (generic)
+  respond: async (id: string, data: {
+    status: 'approved' | 'rejected';
+    response?: string;
+  }): Promise<any> => {
+    console.log(`📤 Responding to request ${id}:`, data);
+    const response = await api.post(`/property-requests/${id}/respond`, data);
+    console.log('✅ Request response sent:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Approve request
+  approve: async (id: string, response?: string): Promise<any> => {
+    console.log(`✅ Approving request ${id}`);
+    const res = await api.post(`/property-requests/${id}/approve`, { response });
+    console.log('✅ Request approved:', res.data);
+    return res.data.data || res.data;
+  },
+
+  // Reject request
+  reject: async (id: string, response?: string): Promise<any> => {
+    console.log(`❌ Rejecting request ${id}`);
+    const res = await api.post(`/property-requests/${id}/reject`, { response });
+    console.log('✅ Request rejected:', res.data);
+    return res.data.data || res.data;
+  },
+
+  // Cancel/delete request
+  delete: async (id: string): Promise<void> => {
+    console.log(`🗑️ Cancelling request ${id}`);
+    await api.delete(`/property-requests/${id}`);
+    console.log('✅ Request cancelled');
+  },
+};
+
+// Agreement API
+export const agreementAPI = {
+  // Create a new agreement (Builder only)
+  create: async (data: {
+    propertyId: string;
+    buyerId: string;
+    agreementType: 'initial' | 'final';
+    terms: any;
+  }): Promise<any> => {
+    console.log('📤 Creating agreement:', data);
+    const response = await api.post('/agreements', data);
+    console.log('✅ Agreement created:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Get all agreements
+  getAll: async (params?: {
+    propertyId?: string;
+    buyerId?: string;
+    builderId?: string;
+    status?: string;
+    agreementType?: string;
+  }): Promise<any[]> => {
+    const response = await api.get('/agreements', { params });
+    return response.data.data || response.data;
+  },
+
+  // Get agreement by ID
+  getById: async (id: string): Promise<any> => {
+    const response = await api.get(`/agreements/${id}`);
+    return response.data.data || response.data;
+  },
+
+  // Get agreements by property ID
+  getByProperty: async (propertyId: string): Promise<any[]> => {
+    const response = await api.get(`/agreements/property/${propertyId}`);
+    return response.data.data || response.data;
+  },
+
+  // Sign agreement (Buyer or Builder)
+  sign: async (id: string, signatureData?: string): Promise<any> => {
+    console.log(`✍️ Signing agreement ${id}`);
+    const response = await api.post(`/agreements/${id}/sign`, { signatureData });
+    console.log('✅ Agreement signed:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Upload signed document
+  uploadSigned: async (id: string, document: File): Promise<any> => {
+    console.log(`📤 Uploading signed document for agreement ${id}`);
+    const formData = new FormData();
+    formData.append('document', document);
+    
+    const response = await api.post(`/agreements/${id}/upload-signed`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    console.log('✅ Signed document uploaded:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Generate ownership document (Builder only)
+  generateOwnership: async (id: string): Promise<any> => {
+    console.log(`📄 Generating ownership document for agreement ${id}`);
+    const response = await api.post(`/agreements/${id}/generate-ownership-doc`);
+    console.log('✅ Ownership document generated:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Verify agreement
+  verify: async (id: string): Promise<any> => {
+    console.log(`🔍 Verifying agreement ${id}`);
+    const response = await api.post(`/agreements/${id}/verify`);
+    console.log('✅ Agreement verified:', response.data);
+    return response.data.data || response.data;
+  },
+};
+
+// Installment API
+export const installmentAPI = {
+  // Create installments from agreement (Builder only)
+  create: async (agreementId: string): Promise<any> => {
+    console.log(`💰 Creating installments for agreement ${agreementId}`);
+    const response = await api.post('/installments', { agreementId });
+    console.log('✅ Installments created:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Get all installments with filters
+  getAll: async (params?: {
+    landId?: string;
+    agreementId?: string;
+    buyerId?: string;
+    status?: 'pending' | 'paid' | 'overdue' | 'completed';
+    page?: number;
+    limit?: number;
+  }): Promise<any> => {
+    console.log('📤 Fetching installments with params:', params);
+    const response = await api.get('/installments', { params });
+    console.log('✅ Installments fetched:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Get my installments (Buyer)
+  getMyInstallments: async (params?: { status?: string }): Promise<any> => {
+    console.log('📤 Fetching my installments with params:', params);
+    const response = await api.get('/installments/my-installments', { params });
+    console.log('✅ My installments fetched:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Get installment by ID
+  getById: async (id: string): Promise<any> => {
+    console.log(`📤 Fetching installment ${id}`);
+    const response = await api.get(`/installments/${id}`);
+    console.log('✅ Installment fetched:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Get installment status
+  getStatus: async (id: string): Promise<any> => {
+    console.log(`📤 Fetching installment status ${id}`);
+    const response = await api.get(`/installments/${id}/status`);
+    console.log('✅ Installment status fetched:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Update overdue installments (Admin only)
+  updateOverdue: async (): Promise<any> => {
+    console.log('💰 Updating overdue installments');
+    const response = await api.post('/installments/update-overdue');
+    console.log('✅ Overdue installments updated:', response.data);
+    return response.data.data || response.data;
+  },
+};
+
 export default api;
 

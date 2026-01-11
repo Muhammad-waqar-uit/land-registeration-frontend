@@ -140,3 +140,84 @@ export interface Project {
   };
 }
 
+export interface PropertyRequest {
+  id: string;
+  propertyId: string;
+  requesterId: string;
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  offerPrice?: number;
+  message?: string;
+  response?: string;
+  createdAt: string;
+  updatedAt?: string;
+  property?: Land;
+  requester?: {
+    id: string;
+    name: string;
+    email: string;
+    walletAddress: string | null;
+  };
+}
+
+export interface Agreement {
+  id: string;
+  propertyId: string;
+  buyerId: string;
+  builderId: string;
+  agreementType: 'initial' | 'final';
+  status: 'pending' | 'buyer_signed' | 'builder_signed' | 'signed' | 'completed';
+  documentUrl?: string;
+  documentIPFSHash?: string;
+  documentHash?: string;
+  buyerSignedAt?: string | null;
+  builderSignedAt?: string | null;
+  signedDocumentUrl?: string | null;
+  signedDocumentIPFSHash?: string;
+  signedDocumentHash?: string;
+  blockchainTxHash?: string | null;
+  terms?: {
+    price?: number;
+    totalAmount?: number;
+    installmentPlanYears?: number;
+    paymentTerms?: string;
+    propertyDetails?: any;
+    [key: string]: any;
+  };
+  createdAt: string;
+  updatedAt?: string;
+  property?: Land;
+  buyer?: {
+    id: string;
+    name: string;
+    email: string;
+    walletAddress: string | null;
+  };
+  builder?: {
+    id: string;
+    name: string;
+    email: string;
+    companyName?: string;
+  };
+}
+
+export interface Installment {
+  id: string;
+  landId: string;
+  agreementId: string;
+  buyerId: string;
+  amount: number;
+  paymentWindowStart: string;
+  paymentWindowEnd: string;
+  status: 'pending' | 'paid' | 'overdue' | 'completed';
+  paymentDate?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+  land?: Land;
+  agreement?: Agreement;
+  buyer?: {
+    id: string;
+    name: string;
+    email: string;
+    walletAddress: string | null;
+  };
+}

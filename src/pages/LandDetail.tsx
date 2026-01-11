@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
-import { landAPI, paymentAPI, reservationAPI } from '../services/api';
+import { landAPI, paymentAPI, reservationAPI, propertyRequestAPI } from '../services/api';
 import type { Land, Payment, Reservation } from '../types';
 import DashboardLayout from '../components/layouts/DashboardLayout';
 import { HomeIcon, DocumentTextIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
@@ -72,6 +72,16 @@ export default function LandDetail() {
   } | null>(null);
   const [blockchainVerificationError, setBlockchainVerificationError] = useState<string | null>(null);
   const [reserving, setReserving] = useState(false);
+  
+  // Property Request state
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requesting, setRequesting] = useState(false);
+  const [requestForm, setRequestForm] = useState({
+    offerPrice: '',
+    message: '',
+  });
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const [requestSuccess, setRequestSuccess] = useState(false);
   
   // Get IPFS URLs from hash JSON
   const imageIPFSUrl = land?.imageIPFSHash ? getIPFSUrl(land.imageIPFSHash) : null;
@@ -274,6 +284,58 @@ export default function LandDetail() {
     }
   };
 
+  const handleRequestProperty = async () => {
+    if (!land?.id || !user) {
+      alert('Please login to request a property');
+      return;
+    }
+
+    if (user.role !== 'user') {
+      alert('Only users can request properties');
+      return;
+    }
+
+    if (land.status !== 'available') {
+      alert('This property is not available');
+      return;
+    }
+
+    setRequestError(null);
+    setRequesting(true);
+
+    try {
+      const data: any = {
+        propertyId: land.id,
+      };
+
+      if (requestForm.offerPrice && parseFloat(requestForm.offerPrice) > 0) {
+        data.offerPrice = parseFloat(requestForm.offerPrice);
+      }
+
+      if (requestForm.message.trim()) {
+        data.message = requestForm.message.trim();
+      }
+
+      await propertyRequestAPI.create(data);
+      setRequestSuccess(true);
+      setShowRequestModal(false);
+      setRequestForm({ offerPrice: '', message: '' });
+      
+      setTimeout(() => {
+        setRequestSuccess(false);
+      }, 5000);
+    } catch (error: any) {
+      console.error('Failed to create property request:', error);
+      setRequestError(
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to submit request. Please try again.'
+      );
+    } finally {
+      setRequesting(false);
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout navItems={navItems}>
@@ -389,6 +451,21 @@ export default function LandDetail() {
                           'Reserve Now'
                         )}
                       </button>
+                    )}
+                    
+                    {/* Request Property Button */}
+                    <button
+                      onClick={() => setShowRequestModal(true)}
+                      className="btn btn-success"
+                    >
+                      Request Property
+                    </button>
+                    
+                    {/* Success Message */}
+                    {requestSuccess && (
+                      <div className="alert alert-success">
+                        <span className="text-black">✅ Property request submitted successfully!</span>
+                      </div>
                     )}
                   </>
                 )}
@@ -677,6 +754,89 @@ export default function LandDetail() {
           </div>
         </div>
       </div>
+
+      {/* Request Property Modal */}
+      {showRequestModal && (
+        <div className="modal modal-open">
+          <div className="modal-box bg-base-200">
+            <h3 className="font-bold text-lg text-white mb-4">Request Property</h3>
+            
+            {requestError && (
+              <div className="alert alert-error mb-4">
+                <span className="text-black">{requestError}</span>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="label">
+                  <span className="label-text text-white">Offer Price (Optional)</span>
+                </label>
+                <input
+                  type="number"
+                  value={requestForm.offerPrice}
+                  onChange={(e) => setRequestForm({ ...requestForm, offerPrice: e.target.value })}
+                  placeholder={`Listed Price: ₹${land?.price.toLocaleString()}`}
+                  className="input input-bordered w-full"
+                  min="0"
+                  step="1000"
+                />
+                <label className="label">
+                  <span className="label-text-alt text-white/60">
+                    Leave empty to offer listed price
+                  </span>
+                </label>
+              </div>
+
+              <div>
+                <label className="label">
+                  <span className="label-text text-white">Message (Optional)</span>
+                </label>
+                <textarea
+                  value={requestForm.message}
+                  onChange={(e) => setRequestForm({ ...requestForm, message: e.target.value })}
+                  placeholder="Any additional information or questions..."
+                  className="textarea textarea-bordered w-full h-24"
+                  maxLength={500}
+                />
+                <label className="label">
+                  <span className="label-text-alt text-white/60">
+                    {requestForm.message.length}/500 characters
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div className="modal-action">
+              <button
+                onClick={() => {
+                  setShowRequestModal(false);
+                  setRequestError(null);
+                  setRequestForm({ offerPrice: '', message: '' });
+                }}
+                className="btn btn-ghost"
+                disabled={requesting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRequestProperty}
+                className="btn btn-success"
+                disabled={requesting}
+              >
+                {requesting ? (
+                  <>
+                    <span className="loading loading-spinner loading-sm"></span>
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Request'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

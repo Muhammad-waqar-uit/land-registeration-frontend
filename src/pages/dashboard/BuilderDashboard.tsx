@@ -2,9 +2,10 @@ import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
   ClockIcon,
-  CheckCircleIcon,
   FolderIcon,
   ExclamationTriangleIcon,
+  DocumentTextIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -14,8 +15,10 @@ import type { Payment, User } from '../../types';
 const navItems = [
   { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
   { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
+  { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
+  { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
+  { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
   { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
-  { name: 'Verified Payments', path: '/dashboard/builder/verified', icon: CheckCircleIcon },
 ];
 
 export default function BuilderDashboard() {
