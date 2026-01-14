@@ -48,10 +48,10 @@ export default function UpdateLand() {
           price: landData.price.toString(),
           status: landData.status,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(
-          err.response?.data?.message ||
-          err.message ||
+          (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data ? String(err.response.data.message) : '') ||
+          (err instanceof Error ? err.message : '') ||
           'Failed to load land. Please try again.'
         );
       } finally {
@@ -130,8 +130,8 @@ export default function UpdateLand() {
 
       // Success - redirect to seller dashboard (will refresh automatically)
       navigate('/dashboard/seller', { state: { refresh: true } });
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || err.message || 'Failed to update land. Please try again.';
+    } catch (err: unknown) {
+      const errorMessage: string = (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data ? String(err.response.data.message) : '') || (err instanceof Error ? err.message : '') || 'Failed to update land. Please try again.';
       setError(errorMessage);
     } finally {
       setIsLoading(false);

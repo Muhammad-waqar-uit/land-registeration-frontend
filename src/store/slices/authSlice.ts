@@ -18,7 +18,7 @@ const loadStateFromStorage = () => {
       isAuthenticated: !!token,
       isLoading: !!token && !user, // Only loading if token exists but user not loaded
     };
-  } catch (error) {
+  } catch {
     return {
       user: null,
       token: null,
@@ -38,8 +38,8 @@ export const loginUser = createAsyncThunk(
     try {
       const response = await authAPI.login(credentials);
       return response;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+    } catch (error: unknown) {
+      return rejectWithValue((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Login failed');
     }
   }
 );
@@ -50,8 +50,8 @@ export const registerUser = createAsyncThunk(
     try {
       const response = await authAPI.register(data);
       return response;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+    } catch (error: unknown) {
+      return rejectWithValue((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Registration failed');
     }
   }
 );
@@ -62,8 +62,8 @@ export const fetchCurrentUser = createAsyncThunk(
     try {
       const user = await authAPI.getCurrentUser();
       return user;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch user');
+    } catch (error: unknown) {
+      return rejectWithValue((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to fetch user');
     }
   }
 );
@@ -78,8 +78,8 @@ export const updateProfile = createAsyncThunk(
     try {
       const user = await authAPI.updateProfile(data);
       return user;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update profile');
+    } catch (error: unknown) {
+      return rejectWithValue((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to update profile');
     }
   }
 );
@@ -90,8 +90,8 @@ export const updatePassword = createAsyncThunk(
     try {
       await authAPI.updatePassword(data);
       return;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update password');
+    } catch (error: unknown) {
+      return rejectWithValue((error as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to update password');
     }
   }
 );

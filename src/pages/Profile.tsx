@@ -34,8 +34,8 @@ export default function Profile() {
       // Only send name and email to API - role is not sent
       await dispatch(updateProfile({ name: formData.name, email: formData.email })).unwrap();
       setIsEditing(false);
-    } catch (err: any) {
-      setError(err || 'Failed to update profile');
+    } catch (err: unknown) {
+      setError((err as string) || 'Failed to update profile');
     }
   };
 
@@ -86,8 +86,9 @@ export default function Profile() {
       });
       // Show success message (you can add a success state if needed)
       setPasswordError(null);
-    } catch (err: any) {
-      setPasswordError(err.response?.data?.message || 'Failed to update password');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setPasswordError(error.response?.data?.message || 'Failed to update password');
     } finally {
       setIsUpdatingPassword(false);
     }

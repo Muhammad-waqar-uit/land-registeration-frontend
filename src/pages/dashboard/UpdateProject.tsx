@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
@@ -27,7 +27,7 @@ export default function UpdateProject() {
     status: 'draft',
   });
   const [approvalDocs, setApprovalDocs] = useState<FileList | null>(null);
-  const [existingDocs, setExistingDocs] = useState<any[]>([]);
+  const [existingDocs, setExistingDocs] = useState<Array<{ id?: string; name?: string; url?: string; path?: string; filename?: string }>>([]);
   const [projectMetadata, setProjectMetadata] = useState<{
     status?: string;
     approvalDocumentsHash?: string;
@@ -44,13 +44,7 @@ export default function UpdateProject() {
     message: string;
   } | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      loadProject();
-    }
-  }, [id]);
-
-  const loadProject = async () => {
+  const loadProject = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -75,15 +69,21 @@ export default function UpdateProject() {
       
       // Store existing approval documents
       if (project.approvalDocuments && project.approvalDocuments.length > 0) {
-        setExistingDocs(project.approvalDocuments);
+        setExistingDocs(project.approvalDocuments as Array<{ id?: string; name?: string; url?: string; path?: string; filename?: string }>);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load project:', err);
-      setError(err.response?.data?.message || 'Failed to load project');
+      setError((err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data ? err.response.data.message as string : null) || 'Failed to load project');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      loadProject();
+    }
+  }, [id, loadProject]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -118,7 +118,7 @@ export default function UpdateProject() {
       setError(null);
 
       // Prepare JSON data
-      const projectData: any = {
+      const projectData: Record<string, string | number> = {
         name: formData.name.trim(),
         location: formData.location.trim(),
         status: 'draft',
@@ -160,9 +160,9 @@ export default function UpdateProject() {
       
       // Success - navigate to projects list
       navigate('/dashboard/builder/projects');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update project:', err);
-      setError(err.response?.data?.message || 'Failed to update project. Please try again.');
+      setError((err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data ? err.response.data.message as string : null) || 'Failed to update project. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -179,11 +179,11 @@ export default function UpdateProject() {
       setVerificationResult(null);
       const result = await projectAPI.verify(id!);
       setVerificationResult(result);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Verification failed:', err);
       setVerificationResult({
         verified: false,
-        message: err.response?.data?.message || 'Verification failed',
+        message: (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data ? err.response.data.message as string : null) || 'Verification failed',
       });
     } finally {
       setVerifying(false);

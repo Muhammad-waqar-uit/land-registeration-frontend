@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
@@ -35,7 +35,7 @@ export default function BuyerDashboard() {
     ownedProperties: 0,
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user?.id) return;
 
     try {
@@ -106,11 +106,11 @@ export default function BuyerDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     fetchData();
-  }, [user?.id]);
+  }, [fetchData]);
 
   // Refresh when component comes into focus (e.g., after navigation back from payment/reservation)
   useEffect(() => {
@@ -119,7 +119,7 @@ export default function BuyerDashboard() {
     };
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [user?.id]);
+  }, [fetchData]);
 
   if (loading) {
     return (

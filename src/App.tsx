@@ -30,6 +30,11 @@ import Installments from './pages/dashboard/Installments';
 import CreateInstallments from './pages/dashboard/CreateInstallments';
 import ResaleRequests from './pages/dashboard/ResaleRequests';
 import CreateResaleRequest from './pages/dashboard/CreateResaleRequest';
+import MintTokens from './pages/dashboard/MintTokens';
+import BuyerPayments from './pages/dashboard/BuyerPayments';
+import SellerBuyerProgress from './pages/dashboard/SellerBuyerProgress';
+import SellerPayments from './pages/dashboard/SellerPayments';
+import BuilderPendingVerifications from './pages/dashboard/BuilderPendingVerifications';
 
 // Other Pages
 import Home from './pages/Home';
@@ -80,6 +85,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <BuilderVerification />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/mint-tokens"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <MintTokens />
             </ProtectedRoute>
           }
         />
@@ -183,6 +196,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/builder/pending"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <BuilderPendingVerifications />
+            </ProtectedRoute>
+          }
+        />
         {/* Legacy seller routes redirect to builder */}
         <Route
           path="/dashboard/seller"
@@ -197,6 +218,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['builder']}>
               <SellerMyLands />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/seller/buyers"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <SellerBuyerProgress />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/seller/payments"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <SellerPayments />
             </ProtectedRoute>
           }
         />
@@ -223,6 +260,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <BuyerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/payments"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <BuyerPayments />
             </ProtectedRoute>
           }
         />

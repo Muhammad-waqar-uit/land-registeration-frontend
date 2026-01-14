@@ -29,9 +29,12 @@ export default function BuilderVerification() {
       setLoading(true);
       const data = await builderAPI.getAll();
       setBuilders(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load builders:', err);
-      alert(err.response?.data?.message || 'Failed to load builders');
+      const errorMessage = err && typeof err === 'object' && 'response' in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      alert(errorMessage || 'Failed to load builders');
     } finally {
       setLoading(false);
     }
@@ -51,12 +54,13 @@ export default function BuilderVerification() {
       await builderAPI.verify(builderId, 'Verified by admin');
       await loadBuilders();
       alert('Builder verified successfully!');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to verify builder:', err);
-      console.error('Error response:', err.response?.data);
+      const errObj = err && typeof err === 'object' && 'response' in err ? (err as { response?: { data?: { message?: string | string[] } } }) : null;
+      console.error('Error response:', errObj?.response?.data);
       
       // Extract validation error messages
-      const errorData = err.response?.data;
+      const errorData = errObj?.response?.data;
       let errorMessage = 'Failed to verify builder';
       
       if (errorData?.message) {

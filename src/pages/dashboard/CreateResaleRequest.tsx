@@ -42,7 +42,7 @@ const CreateResaleRequest: React.FC = () => {
       // Filter for owned properties only
       const owned = properties.filter((p) => p.status === 'sold');
       setOwnedProperties(owned);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching owned properties:', err);
     }
   };
@@ -60,9 +60,9 @@ const CreateResaleRequest: React.FC = () => {
       if (data.price) {
         setRequestedPrice(data.price.toString());
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading property:', err);
-      setError(err.response?.data?.message || 'Failed to load property');
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to load property');
       setProperty(null);
     } finally {
       setLoadingProperty(false);
@@ -110,9 +110,9 @@ const CreateResaleRequest: React.FC = () => {
       setTimeout(() => {
         navigate('/dashboard/buyer');
       }, 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating resale request:', err);
-      setError(err.response?.data?.message || 'Failed to create resale request');
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to create resale request');
     } finally {
       setLoading(false);
     }

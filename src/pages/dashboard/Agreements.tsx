@@ -34,7 +34,7 @@ export default function Agreements() {
       setLoading(true);
       const data = await agreementAPI.getAll();
       setAgreements(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to load agreements:', error);
     } finally {
       setLoading(false);
@@ -45,9 +45,12 @@ export default function Agreements() {
     try {
       await agreementAPI.sign(agreementId);
       await loadAgreements();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to sign agreement:', error);
-      alert(error.response?.data?.message || 'Failed to sign agreement');
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      alert(errorMessage || 'Failed to sign agreement');
     }
   };
 
@@ -70,14 +73,14 @@ export default function Agreements() {
     <DashboardLayout navItems={navItems}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white">Agreements</h1>
             <p className="text-gray-400 mt-1">Manage purchase agreements with buyers</p>
           </div>
           <Link
             to="/dashboard/builder/agreements/create"
-            className="btn btn-primary"
+            className="btn bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0  flex items-center"
           >
             <PlusIcon className="w-5 h-5 mr-2" />
             Create Agreement
@@ -85,41 +88,41 @@ export default function Agreements() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="tabs tabs-boxed bg-base-200">
+        <div className="tabs tabs-boxed bg-gray-800/90 border border-gray-700">
           <a
-            className={`tab ${filter === 'all' ? 'tab-active' : ''}`}
+            className={`tab text-white ${filter === 'all' ? 'tab-active bg-purple-600' : 'hover:bg-gray-700'}`}
             onClick={() => setFilter('all')}
           >
             All
           </a>
           <a
-            className={`tab ${filter === 'pending' ? 'tab-active' : ''}`}
+            className={`tab text-white ${filter === 'pending' ? 'tab-active bg-yellow-600' : 'hover:bg-gray-700'}`}
             onClick={() => setFilter('pending')}
           >
             <ClockIcon className="w-4 h-4 mr-2" />
             Pending
           </a>
           <a
-            className={`tab ${filter === 'buyer_signed' ? 'tab-active' : ''}`}
+            className={`tab text-white ${filter === 'buyer_signed' ? 'tab-active bg-blue-600' : 'hover:bg-gray-700'}`}
             onClick={() => setFilter('buyer_signed')}
           >
             Buyer Signed
           </a>
           <a
-            className={`tab ${filter === 'builder_signed' ? 'tab-active' : ''}`}
+            className={`tab text-white ${filter === 'builder_signed' ? 'tab-active bg-indigo-600' : 'hover:bg-gray-700'}`}
             onClick={() => setFilter('builder_signed')}
           >
             Builder Signed
           </a>
           <a
-            className={`tab ${filter === 'signed' ? 'tab-active' : ''}`}
+            className={`tab text-white ${filter === 'signed' ? 'tab-active bg-green-600' : 'hover:bg-gray-700'}`}
             onClick={() => setFilter('signed')}
           >
             <CheckCircleIcon className="w-4 h-4 mr-2" />
             Signed
           </a>
           <a
-            className={`tab ${filter === 'completed' ? 'tab-active' : ''}`}
+            className={`tab text-white ${filter === 'completed' ? 'tab-active bg-emerald-600' : 'hover:bg-gray-700'}`}
             onClick={() => setFilter('completed')}
           >
             Completed
@@ -128,7 +131,7 @@ export default function Agreements() {
 
         {/* Agreements List */}
         {filteredAgreements.length === 0 ? (
-          <div className="card bg-base-200 shadow-xl">
+          <div className="card bg-gray-800/90 shadow-xl border border-gray-700">
             <div className="card-body items-center text-center">
               <DocumentTextIcon className="w-16 h-16 text-gray-500 mb-4" />
               <h2 className="card-title text-white">No {filter !== 'all' ? filter : ''} agreements found</h2>
@@ -138,7 +141,7 @@ export default function Agreements() {
                   : `No ${filter} agreements at this time`}
               </p>
               {filter === 'all' && (
-                <Link to="/dashboard/builder/agreements/create" className="btn btn-primary mt-4">
+                <Link to="/dashboard/builder/agreements/create" className="btn bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 mt-4">
                   Create First Agreement
                 </Link>
               )}
@@ -147,7 +150,7 @@ export default function Agreements() {
         ) : (
           <div className="grid gap-4">
             {filteredAgreements.map((agreement) => (
-              <div key={agreement.id} className="card bg-base-200 shadow-xl border border-base-300">
+              <div key={agreement.id} className="card bg-gray-800/90 shadow-xl border border-gray-700">
                 <div className="card-body">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">

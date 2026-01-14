@@ -20,8 +20,9 @@ export default function ForgotPassword() {
       const response = await authAPI.forgotPassword(email);
       setMessage(response.message || 'If the email exists, a password reset link has been sent to your email.');
       setEmail(''); // Clear form on success
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send reset email. Please try again.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to send reset email. Please try again.');
     } finally {
       setIsLoading(false);
     }

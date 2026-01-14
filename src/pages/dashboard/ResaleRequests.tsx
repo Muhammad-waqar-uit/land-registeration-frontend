@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import DashboardLayout from '../../components/layouts/DashboardLayout';
 import { resaleRequestAPI } from '../../services/api';
 import type { ResaleRequest } from '../../types';
 import { 
@@ -8,8 +9,18 @@ import {
   XCircleIcon, 
   ClockIcon,
   RectangleStackIcon,
-  ExclamationCircleIcon 
+  ExclamationCircleIcon,
+  HomeIcon,
+  FolderIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
+
+const navItems = [
+  { name: 'Dashboard', path: '/dashboard/builder', icon: HomeIcon },
+  { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
+  { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
+  { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: RectangleStackIcon },
+];
 
 const ResaleRequests: React.FC = () => {
   const [resaleRequests, setResaleRequests] = useState<ResaleRequest[]>([]);
@@ -19,31 +30,28 @@ const ResaleRequests: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchResaleRequests();
-  }, []);
-
-  useEffect(() => {
-    filterRequests(activeFilter);
-  }, [resaleRequests, activeFilter]);
-
-  const fetchResaleRequests = async () => {
+  const fetchResaleRequests = useCallback(async () => {
     try {
       setLoading(true);
       const data = await resaleRequestAPI.getBuilder();
       const requestsArray = Array.isArray(data) ? data : [];
       setResaleRequests(requestsArray);
       setError('');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching resale requests:', err);
-      setError(err.response?.data?.message || 'Failed to load resale requests');
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load resale requests');
       setResaleRequests([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const filterRequests = (filter: string) => {
+  useEffect(() => {
+    fetchResaleRequests();
+  }, [fetchResaleRequests]);
+
+  const filterRequests = useCallback((filter: string) => {
     if (filter === 'all') {
       setFilteredRequests(resaleRequests);
     } else {
@@ -51,7 +59,11 @@ const ResaleRequests: React.FC = () => {
         resaleRequests.filter((req) => req.status === filter)
       );
     }
-  };
+  }, [resaleRequests]);
+
+  useEffect(() => {
+    filterRequests(activeFilter);
+  }, [resaleRequests, activeFilter, filterRequests]);
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
@@ -63,9 +75,10 @@ const ResaleRequests: React.FC = () => {
       await resaleRequestAPI.approve(id);
       await fetchResaleRequests();
       setError('');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error approving resale request:', err);
-      setError(err.response?.data?.message || 'Failed to approve resale request');
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to approve resale request');
     } finally {
       setProcessingId(null);
     }
@@ -77,9 +90,10 @@ const ResaleRequests: React.FC = () => {
       await resaleRequestAPI.reject(id);
       await fetchResaleRequests();
       setError('');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error rejecting resale request:', err);
-      setError(err.response?.data?.message || 'Failed to reject resale request');
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to reject resale request');
     } finally {
       setProcessingId(null);
     }
@@ -91,9 +105,10 @@ const ResaleRequests: React.FC = () => {
       await resaleRequestAPI.list(id);
       await fetchResaleRequests();
       setError('');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error listing resale:', err);
-      setError(err.response?.data?.message || 'Failed to list resale');
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to list resale');
     } finally {
       setProcessingId(null);
     }
@@ -105,9 +120,10 @@ const ResaleRequests: React.FC = () => {
       await resaleRequestAPI.markSold(id);
       await fetchResaleRequests();
       setError('');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error marking as sold:', err);
-      setError(err.response?.data?.message || 'Failed to mark as sold');
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to mark as sold');
     } finally {
       setProcessingId(null);
     }
@@ -159,38 +175,45 @@ const ResaleRequests: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
+      <DashboardLayout navItems={navItems}>
+        <div className="flex justify-center items-center h-64">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Resale Requests</h1>
-          <p className="text-gray-600 mt-1">Manage property resale requests from owners</p>
+    <DashboardLayout navItems={navItems}>
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Resale Requests</h1>
+            <p className="text-gray-400 mt-1">Manage property resale requests from owners</p>
+          </div>
         </div>
-      </div>
 
       {error && (
         <div className="alert alert-error mb-6">
           <ExclamationCircleIcon className="h-6 w-6" />
-          <span>{error}</span>
+          <span className="text-black">{error}</span>
         </div>
       )}
 
       {/* Filter Tabs */}
-      <div className="tabs tabs-boxed mb-6">
+      <div className="flex gap-2 mb-6 overflow-x-auto">
         {filterTabs.map((tab) => (
           <button
             key={tab.key}
-            className={`tab gap-2 ${activeFilter === tab.key ? 'tab-active' : ''}`}
             onClick={() => handleFilterChange(tab.key)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors whitespace-nowrap ${
+              activeFilter === tab.key
+                ? 'bg-primary border-primary text-white'
+                : 'bg-gray-800/90 border-gray-700 text-white hover:bg-gray-700/90'
+            }`}
           >
             {tab.label}
-            <span className="badge badge-sm">{tab.count}</span>
+            <span className="badge badge-sm bg-gray-700 border-gray-600">{tab.count}</span>
           </button>
         ))}
       </div>
@@ -199,8 +222,8 @@ const ResaleRequests: React.FC = () => {
       {filteredRequests.length === 0 ? (
         <div className="text-center py-12">
           <BuildingOfficeIcon className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">No resale requests found</h3>
-          <p className="text-gray-500 mb-4">
+          <h3 className="text-xl font-semibold text-white mb-2">No resale requests found</h3>
+          <p className="text-gray-400 mb-4">
             {activeFilter === 'all'
               ? 'No property owners have requested resale yet.'
               : `No ${activeFilter} resale requests at the moment.`}
@@ -211,13 +234,13 @@ const ResaleRequests: React.FC = () => {
           {filteredRequests.map((request) => (
             <div
               key={request.id}
-              className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow"
+              className="card bg-gray-800/90 shadow-xl hover:shadow-2xl transition-shadow border border-gray-700"
             >
               <div className="card-body">
                 {/* Status Badge */}
                 <div className="flex justify-between items-start mb-2">
                   {getStatusBadge(request.status)}
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-400">
                     {formatDate(request.createdAt)}
                   </span>
                 </div>
@@ -229,8 +252,8 @@ const ResaleRequests: React.FC = () => {
 
                 {/* Property Info */}
                 {request.property && (
-                  <div className="text-sm text-gray-600 mb-2">
-                    <p className="font-semibold">{request.property.title}</p>
+                  <div className="text-sm text-gray-300 mb-2">
+                    <p className="font-semibold text-white">{request.property.title}</p>
                     <p>{request.property.location}</p>
                     {request.property.price && (
                       <p className="text-xs mt-1">
@@ -243,9 +266,9 @@ const ResaleRequests: React.FC = () => {
                 {/* Owner Info */}
                 {request.currentOwner && (
                   <div className="text-sm mb-3">
-                    <p className="text-gray-500">Current Owner:</p>
-                    <p className="font-medium">{request.currentOwner.name}</p>
-                    <p className="text-xs text-gray-500">{request.currentOwner.email}</p>
+                    <p className="text-gray-400">Current Owner:</p>
+                    <p className="font-medium text-white">{request.currentOwner.name}</p>
+                    <p className="text-xs text-gray-400">{request.currentOwner.email}</p>
                   </div>
                 )}
 
@@ -349,13 +372,13 @@ const ResaleRequests: React.FC = () => {
 
       {/* Summary Stats */}
       {filteredRequests.length > 0 && (
-        <div className="stats stats-vertical lg:stats-horizontal shadow mt-8 w-full">
+        <div className="stats stats-vertical lg:stats-horizontal shadow mt-8 w-full bg-gray-800/90 border border-gray-700">
           <div className="stat">
-            <div className="stat-title">Total Requests</div>
+            <div className="stat-title text-gray-400">Total Requests</div>
             <div className="stat-value text-primary">{filteredRequests.length}</div>
           </div>
           <div className="stat">
-            <div className="stat-title">Total Value</div>
+            <div className="stat-title text-gray-400">Total Value</div>
             <div className="stat-value text-secondary">
               {formatCurrency(
                 filteredRequests.reduce((sum, req) => sum + req.requestedPrice, 0)
@@ -363,20 +386,21 @@ const ResaleRequests: React.FC = () => {
             </div>
           </div>
           <div className="stat">
-            <div className="stat-title">Pending</div>
+            <div className="stat-title text-gray-400">Pending</div>
             <div className="stat-value text-warning">
               {filteredRequests.filter(r => r.status === 'pending').length}
             </div>
           </div>
           <div className="stat">
-            <div className="stat-title">Listed</div>
+            <div className="stat-title text-gray-400">Listed</div>
             <div className="stat-value text-info">
               {filteredRequests.filter(r => r.status === 'listed').length}
             </div>
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

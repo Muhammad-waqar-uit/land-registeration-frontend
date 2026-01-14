@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { registerUser } from '../../store/slices/authSlice';
-import type { UserRole } from '../../types';
+import type { UserRole, RegisterData } from '../../types';
 import { FaUser, FaLock, FaEnvelope, FaUserTag } from 'react-icons/fa';
 
 export default function Register() {
@@ -23,15 +23,7 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   
   const dispatch = useAppDispatch();
-  interface AuthState {
-    isAuthenticated: boolean;
-    user: {
-      role: UserRole;
-      [key: string]: any;
-    } | null;
-  }
-
-  const { isAuthenticated, user } = useAppSelector((state: { auth: AuthState }) => state.auth);
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
 
   // Redirect if already logged in
@@ -111,9 +103,10 @@ export default function Register() {
 
     setIsLoading(true);
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword, ...data } = formData;
       // Remove empty optional fields
-      const registerData: any = {
+      const registerData: RegisterData = {
         name: data.name,
         email: data.email,
         password: data.password,
@@ -140,8 +133,9 @@ export default function Register() {
       } else {
         setError(result.payload as string || 'Registration failed');
       }
-    } catch (err: any) {
-      setError(err?.message || 'An unexpected error occurred');
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error?.message || 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }

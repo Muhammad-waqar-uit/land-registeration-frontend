@@ -44,9 +44,12 @@ export default function BuilderDashboard() {
       ]);
       setBuilderProfile(profile);
       setPendingPayments(payments);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load data:', err);
-      setError(err.response?.data?.message || 'Failed to load data');
+      const errorMessage = err && typeof err === 'object' && 'response' in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      setError(errorMessage || 'Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -59,9 +62,12 @@ export default function BuilderDashboard() {
       await paymentAPI.verify(paymentId, verified, remarks);
       // Reload payments after verification
       await loadData();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to verify payment:', err);
-      alert(err.response?.data?.message || 'Failed to verify payment');
+      const errorMessage = err && typeof err === 'object' && 'response' in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      alert(errorMessage || 'Failed to verify payment');
     } finally {
       setVerifying(null);
     }

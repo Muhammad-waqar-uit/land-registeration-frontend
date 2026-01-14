@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
@@ -30,34 +30,37 @@ export default function AgreementDetail() {
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [verificationResult, setVerificationResult] = useState<{ verified: boolean; message: string } | null>(null);
+
+  const loadAgreement = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await agreementAPI.getById(id!);
+      setAgreement(data);
+    } catch (error: unknown) {
+      console.error('Failed to load agreement:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
   useEffect(() => {
     if (id) {
       loadAgreement();
     }
-  }, [id]);
-
-  const loadAgreement = async () => {
-    try {
-      setLoading(true);
-      const data = await agreementAPI.getById(id!);
-      setAgreement(data);
-    } catch (error: any) {
-      console.error('Failed to load agreement:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [id, loadAgreement]);
 
   const handleSign = async () => {
     try {
       setSigning(true);
       await agreementAPI.sign(id!);
       await loadAgreement();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to sign agreement:', error);
-      alert(error.response?.data?.message || 'Failed to sign agreement');
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      alert(errorMessage || 'Failed to sign agreement');
     } finally {
       setSigning(false);
     }
@@ -68,11 +71,14 @@ export default function AgreementDetail() {
       setVerifying(true);
       const result = await agreementAPI.verify(id!);
       setVerificationResult(result);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to verify agreement:', error);
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
       setVerificationResult({
         verified: false,
-        message: error.response?.data?.message || 'Verification failed',
+        message: errorMessage || 'Verification failed',
       });
     } finally {
       setVerifying(false);

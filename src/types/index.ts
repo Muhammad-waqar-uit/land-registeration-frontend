@@ -88,6 +88,7 @@ export interface Payment {
     title: string;
     location: string;
     price?: number;
+    ownerId: string;
   };
   buyer?: {
     id: string;
@@ -109,6 +110,7 @@ export interface Reservation {
     title: string;
     location: string;
     price: number;
+    ownerId: string;
   };
   buyer?: {
     id: string;
@@ -130,7 +132,7 @@ export interface Project {
   builderId: string;
   createdAt: string;
   updatedAt?: string;
-  approvalDocuments?: any[];
+  approvalDocuments?: unknown[];
   approvalDocumentsCID?: string;
   approvalDocumentsIPFSHash?: string;
   approvalDocumentsHash?: string;
@@ -180,8 +182,8 @@ export interface Agreement {
     totalAmount?: number;
     installmentPlanYears?: number;
     paymentTerms?: string;
-    propertyDetails?: any;
-    [key: string]: any;
+    propertyDetails?: unknown;
+    [key: string]: unknown;
   };
   createdAt: string;
   updatedAt?: string;

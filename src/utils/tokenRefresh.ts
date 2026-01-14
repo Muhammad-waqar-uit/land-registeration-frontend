@@ -1,14 +1,15 @@
 // Utility to update Redux state when tokens are refreshed
 // This is called from the axios interceptor to keep Redux in sync
+import type { Store, AnyAction } from '@reduxjs/toolkit';
 
-let store: any = null;
-let setTokensAction: any = null;
+let store: Store | null = null;
+let setTokensAction: ((payload: { accessToken: string; refreshToken?: string }) => AnyAction) | null = null;
 
-export const setStore = (reduxStore: any) => {
+export const setStore = (reduxStore: Store) => {
   store = reduxStore;
 };
 
-export const setSetTokensAction = (action: any) => {
+export const setSetTokensAction = (action: (payload: { accessToken: string; refreshToken?: string }) => AnyAction) => {
   setTokensAction = action;
 };
 

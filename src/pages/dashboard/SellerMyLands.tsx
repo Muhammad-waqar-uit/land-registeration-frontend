@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
@@ -35,7 +35,7 @@ export default function SellerMyLands() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'locked' | 'sold'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user?.id) return;
     
     try {
@@ -49,7 +49,7 @@ export default function SellerMyLands() {
       // Handle paginated or array response
       const landsArray: Land[] = Array.isArray(landsData) 
         ? landsData 
-        : ((landsData as any)?.data || []);
+        : ((landsData && typeof landsData === 'object' && 'data' in landsData ? (landsData as { data: Land[] }).data : null) || []);
 
       // Filter lands owned by current seller
       const sellerLands = landsArray.filter((land) => land.ownerId === user.id);
@@ -73,11 +73,11 @@ export default function SellerMyLands() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     fetchData();
-  }, [user?.id]);
+  }, [fetchData]);
 
   // Filter lands based on search and status
   useEffect(() => {
@@ -125,10 +125,10 @@ export default function SellerMyLands() {
     try {
       await landAPI.delete(landId);
       await fetchData();
-    } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
+    } catch (err: unknown) {
+      const errorMessage: string =
+        (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data ? String(err.response.data.message) : '') ||
+        (err instanceof Error ? err.message : '') ||
         'Failed to delete land. Please try again.';
       setDeleteError(errorMessage);
     } finally {
@@ -196,7 +196,7 @@ export default function SellerMyLands() {
                 <select
                   className="select select-bordered text-white border-2 border-white"
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                  onChange={(e) => setStatusFilter(e.target.value as 'all' | 'available' | 'locked' | 'sold')}
                 >
                   <option value="all">All Status</option>
                   <option value="available">Available</option>

@@ -60,7 +60,7 @@ export default function CreateProject() {
       setError(null);
 
       // Prepare JSON data
-      const projectData: any = {
+      const projectData: Record<string, string | number> = {
         name: formData.name.trim(),
         location: formData.location.trim(),
         status: 'draft',
@@ -101,9 +101,9 @@ export default function CreateProject() {
       
       // Success - navigate to projects list
       navigate('/dashboard/builder/projects');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to create project:', err);
-      setError(err.response?.data?.message || 'Failed to create project. Please try again.');
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to create project. Please try again.');
     } finally {
       setIsLoading(false);
     }

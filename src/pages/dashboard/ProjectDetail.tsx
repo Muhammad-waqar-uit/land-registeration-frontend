@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
@@ -35,25 +35,26 @@ export default function ProjectDetail() {
     message: string;
   } | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      loadProject();
-    }
-  }, [id]);
-
-  const loadProject = async () => {
+  const loadProject = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await projectAPI.getById(id!);
       setProject(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load project:', err);
-      setError(err.response?.data?.message || 'Failed to load project');
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load project');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      loadProject();
+    }
+  }, [id, loadProject]);
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this project? This will also affect all associated properties.')) {
@@ -64,9 +65,10 @@ export default function ProjectDetail() {
       setDeleting(true);
       await projectAPI.delete(id!);
       navigate('/dashboard/builder/projects');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete project:', err);
-      alert(err.response?.data?.message || 'Failed to delete project');
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Failed to delete project');
       setDeleting(false);
     }
   };
@@ -84,11 +86,12 @@ export default function ProjectDetail() {
         : await projectAPI.verify(id!);
       
       setVerificationResult(result);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Verification failed:', err);
+      const error = err as { response?: { data?: { message?: string } } };
       setVerificationResult({
         verified: false,
-        message: err.response?.data?.message || 'Verification failed',
+        message: error.response?.data?.message || 'Verification failed',
       });
     } finally {
       setVerifying(false);

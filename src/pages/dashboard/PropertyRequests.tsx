@@ -32,7 +32,7 @@ export default function PropertyRequests() {
       setLoading(true);
       const data = await propertyRequestAPI.getPending();
       setRequests(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to load property requests:', error);
     } finally {
       setLoading(false);
@@ -49,9 +49,10 @@ export default function PropertyRequests() {
       await propertyRequestAPI.approve(requestId, responseText[requestId] || undefined);
       await loadRequests();
       setResponseText({ ...responseText, [requestId]: '' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to approve request:', error);
-      alert(error.response?.data?.message || 'Failed to approve request');
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err.response?.data?.message || 'Failed to approve request');
     } finally {
       setProcessing(null);
     }
@@ -67,9 +68,10 @@ export default function PropertyRequests() {
       await propertyRequestAPI.reject(requestId, responseText[requestId] || undefined);
       await loadRequests();
       setResponseText({ ...responseText, [requestId]: '' });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to reject request:', error);
-      alert(error.response?.data?.message || 'Failed to reject request');
+      const err = error as { response?: { data?: { message?: string } } };
+      alert(err.response?.data?.message || 'Failed to reject request');
     } finally {
       setProcessing(null);
     }
@@ -100,30 +102,30 @@ export default function PropertyRequests() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="tabs tabs-boxed bg-base-200">
+        <div className="tabs tabs-boxed bg-gray-800/90 border border-gray-700">
           <a
-            className={`tab ${filter === 'pending' ? 'tab-active' : ''}`}
+            className={`tab text-white ${filter === 'pending' ? 'tab-active bg-blue-600' : 'hover:bg-gray-700'}`}
             onClick={() => setFilter('pending')}
           >
             <ClockIcon className="w-4 h-4 mr-2" />
             Pending
           </a>
           <a
-            className={`tab ${filter === 'approved' ? 'tab-active' : ''}`}
+            className={`tab text-white ${filter === 'approved' ? 'tab-active bg-green-600' : 'hover:bg-gray-700'}`}
             onClick={() => setFilter('approved')}
           >
             <CheckCircleIcon className="w-4 h-4 mr-2" />
             Approved
           </a>
           <a
-            className={`tab ${filter === 'rejected' ? 'tab-active' : ''}`}
+            className={`tab text-white ${filter === 'rejected' ? 'tab-active bg-red-600' : 'hover:bg-gray-700'}`}
             onClick={() => setFilter('rejected')}
           >
             <XCircleIcon className="w-4 h-4 mr-2" />
             Rejected
           </a>
           <a
-            className={`tab ${filter === 'all' ? 'tab-active' : ''}`}
+            className={`tab text-white ${filter === 'all' ? 'tab-active bg-purple-600' : 'hover:bg-gray-700'}`}
             onClick={() => setFilter('all')}
           >
             All
@@ -132,7 +134,7 @@ export default function PropertyRequests() {
 
         {/* Requests List */}
         {filteredRequests.length === 0 ? (
-          <div className="card bg-base-200 shadow-xl">
+          <div className="card bg-gray-800/90 shadow-xl border border-gray-700">
             <div className="card-body items-center text-center">
               <DocumentTextIcon className="w-16 h-16 text-gray-500 mb-4" />
               <h2 className="card-title text-white">No {filter !== 'all' ? filter : ''} requests found</h2>
@@ -146,7 +148,7 @@ export default function PropertyRequests() {
         ) : (
           <div className="grid gap-4">
             {filteredRequests.map((request) => (
-              <div key={request.id} className="card bg-base-200 shadow-xl border border-base-300">
+              <div key={request.id} className="card bg-gray-800/90 shadow-xl border border-gray-700">
                 <div className="card-body">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -268,6 +270,20 @@ export default function PropertyRequests() {
                       <p className="text-sm text-gray-400">Your Response</p>
                       <p className="text-white bg-base-300 p-3 rounded mt-1">{request.response}</p>
                     </div>
+                  )}
+
+                  {request.status === 'approved' && (
+                    <>
+                      <div className="divider"></div>
+                      <div className="card-actions justify-end">
+                        <Link
+                          to={`/dashboard/builder/agreements/create?requestId=${request.id}`}
+                          className="btn btn-primary btn-sm"
+                        >
+                          Create Agreement
+                        </Link>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>

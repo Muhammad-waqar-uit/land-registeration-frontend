@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import DashboardLayout from '../../components/layouts/DashboardLayout';
 import { installmentAPI, agreementAPI } from '../../services/api';
 import type { Agreement } from '../../types';
-import { CurrencyDollarIcon, DocumentTextIcon, CalendarIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { CurrencyDollarIcon, DocumentTextIcon, CalendarIcon, ExclamationCircleIcon, HomeIcon, FolderIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+
+const navItems = [
+  { name: 'Dashboard', path: '/dashboard/builder', icon: HomeIcon },
+  { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
+  { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
+  { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
+];
 
 const CreateInstallments: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -34,7 +42,7 @@ const CreateInstallments: React.FC = () => {
       const agreementsArray = Array.isArray(data) ? data : [];
       // Only show signed agreements that don't have installments yet
       setAgreements(agreementsArray.filter((a) => a.status === 'signed' || a.status === 'builder_signed'));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching agreements:', err);
     }
   };
@@ -52,9 +60,9 @@ const CreateInstallments: React.FC = () => {
       if (data.status !== 'signed' && data.status !== 'completed') {
         setError('This agreement must be fully signed before creating installments.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error loading agreement:', err);
-      setError(err.response?.data?.message || 'Failed to load agreement');
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to load agreement');
       setAgreement(null);
     } finally {
       setLoadingAgreement(false);
@@ -103,9 +111,9 @@ const CreateInstallments: React.FC = () => {
       setTimeout(() => {
         navigate('/dashboard/builder/installments');
       }, 2000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating installments:', err);
-      setError(err.response?.data?.message || 'Failed to create installments');
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Failed to create installments');
     } finally {
       setLoading(false);
     }
@@ -119,17 +127,24 @@ const CreateInstallments: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <DashboardLayout navItems={navItems}>
       <div className="max-w-3xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Create Installments</h1>
-          <p className="text-gray-600 mt-1">Generate payment schedule from signed agreement</p>
+          <button
+            onClick={() => navigate('/dashboard/builder/installments')}
+            className="btn btn-outline btn-primary btn-sm gap-2 mb-4 inline-flex items-center justify-center"
+          >
+            <ArrowLeftIcon className="w-4 h-4 flex-shrink-0" />
+            <span>Back to Installments</span>
+          </button>
+          <h1 className="text-3xl font-bold text-white">Create Installments</h1>
+          <p className="text-gray-400 mt-1">Generate payment schedule from signed agreement</p>
         </div>
 
         {error && (
           <div className="alert alert-error mb-6">
             <ExclamationCircleIcon className="h-6 w-6" />
-            <span>{error}</span>
+            <span className="text-black">{error}</span>
           </div>
         )}
 
@@ -138,34 +153,34 @@ const CreateInstallments: React.FC = () => {
             <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>{success}</span>
+            <span className="text-black">{success}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="card bg-base-100 shadow-xl">
+        <form onSubmit={handleSubmit} className="card bg-blue-950 shadow-2xl border border-blue-800">
           <div className="card-body">
             {/* Agreement Selection */}
-            <div className="form-control">
+            <div className="form-control mb-4">
               <label className="label">
-                <span className="label-text font-semibold">Select Agreement *</span>
+                <span className="label-text text-black font-semibold text-base">Select Agreement *</span>
               </label>
               <select
-                className="select select-bordered w-full"
+                className="select w-full bg-blue-900/60 text-white border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none"
                 value={agreementId}
                 onChange={handleAgreementChange}
                 required
                 disabled={!!agreementIdParam}
               >
-                <option value="">Choose a signed agreement...</option>
+                <option value="" className="bg-gray-800 text-gray-300">Choose a signed agreement...</option>
                 {agreements.map((agr) => (
-                  <option key={agr.id} value={agr.id}>
+                  <option key={agr.id} value={agr.id} className="bg-gray-800 text-white">
                     {agr.property?.title} - {agr.buyer?.name} - ₹
                     {agr.terms?.totalAmount?.toLocaleString() || 0}
                   </option>
                 ))}
               </select>
               <label className="label">
-                <span className="label-text-alt text-gray-500">
+                <span className="label-text-alt text-blue-800">
                   Only signed agreements are available
                 </span>
               </label>
@@ -180,50 +195,50 @@ const CreateInstallments: React.FC = () => {
 
             {agreement && !loadingAgreement && (
               <div className="mt-6 space-y-4">
-                <div className="divider">Agreement Details</div>
+                <div className="divider text-blue-100">Agreement Details</div>
 
                 {/* Property Information */}
-                <div className="bg-base-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-lg mb-3 flex items-center">
+                <div className="bg-blue-900/40 rounded-lg p-4 border border-blue-700">
+                  <h3 className="font-semibold text-lg mb-3 flex items-center text-blue-100">
                     <DocumentTextIcon className="h-5 w-5 mr-2" />
                     Property Information
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-500">Property</p>
-                      <p className="font-medium">{agreement.property?.title}</p>
+                      <p className="text-sm text-blue-300">Property</p>
+                      <p className="font-medium text-white">{agreement.property?.title}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Location</p>
-                      <p className="font-medium">{agreement.property?.location}</p>
+                      <p className="text-sm text-blue-300">Location</p>
+                      <p className="font-medium text-white">{agreement.property?.location}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Buyer Information */}
-                <div className="bg-base-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-lg mb-3">Buyer Information</h3>
+                <div className="bg-blue-900/40 rounded-lg p-4 border border-blue-700">
+                  <h3 className="font-semibold text-lg mb-3 text-blue-100">Buyer Information</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-500">Name</p>
-                      <p className="font-medium">{agreement.buyer?.name}</p>
+                      <p className="text-sm text-blue-300">Name</p>
+                      <p className="font-medium text-white">{agreement.buyer?.name}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">{agreement.buyer?.email}</p>
+                      <p className="text-sm text-blue-300">Email</p>
+                      <p className="font-medium text-white">{agreement.buyer?.email}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Payment Terms */}
-                <div className="bg-base-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-lg mb-3 flex items-center">
+                <div className="bg-blue-900/40 rounded-lg p-4 border border-blue-700">
+                  <h3 className="font-semibold text-lg mb-3 flex items-center text-blue-100">
                     <CurrencyDollarIcon className="h-5 w-5 mr-2" />
                     Payment Terms
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-500">Total Amount</p>
+                      <p className="text-sm text-blue-300">Total Amount</p>
                       <p className="font-medium text-xl text-primary">
                         {agreement.terms?.totalAmount 
                           ? formatCurrency(agreement.terms.totalAmount)
@@ -231,41 +246,41 @@ const CreateInstallments: React.FC = () => {
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Installment Plan</p>
-                      <p className="font-medium">
+                      <p className="text-sm text-blue-300">Installment Plan</p>
+                      <p className="font-medium text-white">
                         {agreement.terms?.installmentPlanYears || 0} years
                       </p>
                     </div>
                     <div className="col-span-2">
-                      <p className="text-sm text-gray-500">Agreement Type</p>
-                      <p className="font-medium capitalize">{agreement.agreementType}</p>
+                      <p className="text-sm text-blue-300">Agreement Type</p>
+                      <p className="font-medium capitalize text-white">{agreement.agreementType}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Installment Preview */}
                 {agreement.terms?.totalAmount && agreement.terms?.installmentPlanYears && (
-                  <div className="bg-base-200 rounded-lg p-4">
-                    <h3 className="font-semibold text-lg mb-3 flex items-center">
+                  <div className="bg-blue-900/40 rounded-lg p-4 border border-blue-700">
+                    <h3 className="font-semibold text-lg mb-3 flex items-center text-blue-100">
                       <CalendarIcon className="h-5 w-5 mr-2" />
                       Installment Preview
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-gray-500">Number of Installments</p>
-                        <p className="font-medium text-2xl">
+                        <p className="text-sm text-blue-300">Number of Installments</p>
+                        <p className="font-medium text-2xl text-white">
                           {agreement.terms.installmentPlanYears * 12}
                         </p>
-                        <p className="text-xs text-gray-500">Monthly payments</p>
+                        <p className="text-xs text-blue-300">Monthly payments</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Amount per Installment</p>
+                        <p className="text-sm text-blue-300">Amount per Installment</p>
                         <p className="font-medium text-2xl text-secondary">
                           {formatCurrency(
                             agreement.terms.totalAmount / (agreement.terms.installmentPlanYears * 12)
                           )}
                         </p>
-                        <p className="text-xs text-gray-500">Approximate amount</p>
+                        <p className="text-xs text-blue-300">Approximate amount</p>
                       </div>
                     </div>
                   </div>
@@ -285,18 +300,18 @@ const CreateInstallments: React.FC = () => {
             )}
 
             {/* Submit Button */}
-            <div className="card-actions justify-end mt-6">
+            <div className="card-actions justify-end mt-8 gap-3">
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/builder/installments')}
-                className="btn btn-ghost"
+                className="btn btn-outline btn-primary"
                 disabled={loading}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="btn btn-primary"
+                className="btn btn-primary gap-2 inline-flex items-center justify-center"
                 disabled={
                   loading ||
                   !agreement ||
@@ -306,12 +321,12 @@ const CreateInstallments: React.FC = () => {
                 {loading ? (
                   <>
                     <span className="loading loading-spinner loading-sm"></span>
-                    Creating...
+                    <span>Creating...</span>
                   </>
                 ) : (
                   <>
-                    <CurrencyDollarIcon className="h-5 w-5 mr-2" />
-                    Create Installments
+                    <CurrencyDollarIcon className="h-5 w-5 flex-shrink-0" />
+                    <span>Create Installments</span>
                   </>
                 )}
               </button>
@@ -325,8 +340,8 @@ const CreateInstallments: React.FC = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
           <div>
-            <h3 className="font-bold">How it works</h3>
-            <div className="text-sm">
+            <h3 className="font-bold text-black">How it works</h3>
+            <div className="text-sm text-black">
               <p>• Installments will be created automatically based on the agreement terms</p>
               <p>• Each installment will have a payment window (start and end date)</p>
               <p>• Buyers will receive notifications when payments are due</p>
@@ -335,7 +350,7 @@ const CreateInstallments: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 

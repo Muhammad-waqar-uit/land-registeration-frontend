@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import { landAPI, paymentAPI, reservationAPI, propertyRequestAPI } from '../services/api';
@@ -87,7 +87,7 @@ export default function LandDetail() {
   const imageIPFSUrl = land?.imageIPFSHash ? getIPFSUrl(land.imageIPFSHash) : null;
   const documentIPFSUrl = land?.documentIPFSHash ? getIPFSUrl(land.documentIPFSHash) : null;
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!id) return;
     try {
       setLoading(true);
@@ -110,11 +110,11 @@ export default function LandDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchData();
-  }, [id]);
+  }, [fetchData]);
 
   const handleDelete = async () => {
     if (!land || !user) return;
@@ -143,10 +143,11 @@ export default function LandDetail() {
       } else {
         navigate('/dashboard');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
+        error.response?.data?.message ||
+        error.message ||
         'Failed to delete land. Please try again.';
       setDeleteError(errorMessage);
     } finally {
@@ -177,11 +178,12 @@ export default function LandDetail() {
       setVerificationStatus('completed');
       // Refresh land data after verification
       await fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Verification failed:', error);
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       setVerificationError(
-        error.response?.data?.message ||
-        error.message ||
+        err.response?.data?.message ||
+        err.message ||
         'Failed to verify files. Please try again.'
       );
       setVerificationStatus('completed');
@@ -206,11 +208,12 @@ export default function LandDetail() {
       setBlockchainVerificationStatus('completed');
       // Refresh land data after blockchain verification
       await fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Blockchain verification failed:', error);
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       setBlockchainVerificationError(
-        error.response?.data?.message ||
-        error.message ||
+        err.response?.data?.message ||
+        err.message ||
         'Failed to verify blockchain. Please try again.'
       );
       setBlockchainVerificationStatus('completed');
@@ -252,11 +255,12 @@ export default function LandDetail() {
       // Refresh data after successful reservation
       await fetchData();
       alert('Land reserved successfully!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to reserve land:', error);
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage = 
-        error.response?.data?.message ||
-        error.message ||
+        err.response?.data?.message ||
+        err.message ||
         'Failed to reserve land. Please try again.';
       alert(errorMessage);
     } finally {
@@ -274,11 +278,12 @@ export default function LandDetail() {
       // Refresh data after cancellation
       await fetchData();
       alert('Reservation cancelled successfully!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to cancel reservation:', error);
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       const errorMessage = 
-        error.response?.data?.message ||
-        error.message ||
+        err.response?.data?.message ||
+        err.message ||
         'Failed to cancel reservation. Please try again.';
       alert(errorMessage);
     }
@@ -304,7 +309,7 @@ export default function LandDetail() {
     setRequesting(true);
 
     try {
-      const data: any = {
+      const data: { propertyId: string; offerPrice?: number; message?: string } = {
         propertyId: land.id,
       };
 
@@ -324,11 +329,12 @@ export default function LandDetail() {
       setTimeout(() => {
         setRequestSuccess(false);
       }, 5000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create property request:', error);
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       setRequestError(
-        error.response?.data?.message ||
-        error.message ||
+        err.response?.data?.message ||
+        err.message ||
         'Failed to submit request. Please try again.'
       );
     } finally {

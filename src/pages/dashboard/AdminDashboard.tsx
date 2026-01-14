@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
-  DocumentTextIcon,
   UserGroupIcon,
-  CreditCardIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import { landAPI, paymentAPI, builderAPI } from '../../services/api';
 import type { Land, Payment } from '../../types';
@@ -13,8 +12,7 @@ import { Link } from 'react-router-dom';
 const navItems = [
   { name: 'Overview', path: '/dashboard/admin', icon: HomeIcon },
   { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
-  { name: 'Land Management', path: '/dashboard/admin/lands', icon: DocumentTextIcon },
-  { name: 'Payment Oversight', path: '/dashboard/admin/payments', icon: CreditCardIcon },
+  { name: 'Mint Tokens', path: '/dashboard/admin/mint-tokens', icon: CurrencyDollarIcon },
 ];
 
 export default function AdminDashboard() {
@@ -126,6 +124,45 @@ export default function AdminDashboard() {
             <div className="stat-title text-white">Pending Builders</div>
             <div className="stat-value text-warning text-3xl">{stats.pendingBuilders}</div>
             <div className="stat-desc text-gray-400">{stats.totalBuilders} total builders</div>
+          </Link>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Mint Tokens Card */}
+          <Link
+            to="/dashboard/admin/mint-tokens"
+            className="card bg-gradient-to-br from-primary to-primary-focus text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+          >
+            <div className="card-body">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="card-title text-lg">Mint Tokens</h3>
+                  <p className="text-sm opacity-90 mt-1">
+                    Create new ERC20 tokens
+                  </p>
+                </div>
+                <CurrencyDollarIcon className="h-12 w-12 opacity-80" />
+              </div>
+            </div>
+          </Link>
+
+          {/* Builder Verification Card */}
+          <Link
+            to="/dashboard/admin/builders"
+            className="card bg-gradient-to-br from-info to-info-focus text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+          >
+            <div className="card-body">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="card-title text-lg">Verify Builders</h3>
+                  <p className="text-sm opacity-90 mt-1">
+                    {stats.pendingBuilders} pending
+                  </p>
+                </div>
+                <UserGroupIcon className="h-12 w-12 opacity-80" />
+              </div>
+            </div>
           </Link>
         </div>
 

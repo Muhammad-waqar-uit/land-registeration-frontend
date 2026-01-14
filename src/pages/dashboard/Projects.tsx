@@ -39,9 +39,10 @@ export default function Projects() {
       setError(null);
       const data = await projectAPI.getAll();
       setProjects(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load projects:', err);
-      setError(err.response?.data?.message || 'Failed to load projects');
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Failed to load projects');
     } finally {
       setLoading(false);
     }
@@ -56,9 +57,10 @@ export default function Projects() {
       setDeleting(projectId);
       await projectAPI.delete(projectId);
       setProjects(projects.filter((p) => p.id !== projectId));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to delete project:', err);
-      alert(err.response?.data?.message || 'Failed to delete project');
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || 'Failed to delete project');
     } finally {
       setDeleting(null);
     }
@@ -81,13 +83,14 @@ export default function Projects() {
         ...prev,
         [projectId]: result,
       }));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Verification failed:', err);
+      const error = err as { response?: { data?: { message?: string } } };
       setVerificationResults(prev => ({
         ...prev,
         [projectId]: {
           verified: false,
-          message: err.response?.data?.message || 'Verification failed',
+          message: error.response?.data?.message || 'Verification failed',
         },
       }));
     } finally {
@@ -235,7 +238,7 @@ export default function Projects() {
                       <div className="mt-2">
                         <p className="text-xs text-gray-500 mb-1">Documents:</p>
                         <div className="space-y-1">
-                          {project.approvalDocuments.slice(0, 2).map((doc: any, index: number) => (
+                          {(project.approvalDocuments as Array<{ url?: string; path?: string; name?: string; filename?: string }>).slice(0, 2).map((doc, index: number) => (
                             <div key={index} className="flex items-center gap-1 text-xs">
                               <DocumentTextIcon className="w-3 h-3 text-blue-400 flex-shrink-0" />
                               <a

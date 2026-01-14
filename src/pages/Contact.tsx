@@ -38,10 +38,11 @@ export default function Contact() {
         email: '',
         message: '',
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
       setError(
-        err.response?.data?.message || 
-        err.message || 
+        error.response?.data?.message || 
+        error.message || 
         'Failed to send message. Please try again later.'
       );
     } finally {

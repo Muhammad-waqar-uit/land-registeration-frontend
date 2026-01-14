@@ -1,6 +1,7 @@
 import { useState, type FormEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
+import type { Project } from '../../types';
 import {
   HomeIcon,
   DocumentTextIcon,
@@ -25,7 +26,7 @@ export default function RegisterLand() {
   });
   const [document, setDocument] = useState<File | null>(null);
   const [image, setImage] = useState<File | null>(null);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +38,7 @@ export default function RegisterLand() {
     try {
       const data = await projectAPI.getAll();
       setProjects(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load projects:', err);
       // Non-critical error - user can still create property without project
     }
@@ -119,10 +120,11 @@ export default function RegisterLand() {
 
       // Success - redirect to seller dashboard (will refresh automatically)
       navigate('/dashboard/seller', { state: { refresh: true } });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
       setError(
-        err.response?.data?.message ||
-        err.message ||
+        error.response?.data?.message ||
+        error.message ||
         'Failed to register land. Please try again.'
       );
     } finally {

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { LoginCredentials, RegisterData, User, Land, Payment, Reservation } from '../types';
+import type { LoginCredentials, RegisterData, User, Land, Payment, Reservation, Project, PropertyRequest, Agreement, Installment, ResaleRequest } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -33,11 +33,11 @@ api.interceptors.request.use((config) => {
 // Track if we're currently refreshing to avoid multiple refresh calls
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (value?: any) => void;
-  reject: (reason?: any) => void;
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
 }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -112,7 +112,7 @@ api.interceptors.response.use(
         try {
           const { updateTokensInStore } = await import('../utils/tokenRefresh');
           updateTokensInStore(accessToken, newRefreshToken);
-        } catch (error) {
+        } catch {
           // Ignore if store not available yet
         }
 
@@ -125,7 +125,7 @@ api.interceptors.response.use(
 
         // Retry original request
         return api(originalRequest);
-      } catch (refreshError: any) {
+      } catch (refreshError: unknown) {
         // Refresh failed - logout user
         isRefreshing = false;
         processQueue(refreshError, null);
@@ -227,14 +227,14 @@ export const authAPI = {
     if (tokenToRevoke) {
       try {
         await api.post('/auth/logout', { refreshToken: tokenToRevoke });
-      } catch (error) {
+      } catch {
         // Ignore logout API errors - tokens are already cleared locally
         console.warn('Logout API call failed, but tokens cleared locally');
       }
     } else {
       try {
         await api.post('/auth/logout');
-      } catch (error) {
+      } catch {
         // Ignore logout API errors
         console.warn('Logout API call failed, but tokens cleared locally');
       }
@@ -449,22 +449,22 @@ export const contactAPI = {
 
 // Project API
 export const projectAPI = {
-  create: async (data: any): Promise<any> => {
+  create: async (data: Partial<Project>): Promise<Project> => {
     const response = await api.post('/projects', data);
     return response.data.data || response.data;
   },
 
-  getAll: async (): Promise<any[]> => {
+  getAll: async (): Promise<Project[]> => {
     const response = await api.get('/projects');
     return response.data.data || response.data;
   },
 
-  getById: async (id: string): Promise<any> => {
+  getById: async (id: string): Promise<Project> => {
     const response = await api.get(`/projects/${id}`);
     return response.data.data || response.data;
   },
 
-  update: async (id: string, data: any): Promise<any> => {
+  update: async (id: string, data: Partial<Project>): Promise<Project> => {
     const response = await api.patch(`/projects/${id}`, data);
     return response.data.data || response.data;
   },
@@ -473,12 +473,12 @@ export const projectAPI = {
     await api.delete(`/projects/${id}`);
   },
 
-  getProperties: async (id: string): Promise<any[]> => {
+  getProperties: async (id: string): Promise<Land[]> => {
     const response = await api.get(`/projects/${id}/properties`);
     return response.data.data || response.data;
   },
 
-  uploadDocs: async (id: string, formData: FormData): Promise<any> => {
+  uploadDocs: async (id: string, formData: FormData): Promise<Project> => {
     const response = await api.post(`/projects/${id}/approval-documents`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -517,7 +517,7 @@ export const propertyRequestAPI = {
     propertyId: string;
     offerPrice?: number;
     message?: string;
-  }): Promise<any> => {
+  }): Promise<PropertyRequest> => {
     console.log('📤 Creating property request:', data);
     const response = await api.post('/property-requests', data);
     console.log('✅ Property request created:', response.data);
@@ -525,25 +525,25 @@ export const propertyRequestAPI = {
   },
 
   // Get all property requests (Admin only)
-  getAll: async (): Promise<any[]> => {
+  getAll: async (): Promise<PropertyRequest[]> => {
     const response = await api.get('/property-requests');
     return response.data.data || response.data;
   },
 
   // Get buyer's own requests
-  getMyRequests: async (): Promise<any[]> => {
+  getMyRequests: async (): Promise<PropertyRequest[]> => {
     const response = await api.get('/property-requests/my-requests');
     return response.data.data || response.data;
   },
 
   // Get pending requests for builder
-  getPending: async (): Promise<any[]> => {
+  getPending: async (): Promise<PropertyRequest[]> => {
     const response = await api.get('/property-requests/pending');
     return response.data.data || response.data;
   },
 
   // Get single request by ID
-  getById: async (id: string): Promise<any> => {
+  getById: async (id: string): Promise<PropertyRequest> => {
     const response = await api.get(`/property-requests/${id}`);
     return response.data.data || response.data;
   },
@@ -552,7 +552,7 @@ export const propertyRequestAPI = {
   respond: async (id: string, data: {
     status: 'approved' | 'rejected';
     response?: string;
-  }): Promise<any> => {
+  }): Promise<PropertyRequest> => {
     console.log(`📤 Responding to request ${id}:`, data);
     const response = await api.post(`/property-requests/${id}/respond`, data);
     console.log('✅ Request response sent:', response.data);
@@ -560,7 +560,7 @@ export const propertyRequestAPI = {
   },
 
   // Approve request
-  approve: async (id: string, response?: string): Promise<any> => {
+  approve: async (id: string, response?: string): Promise<PropertyRequest> => {
     console.log(`✅ Approving request ${id}`);
     const res = await api.post(`/property-requests/${id}/approve`, { response });
     console.log('✅ Request approved:', res.data);
@@ -568,7 +568,7 @@ export const propertyRequestAPI = {
   },
 
   // Reject request
-  reject: async (id: string, response?: string): Promise<any> => {
+  reject: async (id: string, response?: string): Promise<PropertyRequest> => {
     console.log(`❌ Rejecting request ${id}`);
     const res = await api.post(`/property-requests/${id}/reject`, { response });
     console.log('✅ Request rejected:', res.data);
@@ -590,8 +590,8 @@ export const agreementAPI = {
     propertyId: string;
     buyerId: string;
     agreementType: 'initial' | 'final';
-    terms: any;
-  }): Promise<any> => {
+    terms: Record<string, unknown>;
+  }): Promise<Agreement> => {
     console.log('📤 Creating agreement:', data);
     const response = await api.post('/agreements', data);
     console.log('✅ Agreement created:', response.data);
@@ -605,25 +605,25 @@ export const agreementAPI = {
     builderId?: string;
     status?: string;
     agreementType?: string;
-  }): Promise<any[]> => {
+  }): Promise<Agreement[]> => {
     const response = await api.get('/agreements', { params });
     return response.data.data || response.data;
   },
 
   // Get agreement by ID
-  getById: async (id: string): Promise<any> => {
+  getById: async (id: string): Promise<Agreement> => {
     const response = await api.get(`/agreements/${id}`);
     return response.data.data || response.data;
   },
 
   // Get agreements by property ID
-  getByProperty: async (propertyId: string): Promise<any[]> => {
+  getByProperty: async (propertyId: string): Promise<Agreement[]> => {
     const response = await api.get(`/agreements/property/${propertyId}`);
     return response.data.data || response.data;
   },
 
   // Sign agreement (Buyer or Builder)
-  sign: async (id: string, signatureData?: string): Promise<any> => {
+  sign: async (id: string, signatureData?: string): Promise<Agreement> => {
     console.log(`✍️ Signing agreement ${id}`);
     const response = await api.post(`/agreements/${id}/sign`, { signatureData });
     console.log('✅ Agreement signed:', response.data);
@@ -631,7 +631,7 @@ export const agreementAPI = {
   },
 
   // Upload signed document
-  uploadSigned: async (id: string, document: File): Promise<any> => {
+  uploadSigned: async (id: string, document: File): Promise<Agreement> => {
     console.log(`📤 Uploading signed document for agreement ${id}`);
     const formData = new FormData();
     formData.append('document', document);
@@ -646,7 +646,7 @@ export const agreementAPI = {
   },
 
   // Generate ownership document (Builder only)
-  generateOwnership: async (id: string): Promise<any> => {
+  generateOwnership: async (id: string): Promise<Agreement> => {
     console.log(`📄 Generating ownership document for agreement ${id}`);
     const response = await api.post(`/agreements/${id}/generate-ownership-doc`);
     console.log('✅ Ownership document generated:', response.data);
@@ -654,7 +654,7 @@ export const agreementAPI = {
   },
 
   // Verify agreement
-  verify: async (id: string): Promise<any> => {
+  verify: async (id: string): Promise<{ verified: boolean; message: string }> => {
     console.log(`🔍 Verifying agreement ${id}`);
     const response = await api.post(`/agreements/${id}/verify`);
     console.log('✅ Agreement verified:', response.data);
@@ -665,7 +665,7 @@ export const agreementAPI = {
 // Installment API
 export const installmentAPI = {
   // Create installments from agreement (Builder only)
-  create: async (agreementId: string): Promise<any> => {
+  create: async (agreementId: string): Promise<Installment[]> => {
     console.log(`💰 Creating installments for agreement ${agreementId}`);
     const response = await api.post('/installments', { agreementId });
     console.log('✅ Installments created:', response.data);
@@ -680,7 +680,7 @@ export const installmentAPI = {
     status?: 'pending' | 'paid' | 'overdue' | 'completed';
     page?: number;
     limit?: number;
-  }): Promise<any> => {
+  }): Promise<Installment[]> => {
     console.log('📤 Fetching installments with params:', params);
     const response = await api.get('/installments', { params });
     console.log('✅ Installments fetched:', response.data);
@@ -688,7 +688,7 @@ export const installmentAPI = {
   },
 
   // Get my installments (Buyer)
-  getMyInstallments: async (params?: { status?: string }): Promise<any> => {
+  getMyInstallments: async (params?: { status?: string }): Promise<Installment[]> => {
     console.log('📤 Fetching my installments with params:', params);
     const response = await api.get('/installments/my-installments', { params });
     console.log('✅ My installments fetched:', response.data);
@@ -696,7 +696,7 @@ export const installmentAPI = {
   },
 
   // Get installment by ID
-  getById: async (id: string): Promise<any> => {
+  getById: async (id: string): Promise<Installment> => {
     console.log(`📤 Fetching installment ${id}`);
     const response = await api.get(`/installments/${id}`);
     console.log('✅ Installment fetched:', response.data);
@@ -704,7 +704,7 @@ export const installmentAPI = {
   },
 
   // Get installment status
-  getStatus: async (id: string): Promise<any> => {
+  getStatus: async (id: string): Promise<{ status: string; message: string }> => {
     console.log(`📤 Fetching installment status ${id}`);
     const response = await api.get(`/installments/${id}/status`);
     console.log('✅ Installment status fetched:', response.data);
@@ -712,7 +712,7 @@ export const installmentAPI = {
   },
 
   // Update overdue installments (Admin only)
-  updateOverdue: async (): Promise<any> => {
+  updateOverdue: async (): Promise<{ updated: number; message: string }> => {
     console.log('💰 Updating overdue installments');
     const response = await api.post('/installments/update-overdue');
     console.log('✅ Overdue installments updated:', response.data);
@@ -723,7 +723,7 @@ export const installmentAPI = {
 // Resale Request API
 export const resaleRequestAPI = {
   // Create resale request
-  create: async (data: { propertyId: string; requestedPrice: number }): Promise<any> => {
+  create: async (data: { propertyId: string; requestedPrice: number }): Promise<ResaleRequest> => {
     console.log('🔄 Creating resale request:', data);
     const response = await api.post('/resale-requests', data);
     console.log('✅ Resale request created:', response.data);
@@ -736,7 +736,7 @@ export const resaleRequestAPI = {
     propertyId?: string;
     page?: number;
     limit?: number;
-  }): Promise<any> => {
+  }): Promise<ResaleRequest[]> => {
     console.log('📤 Fetching all resale requests with params:', params);
     const response = await api.get('/resale-requests', { params });
     console.log('✅ Resale requests fetched:', response.data);
@@ -744,7 +744,7 @@ export const resaleRequestAPI = {
   },
 
   // Get my resale requests
-  getMyRequests: async (): Promise<any> => {
+  getMyRequests: async (): Promise<ResaleRequest[]> => {
     console.log('📤 Fetching my resale requests');
     const response = await api.get('/resale-requests/my-requests');
     console.log('✅ My resale requests fetched:', response.data);
@@ -752,7 +752,7 @@ export const resaleRequestAPI = {
   },
 
   // Get builder's resale requests
-  getBuilder: async (params?: { status?: string }): Promise<any> => {
+  getBuilder: async (params?: { status?: string }): Promise<ResaleRequest[]> => {
     console.log('📤 Fetching builder resale requests with params:', params);
     const response = await api.get('/resale-requests/builder', { params });
     console.log('✅ Builder resale requests fetched:', response.data);
@@ -760,7 +760,7 @@ export const resaleRequestAPI = {
   },
 
   // Get resale request by ID
-  getById: async (id: string): Promise<any> => {
+  getById: async (id: string): Promise<ResaleRequest> => {
     console.log(`📤 Fetching resale request ${id}`);
     const response = await api.get(`/resale-requests/${id}`);
     console.log('✅ Resale request fetched:', response.data);
@@ -768,7 +768,7 @@ export const resaleRequestAPI = {
   },
 
   // Respond to resale request (Builder)
-  respond: async (id: string, status: 'approved' | 'rejected'): Promise<any> => {
+  respond: async (id: string, status: 'approved' | 'rejected'): Promise<ResaleRequest> => {
     console.log(`🔄 Responding to resale request ${id} with status:`, status);
     const response = await api.post(`/resale-requests/${id}/respond`, { status });
     console.log('✅ Resale request response sent:', response.data);
@@ -776,7 +776,7 @@ export const resaleRequestAPI = {
   },
 
   // Approve resale request
-  approve: async (id: string): Promise<any> => {
+  approve: async (id: string): Promise<ResaleRequest> => {
     console.log(`✅ Approving resale request ${id}`);
     const response = await api.post(`/resale-requests/${id}/approve`);
     console.log('✅ Resale request approved:', response.data);
@@ -784,7 +784,7 @@ export const resaleRequestAPI = {
   },
 
   // Reject resale request
-  reject: async (id: string): Promise<any> => {
+  reject: async (id: string): Promise<ResaleRequest> => {
     console.log(`❌ Rejecting resale request ${id}`);
     const response = await api.post(`/resale-requests/${id}/reject`);
     console.log('✅ Resale request rejected:', response.data);
@@ -792,7 +792,7 @@ export const resaleRequestAPI = {
   },
 
   // List property as resale
-  list: async (id: string): Promise<any> => {
+  list: async (id: string): Promise<ResaleRequest> => {
     console.log(`📋 Listing resale request ${id}`);
     const response = await api.post(`/resale-requests/${id}/list`);
     console.log('✅ Resale request listed:', response.data);
@@ -800,11 +800,49 @@ export const resaleRequestAPI = {
   },
 
   // Mark resale as sold
-  markSold: async (id: string): Promise<any> => {
+  markSold: async (id: string): Promise<ResaleRequest> => {
     console.log(`💰 Marking resale request ${id} as sold`);
     const response = await api.post(`/resale-requests/${id}/mark-sold`);
     console.log('✅ Resale request marked as sold:', response.data);
     return response.data.data || response.data;
+  },
+};
+
+// Token API
+export const tokenAPI = {
+  // Get token balance for a wallet address
+  getBalance: async (address: string): Promise<{
+    success: boolean;
+    data?: {
+      success: boolean;
+      balance: string;
+      balanceRaw: string;
+      decimals: number;
+    };
+    balance?: string;
+    balanceRaw?: string;
+    decimals?: number;
+    error?: string;
+  }> => {
+    console.log(`🪙 Getting token balance for address: ${address}`);
+    const response = await api.get(`/tokens/balance?address=${address}`);
+    console.log('✅ Token balance retrieved:', response.data);
+    return response.data;
+  },
+
+  // Mint tokens to an address (Admin only)
+  mintTokens: async (toAddress: string, amount: number): Promise<{
+    success: boolean;
+    transactionHash?: string;
+    error?: string;
+  }> => {
+    console.log(`🪙 Minting ${amount} tokens to ${toAddress}`);
+    const response = await api.post('/tokens/mint', {
+      toAddress,
+      amount
+    });
+    console.log('✅ Tokens minted successfully:', response.data);
+    return response.data;
   },
 };
 
