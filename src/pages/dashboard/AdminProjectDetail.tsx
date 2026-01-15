@@ -6,11 +6,12 @@ import {
   FolderIcon,
   UserGroupIcon,
   CurrencyDollarIcon,
+  BuildingOfficeIcon,
+  MapPinIcon,
   ArrowLeftIcon,
   PencilIcon,
   CheckCircleIcon,
   ShieldCheckIcon,
-  MapPinIcon,
   CalendarIcon,
   UserGroupIcon as UsersIcon,
   DocumentTextIcon,
@@ -21,6 +22,8 @@ import type { Project, ProjectStatus } from '../../types';
 const navItems = [
   { name: 'Overview', path: '/dashboard/admin', icon: HomeIcon },
   { name: 'Project Approvals', path: '/dashboard/admin/projects', icon: FolderIcon },
+  { name: 'Approved Projects', path: '/dashboard/admin/approved-projects', icon: BuildingOfficeIcon },
+  { name: 'All Lands', path: '/dashboard/admin/all-lands', icon: MapPinIcon },
   { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
   { name: 'Mint Tokens', path: '/dashboard/admin/mint-tokens', icon: CurrencyDollarIcon },
 ];
@@ -153,7 +156,7 @@ export default function AdminProjectDetail() {
           <div>
             <button
               onClick={() => navigate('/dashboard/admin/projects')}
-              className="btn btn-ghost btn-sm mb-2"
+              className="btn btn-ghost btn-sm mb-2 text-white flex flex-row items-center gap-2"
             >
               <ArrowLeftIcon className="w-4 h-4 mr-2" />
               Back to Project Approvals
@@ -169,7 +172,7 @@ export default function AdminProjectDetail() {
             {project.status === 'pending_approval' && (
               <button
                 onClick={onApprove}
-                className="btn btn-success btn-sm"
+                className="btn btn-success btn-sm text-white flex flex-row items-center gap-2"
                 disabled={approving}
               >
                 {approving ? (
@@ -180,7 +183,7 @@ export default function AdminProjectDetail() {
                 Approve Project
               </button>
             )}
-            <Link to="/dashboard/admin/projects" className="btn btn-primary btn-sm">
+            <Link to="/dashboard/admin/projects" className="btn btn-primary btn-sm text-white flex flex-row items-center gap-2">
               <PencilIcon className="w-4 h-4 mr-2" />
               Review List
             </Link>
@@ -295,7 +298,7 @@ export default function AdminProjectDetail() {
                     <button
                       onClick={onVerifyDocs}
                       disabled={verifying}
-                      className="btn btn-sm btn-success gap-2"
+                      className="btn btn-sm btn-success gap-2 text-white flex flex-row items-center gap-2"
                     >
                       {verifying ? (
                         <span className="loading loading-spinner loading-xs"></span>

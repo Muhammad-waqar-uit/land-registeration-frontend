@@ -248,7 +248,7 @@ export default function RegisterLand() {
                         </>
                       ) : (
                         <>
-                          Cannot create lands for this project yet (status: <strong>{String(approvalStatus.status).replace(/_/g, ' ')}</strong>).
+                          Cannot create lands for this project no more remaining units.
                         </>
                       )}
                     </span>

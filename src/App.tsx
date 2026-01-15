@@ -14,6 +14,8 @@ import ResetPassword from './pages/auth/ResetPassword';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import AdminProjects from './pages/dashboard/AdminProjects';
 import AdminProjectDetail from './pages/dashboard/AdminProjectDetail';
+import AdminApprovedProjects from './pages/dashboard/AdminApprovedProjects';
+import AdminAllLands from './pages/dashboard/AdminAllLands';
 import BuilderVerification from './pages/dashboard/BuilderVerification';
 import SellerDashboard from './pages/dashboard/SellerDashboard';
 import SellerMyLands from './pages/dashboard/SellerMyLands';
@@ -113,6 +115,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminProjectDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/approved-projects"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminApprovedProjects />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/all-lands"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminAllLands />
             </ProtectedRoute>
           }
         />

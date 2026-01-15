@@ -13,13 +13,26 @@ import {
   CalendarIcon,
   UserGroupIcon,
   ArrowLeftIcon,
+  DocumentTextIcon,
+  CreditCardIcon,
+  CurrencyDollarIcon,
+  ArrowPathIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { projectAPI } from '../../services/api';
 import type { Project } from '../../types';
 
 const navItems = [
-  { name: 'Dashboard', path: '/dashboard/builder', icon: HomeIcon },
+  { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
   { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
+  { name: 'My Lands', path: '/dashboard/builder/lands', icon: DocumentTextIcon },
+  { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
+  { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
+  { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
+  { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
+  { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
+  { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
+  { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
 ];
 
 export default function ProjectDetail() {
@@ -43,6 +56,17 @@ export default function ProjectDetail() {
       setLoading(true);
       setError(null);
       const data = await projectAPI.getById(id!);
+      // Debug: Check what the API is returning
+      console.log('Project API Response:', {
+        id: data.id,
+        name: data.name,
+        soldUnits: data.soldUnits,
+        totalUnits: data.totalUnits,
+        _count: data._count,
+        landsCount: data._count?.lands,
+        landsArrayLength: data.lands?.length,
+        fullResponse: data,
+      });
       setProject(data);
     } catch (err: unknown) {
       console.error('Failed to load project:', err);
@@ -149,13 +173,15 @@ export default function ProjectDetail() {
           </div>
 
           <div className="flex gap-2">
-            <Link
-              to={`/dashboard/builder/projects/${project.id}/edit`}
-              className="btn btn-primary btn-sm"
-            >
-              <PencilIcon className="w-4 h-4 mr-2" />
-              Edit
-            </Link>
+            {project.status !== 'approved' && (
+              <Link
+                to={`/dashboard/builder/projects/${project.id}/edit`}
+                className="btn btn-primary btn-sm"
+              >
+                <PencilIcon className="w-4 h-4 mr-2" />
+                Edit
+              </Link>
+            )}
             <button
               onClick={handleDelete}
               className="btn btn-error btn-sm"
@@ -205,26 +231,22 @@ export default function ProjectDetail() {
               )}
 
               {/* Sold Units */}
-              {project.soldUnits !== undefined && (
-                <div className="flex items-start gap-3">
-                  <UserGroupIcon className="w-5 h-5 text-primary mt-1" />
-                  <div>
-                    <p className="text-sm text-gray-400">Sold Units</p>
-                    <p className="text-white font-semibold">{project.soldUnits}</p>
-                  </div>
+              <div className="flex items-start gap-3">
+                <UserGroupIcon className="w-5 h-5 text-primary mt-1" />
+                <div>
+                  <p className="text-sm text-gray-400">Sold Units</p>
+                  <p className="text-white font-semibold">{project.soldUnits ?? 0}</p>
                 </div>
-              )}
+              </div>
 
               {/* Total Properties */}
-              {project._count && (
-                <div className="flex items-start gap-3">
-                  <UserGroupIcon className="w-5 h-5 text-primary mt-1" />
-                  <div>
-                    <p className="text-sm text-gray-400">Total Properties</p>
-                    <p className="text-white font-semibold">{project._count.lands}</p>
-                  </div>
+              <div className="flex items-start gap-3">
+                <UserGroupIcon className="w-5 h-5 text-primary mt-1" />
+                <div>
+                  <p className="text-sm text-gray-400">Total Properties</p>
+                  <p className="text-white font-semibold">{project._count?.lands ?? project.lands?.length ?? 0}</p>
                 </div>
-              )}
+              </div>
 
               {/* Created Date */}
               <div className="flex items-start gap-3">

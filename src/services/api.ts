@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { LoginCredentials, RegisterData, User, Land, Payment, Reservation, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus } from '../types';
+import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Reservation, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -270,6 +270,36 @@ export const authAPI = {
     // Backend returns: { message: string }
     return response.data.data || response.data;
   },
+
+  // Get all users with pagination and filtering (Admin only)
+  getAllUsers: async (params?: {
+    page?: number;
+    limit?: number;
+    offset?: number;
+    role?: UserRole;
+  }): Promise<{
+    data: User[];
+    total: number;
+    page: number;
+    limit: number;
+    offset: number;
+  }> => {
+    const response = await api.get('/auth/users', { params });
+    // Backend returns: { data: User[], total, page, limit, offset }
+    const responseData = response.data.data || response.data;
+    // Ensure response matches expected format
+    if (responseData && Array.isArray(responseData.data)) {
+      return responseData;
+    }
+    // Fallback if backend returns data directly
+    return {
+      data: Array.isArray(responseData) ? responseData : [],
+      total: responseData?.total || 0,
+      page: responseData?.page || 1,
+      limit: responseData?.limit || 10,
+      offset: responseData?.offset || 0,
+    };
+  },
 };
 
 // Builder API
@@ -382,6 +412,38 @@ export const landAPI = {
     const response = await api.post(`/lands/${id}/verify-blockchain`);
     // Backend returns: blockchain verification result object directly
     return response.data.data || response.data;
+  },
+
+  // Admin-only: Get all lands with comprehensive filters
+  getAllLands: async (params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    projectId?: string;
+    builderId?: string;
+    ownerId?: string;
+    isResale?: boolean;
+    minPrice?: number;
+    maxPrice?: number;
+  }): Promise<{
+    data: Land[];
+    total: number;
+    page: number;
+    limit: number;
+  }> => {
+    const response = await api.get('/lands/admin/all', { params });
+    const responseData = response.data.data || response.data;
+    // Ensure response matches expected format
+    if (responseData && Array.isArray(responseData.data)) {
+      return responseData;
+    }
+    // Fallback if backend returns data directly
+    return {
+      data: Array.isArray(responseData) ? responseData : [],
+      total: responseData?.total || 0,
+      page: responseData?.page || 1,
+      limit: responseData?.limit || 10,
+    };
   },
 };
 
@@ -540,6 +602,33 @@ export const projectAPI = {
   }> => {
     const response = await api.post(`/projects/${id}/verify-blockchain`);
     return response.data.data || response.data;
+  },
+
+  // Admin-only: Get all approved projects
+  getApprovedProjects: async (params?: {
+    page?: number;
+    limit?: number;
+    builderId?: string;
+    search?: string;
+  }): Promise<{
+    data: Project[];
+    total: number;
+    page: number;
+    limit: number;
+  }> => {
+    const response = await api.get('/projects/admin/approved', { params });
+    const responseData = response.data.data || response.data;
+    // Ensure response matches expected format
+    if (responseData && Array.isArray(responseData.data)) {
+      return responseData;
+    }
+    // Fallback if backend returns data directly
+    return {
+      data: Array.isArray(responseData) ? responseData : [],
+      total: responseData?.total || 0,
+      page: responseData?.page || 1,
+      limit: responseData?.limit || 10,
+    };
   },
 };
 

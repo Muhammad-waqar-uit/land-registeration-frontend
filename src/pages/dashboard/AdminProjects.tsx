@@ -6,6 +6,8 @@ import {
   FolderIcon,
   UserGroupIcon,
   CurrencyDollarIcon,
+  BuildingOfficeIcon,
+  MapPinIcon,
   CheckCircleIcon,
   EyeIcon,
 } from '@heroicons/react/24/outline';
@@ -15,6 +17,8 @@ import type { Project, ProjectStatus } from '../../types';
 const navItems = [
   { name: 'Overview', path: '/dashboard/admin', icon: HomeIcon },
   { name: 'Project Approvals', path: '/dashboard/admin/projects', icon: FolderIcon },
+  { name: 'Approved Projects', path: '/dashboard/admin/approved-projects', icon: BuildingOfficeIcon },
+  { name: 'All Lands', path: '/dashboard/admin/all-lands', icon: MapPinIcon },
   { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
   { name: 'Mint Tokens', path: '/dashboard/admin/mint-tokens', icon: CurrencyDollarIcon },
 ];

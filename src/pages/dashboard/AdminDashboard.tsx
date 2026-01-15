@@ -5,6 +5,8 @@ import {
   UserGroupIcon,
   CurrencyDollarIcon,
   FolderIcon,
+  BuildingOfficeIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
 import { landAPI, paymentAPI, builderAPI, projectAPI } from '../../services/api';
 import type { Land, Payment } from '../../types';
@@ -13,6 +15,8 @@ import { Link } from 'react-router-dom';
 const navItems = [
   { name: 'Overview', path: '/dashboard/admin', icon: HomeIcon },
   { name: 'Project Approvals', path: '/dashboard/admin/projects', icon: FolderIcon },
+  { name: 'Approved Projects', path: '/dashboard/admin/approved-projects', icon: BuildingOfficeIcon },
+  { name: 'All Lands', path: '/dashboard/admin/all-lands', icon: MapPinIcon },
   { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
   { name: 'Mint Tokens', path: '/dashboard/admin/mint-tokens', icon: CurrencyDollarIcon },
 ];

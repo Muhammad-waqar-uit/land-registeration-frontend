@@ -1,7 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { tokenAPI } from '../../services/api';
-import { CurrencyDollarIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { tokenAPI, authAPI } from '../../services/api';
+import type { User } from '../../types';
+import {
+  HomeIcon,
+  FolderIcon,
+  UserGroupIcon,
+  CurrencyDollarIcon,
+  BuildingOfficeIcon,
+  MapPinIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
 
 export default function MintTokens() {
   const [toAddress, setToAddress] = useState('');
@@ -12,6 +23,16 @@ export default function MintTokens() {
     transactionHash?: string;
     error?: string;
   } | null>(null);
+
+  // User selection state
+  const [users, setUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [userSearch, setUserSearch] = useState('');
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersTotal, setUsersTotal] = useState(0);
+  const [usersLimit] = useState(50);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +47,8 @@ export default function MintTokens() {
         // Clear form on success
         setToAddress('');
         setAmount('');
+        setSelectedUser(null);
+        setUserSearch('');
       }
     } catch (error: unknown) {
       console.error('Mint tokens error:', error);
@@ -44,8 +67,63 @@ export default function MintTokens() {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
   };
 
+  // Fetch users
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setUsersLoading(true);
+        const response = await authAPI.getAllUsers({
+          page: usersPage,
+          limit: usersLimit,
+        });
+        setUsers(response.data.filter(user => user.walletAddress)); // Only show users with wallet addresses
+        setUsersTotal(response.total);
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [usersPage, usersLimit]);
+
+  // Filter users based on search
+  const filteredUsers = users.filter((user) => {
+    if (!userSearch) return true;
+    const searchLower = userSearch.toLowerCase();
+    return (
+      user.name.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower) ||
+      user.walletAddress?.toLowerCase().includes(searchLower) ||
+      false
+    );
+  });
+
+  // Handle user selection
+  const handleUserSelect = (user: User) => {
+    setSelectedUser(user);
+    if (user.walletAddress) {
+      setToAddress(user.walletAddress);
+    }
+    setShowUserDropdown(false);
+    setUserSearch('');
+  };
+
+  // Clear user selection
+  const handleClearUser = () => {
+    setSelectedUser(null);
+    setToAddress('');
+    setUserSearch('');
+  };
+
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard/admin', icon: CurrencyDollarIcon },
+    { name: 'Overview', path: '/dashboard/admin', icon: HomeIcon },
+    { name: 'Project Approvals', path: '/dashboard/admin/projects', icon: FolderIcon },
+    { name: 'Approved Projects', path: '/dashboard/admin/approved-projects', icon: BuildingOfficeIcon },
+    { name: 'All Lands', path: '/dashboard/admin/all-lands', icon: MapPinIcon },
+    { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
+    { name: 'Mint Tokens', path: '/dashboard/admin/mint-tokens', icon: CurrencyDollarIcon },
   ];
 
   return (
@@ -68,6 +146,90 @@ export default function MintTokens() {
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* User Selection */}
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text font-semibold text-gray-800">Select User (Optional)</span>
+                </label>
+                <div className="relative">
+                  {selectedUser ? (
+                    <div className="flex items-center gap-2 p-3 bg-gray-700 border border-gray-600 rounded-lg">
+                      <div className="flex-1">
+                        <div className="text-white font-medium">{selectedUser.name}</div>
+                        <div className="text-gray-400 text-sm">{selectedUser.email}</div>
+                        <div className="text-gray-500 text-xs font-mono mt-1">{selectedUser.walletAddress}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleClearUser}
+                        className="btn btn-sm btn-ghost text-white"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="relative">
+                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search users by name, email, or wallet address..."
+                          className="input w-full pl-10 bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                          value={userSearch}
+                          onChange={(e) => {
+                            setUserSearch(e.target.value);
+                            setShowUserDropdown(true);
+                          }}
+                          onFocus={() => setShowUserDropdown(true)}
+                        />
+                      </div>
+                      {showUserDropdown && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setShowUserDropdown(false)}
+                          />
+                          <div className="absolute z-20 w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {usersLoading ? (
+                              <div className="p-4 text-center text-gray-400">
+                                <span className="loading loading-spinner loading-sm"></span>
+                                <span className="ml-2">Loading users...</span>
+                              </div>
+                            ) : filteredUsers.length === 0 ? (
+                              <div className="p-4 text-center text-gray-400">
+                                {userSearch ? 'No users found' : 'No users available'}
+                              </div>
+                            ) : (
+                              filteredUsers.map((user) => (
+                                <button
+                                  key={user.id}
+                                  type="button"
+                                  onClick={() => handleUserSelect(user)}
+                                  className="w-full text-left p-3 hover:bg-gray-700 border-b border-gray-700 last:border-b-0 transition-colors"
+                                >
+                                  <div className="text-white font-medium">{user.name}</div>
+                                  <div className="text-gray-400 text-sm">{user.email}</div>
+                                  {user.walletAddress && (
+                                    <div className="text-gray-500 text-xs font-mono mt-1">
+                                      {user.walletAddress.slice(0, 10)}...{user.walletAddress.slice(-8)}
+                                    </div>
+                                  )}
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+                </div>
+                <label className="label">
+                  <span className="label-text-alt text-gray-400">
+                    Select a user to automatically fill their wallet address, or enter address manually below
+                  </span>
+                </label>
+              </div>
+
               {/* Recipient Address */}
               <div className="form-control">
                 <label className="label">
@@ -80,7 +242,13 @@ export default function MintTokens() {
                     toAddress && !isValidAddress(toAddress) ? 'border-red-500' : ''
                   }`}
                   value={toAddress}
-                  onChange={(e) => setToAddress(e.target.value)}
+                  onChange={(e) => {
+                    setToAddress(e.target.value);
+                    // Clear selected user if address is manually edited
+                    if (selectedUser && e.target.value !== selectedUser.walletAddress) {
+                      setSelectedUser(null);
+                    }
+                  }}
                   required
                 />
                 {toAddress && !isValidAddress(toAddress) && (

@@ -7,15 +7,21 @@ import {
   DocumentTextIcon,
   CurrencyDollarIcon,
   ArrowPathIcon,
+  UserGroupIcon,
+  CreditCardIcon,
 } from '@heroicons/react/24/outline';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { paymentAPI, builderAPI } from '../../services/api';
-import type { Payment, User } from '../../types';
+import { paymentAPI, builderAPI, landAPI, projectAPI } from '../../services/api';
+import { useAppSelector } from '../../store/hooks';
+import type { Payment, User, Land } from '../../types';
 
 const navItems = [
   { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
   { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
+  { name: 'My Lands', path: '/dashboard/builder/lands', icon: DocumentTextIcon },
+  { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
+  { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
   { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
   { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
   { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
@@ -24,26 +30,69 @@ const navItems = [
 ];
 
 export default function BuilderDashboard() {
+  const { user } = useAppSelector((state) => state.auth);
   const [builderProfile, setBuilderProfile] = useState<User | null>(null);
   const [pendingPayments, setPendingPayments] = useState<Payment[]>([]);
+  const [myLands, setMyLands] = useState<Land[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    totalLands: 0,
+    activeReservations: 0,
+    totalRevenue: 0,
+    totalProjects: 0,
+  });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!user?.id) return;
+    
     try {
       setLoading(true);
       setError(null);
-      const [profile, payments] = await Promise.all([
-        builderAPI.getMe(),
+      
+      const [profile, pendingPaymentsData, landsData, projectsData] = await Promise.all([
+        builderAPI.getMe().catch(() => null),
         paymentAPI.getPending().catch(() => []),
+        landAPI.getAll().catch(() => []),
+        projectAPI.getAll({ builderId: user.id }).catch(() => []),
       ]);
+
       setBuilderProfile(profile);
-      setPendingPayments(payments);
+      setPendingPayments(pendingPaymentsData);
+
+      // Handle paginated or array response for lands
+      const landsArray: Land[] = Array.isArray(landsData) 
+        ? landsData 
+        : ((landsData && typeof landsData === 'object' && 'data' in landsData ? (landsData as { data: Land[] }).data : null) || []);
+
+      // Filter lands owned by current builder
+      const builderLands = landsArray.filter((land) => land.ownerId === user.id);
+      setMyLands(builderLands);
+
+      // Filter payments for builder's lands
+      const builderLandIds = builderLands.map((land) => land.id);
+      
+      // Get all payments (not just pending) for payments list and revenue
+      const allPaymentsResponse = await paymentAPI.getByBuyer().catch(() => []);
+      const allPayments = Array.isArray(allPaymentsResponse) ? allPaymentsResponse : [];
+      const builderPayments = allPayments.filter((payment: Payment) =>
+        builderLandIds.includes(payment.landId)
+      );
+      setPayments(builderPayments);
+
+      // Calculate stats
+      const lockedLands = builderLands.filter((l) => l.status === 'locked').length;
+      const verifiedPayments = builderPayments.filter((p: Payment) => p.status === 'verified');
+      const totalRevenue = verifiedPayments.reduce((sum: number, p: Payment) => sum + p.amount, 0);
+
+      setStats({
+        totalLands: builderLands.length,
+        activeReservations: lockedLands,
+        totalRevenue,
+        totalProjects: Array.isArray(projectsData) ? projectsData.length : 0,
+      });
     } catch (err: unknown) {
       console.error('Failed to load data:', err);
       const errorMessage = err && typeof err === 'object' && 'response' in err
@@ -53,7 +102,11 @@ export default function BuilderDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleVerify = async (paymentId: string, verified: boolean) => {
     try {
@@ -61,7 +114,7 @@ export default function BuilderDashboard() {
       const remarks = verified ? 'Payment verified successfully' : 'Payment proof is unclear';
       await paymentAPI.verify(paymentId, verified, remarks);
       // Reload payments after verification
-      await loadData();
+      await fetchData();
     } catch (err: unknown) {
       console.error('Failed to verify payment:', err);
       const errorMessage = err && typeof err === 'object' && 'response' in err
@@ -148,45 +201,56 @@ export default function BuilderDashboard() {
         {error && (
           <div className="alert alert-error">
             <span className="text-black">{error}</span>
-            <button className="btn btn-sm" onClick={loadData}>
+            <button className="btn btn-sm" onClick={fetchData}>
               Retry
             </button>
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="stat bg-base-100 rounded-lg shadow">
-            <div className="stat-title text-white">Pending Verifications</div>
-            <div className="stat-value text-warning">{pendingPayments.length}</div>
-            <div className="stat-desc text-white">Awaiting review</div>
-          </div>
-
-          <div className="stat bg-base-100 rounded-lg shadow">
-            <div className="stat-title text-white">Verified Today</div>
-            <div className="stat-value text-success">
-              {pendingPayments.filter((p) => p.status === 'verified').length}
-            </div>
-            <div className="stat-desc text-white">Payments approved</div>
-          </div>
-
-          <div className="stat bg-base-100 rounded-lg shadow">
-            <div className="stat-title text-white">Rejected Today</div>
-            <div className="stat-value text-error">
-              {pendingPayments.filter((p) => p.status === 'rejected').length}
-            </div>
-            <div className="stat-desc text-white">Payments rejected</div>
-          </div>
-        </div>
-
-        {/* Pending Verifications */}
-        <div className="card bg-base-100 shadow-xl">
+        {/* Overview - Combined Stats and Pending Verifications */}
+        <div className="card bg-base-100 shadow-xl border border-base-300">
           <div className="card-body">
-            <h2 className="card-title text-white">Pending Verifications</h2>
+            <h2 className="card-title text-white mb-4">Overview</h2>
+            
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="stat bg-base-200 rounded-lg shadow border border-base-300">
+                <div className="stat-title text-white">My Lands</div>
+                <div className="stat-value text-primary text-3xl">{stats.totalLands}</div>
+                <div className="stat-desc text-white">Total properties</div>
+              </div>
+
+              <div className="stat bg-base-200 rounded-lg shadow border border-base-300">
+                <div className="stat-title text-white">Active Reservations</div>
+                <div className="stat-value text-secondary text-3xl">{stats.activeReservations}</div>
+                <div className="stat-desc text-white">Lands with buyers</div>
+              </div>
+
+              <div className="stat bg-base-200 rounded-lg shadow border border-base-300">
+                <div className="stat-title text-white">Total Revenue</div>
+                <div className="stat-value text-success text-3xl">₹{stats.totalRevenue.toLocaleString()}</div>
+                <div className="stat-desc text-white">From sales</div>
+              </div>
+
+              <div className="stat bg-base-200 rounded-lg shadow border border-base-300">
+                <div className="stat-title text-white">Total Projects</div>
+                <div className="stat-value text-info text-3xl">{stats.totalProjects}</div>
+                <div className="stat-desc text-white">My projects</div>
+              </div>
+            </div>
+
+            {/* Pending Verifications */}
+            <div className="divider"></div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-white">Pending Verifications</h3>
+              <Link to="/dashboard/builder/pending" className="btn btn-ghost btn-sm text-white">
+                View All
+              </Link>
+            </div>
             {pendingPayments.length === 0 ? (
-              <p className="text-gray-400 mt-4">No pending payments to verify.</p>
+              <p className="text-gray-400">No pending payments to verify.</p>
             ) : (
-              <div className="overflow-x-auto mt-4">
+              <div className="overflow-x-auto">
                 <table className="table">
                   <thead>
                     <tr className="text-black">
@@ -269,6 +333,190 @@ export default function BuilderDashboard() {
             )}
           </div>
         </div>
+
+        {/* My Lands */}
+        <div className="card bg-base-100 shadow-xl border border-base-300">
+          <div className="card-body">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="card-title text-white">My Lands</h2>
+              <Link to="/dashboard/builder/projects" className="btn btn-primary text-white">
+                Create Project
+              </Link>
+            </div>
+            {myLands.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-white">No lands registered yet.</p>
+                <Link to="/dashboard/builder/projects" className="btn btn-primary btn-sm mt-4 text-white">
+                  Create Your First Project
+                </Link>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="table">
+                  <thead className="bg-transparent">
+                    <tr>
+                      <th className="text-black">Title</th>
+                      <th className="text-black">Location</th>
+                      <th className="text-black">Price</th>
+                      <th className="text-black">Status</th>
+                      <th className="text-black">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {myLands.slice(0, 5).map((land) => (
+                      <tr key={land.id} className="text-black">
+                        <td className="text-black">{land.title}</td>
+                        <td className="text-black">{land.location}</td>
+                        <td className="text-black">₹{land.price.toLocaleString()}</td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              land.status === 'available'
+                                ? 'badge-success'
+                                : land.status === 'locked'
+                                ? 'badge-warning'
+                                : 'badge-error'
+                            }`}
+                          >
+                            {land.status}
+                          </span>
+                        </td>
+                        <td>
+                          <Link
+                            to={`/land/${land.id}`}
+                            className="btn btn-xs btn-primary text-white"
+                          >
+                            View
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {myLands.length > 5 && (
+                  <div className="mt-4 text-center">
+                    <Link to="/dashboard/builder/lands" className="btn btn-ghost btn-sm text-white">
+                      View All ({myLands.length} total)
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Buyer Progress */}
+        {myLands.filter((l) => l.status === 'locked').length > 0 && (
+          <div className="card bg-base-100 shadow-xl border border-base-300">
+            <div className="card-body">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="card-title text-white">Buyer Progress</h2>
+                <Link to="/dashboard/builder/buyers" className="btn btn-ghost btn-sm text-white">
+                  View All
+                </Link>
+              </div>
+              <div className="space-y-4 mt-4">
+                {myLands
+                  .filter((land) => land.status === 'locked')
+                  .slice(0, 3)
+                  .map((land) => {
+                    const landPayments = payments.filter((p) => p.landId === land.id);
+                    const verifiedPayments = landPayments.filter((p) => p.status === 'verified');
+                    const totalInstallments = 5; // This should come from backend
+                    const paidInstallments = verifiedPayments.length;
+                    const progress = (paidInstallments / totalInstallments) * 100;
+
+                    return (
+                      <div
+                        key={land.id}
+                        className="flex items-center justify-between p-4 bg-base-200 rounded-lg border border-base-300"
+                      >
+                        <div>
+                          <p className="font-semibold text-white">{land.title}</p>
+                          <p className="text-sm text-white">
+                            {landPayments.length > 0
+                              ? `Payments: ${paidInstallments}/${totalInstallments}`
+                              : 'No payments yet'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-white">
+                            Installments Paid: {paidInstallments}/{totalInstallments}
+                          </p>
+                          <progress
+                            className="progress progress-primary w-32"
+                            value={progress}
+                            max="100"
+                          ></progress>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payments */}
+        {payments.length > 0 && (
+          <div className="card bg-base-100 shadow-xl border border-base-300">
+            <div className="card-body">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="card-title text-white">Recent Payments</h2>
+                <Link to="/dashboard/builder/payments" className="btn btn-ghost btn-sm text-white">
+                  View All
+                </Link>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="table">
+                  <thead>
+                    <tr className="text-black">
+                      <th className="text-black">Land</th>
+                      <th className="text-black">Buyer</th>
+                      <th className="text-black">Amount</th>
+                      <th className="text-black">Status</th>
+                      <th className="text-black">Due Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.slice(0, 5).map((payment) => (
+                      <tr key={payment.id} className="text-black">
+                        <td className="text-black">
+                          <div className="font-medium">{payment.land?.title || payment.landId.slice(0, 8)}...</div>
+                          {payment.land?.location && (
+                            <div className="text-xs text-gray-600">{payment.land.location}</div>
+                          )}
+                        </td>
+                        <td className="text-black">
+                          <div className="font-medium">{payment.buyer?.name || 'Unknown'}</div>
+                          {payment.buyer?.email && (
+                            <div className="text-xs text-gray-600">{payment.buyer.email}</div>
+                          )}
+                        </td>
+                        <td className="text-black">₹{payment.amount.toLocaleString()}</td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              payment.status === 'verified'
+                                ? 'badge-success'
+                                : payment.status === 'rejected'
+                                ? 'badge-error'
+                                : 'badge-warning'
+                            }`}
+                          >
+                            {payment.status}
+                          </span>
+                        </td>
+                        <td className="text-black">{new Date(payment.dueDate).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </DashboardLayout>
   );

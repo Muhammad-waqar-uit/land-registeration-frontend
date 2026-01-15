@@ -5,13 +5,21 @@ import {
   UserGroupIcon,
   CheckCircleIcon,
   ClockIcon,
+  FolderIcon,
+  CurrencyDollarIcon,
+  BuildingOfficeIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
 import { builderAPI } from '../../services/api';
 import type { User } from '../../types';
 
 const navItems = [
   { name: 'Overview', path: '/dashboard/admin', icon: HomeIcon },
+  { name: 'Project Approvals', path: '/dashboard/admin/projects', icon: FolderIcon },
+  { name: 'Approved Projects', path: '/dashboard/admin/approved-projects', icon: BuildingOfficeIcon },
+  { name: 'All Lands', path: '/dashboard/admin/all-lands', icon: MapPinIcon },
   { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
+  { name: 'Mint Tokens', path: '/dashboard/admin/mint-tokens', icon: CurrencyDollarIcon },
 ];
 
 export default function BuilderVerification() {
