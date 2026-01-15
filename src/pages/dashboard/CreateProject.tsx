@@ -21,7 +21,6 @@ export default function CreateProject() {
     locationDetails: '',
     description: '',
     totalUnits: '',
-    status: 'draft',
   });
   const [approvalDocs, setApprovalDocs] = useState<FileList | null>(null);
   const [isLoading, setIsLoading] = useState(false);

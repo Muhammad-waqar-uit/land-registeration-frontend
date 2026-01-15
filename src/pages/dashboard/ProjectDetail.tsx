@@ -284,7 +284,7 @@ export default function ProjectDetail() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleVerify(false)}
-                    className="btn btn-primary btn-sm"
+                    className="btn btn-primary btn-sm flex flex-row items-center"
                     disabled={verifying}
                   >
                     {verifying ? (
@@ -296,7 +296,7 @@ export default function ProjectDetail() {
                   </button>
                   <button
                     onClick={() => handleVerify(true)}
-                    className="btn btn-secondary btn-sm"
+                    className="btn btn-secondary btn-sm flex flex-row items-center"
                     disabled={verifying}
                   >
                     {verifying ? (
