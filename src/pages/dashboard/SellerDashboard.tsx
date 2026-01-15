@@ -3,26 +3,46 @@ import { Link, useLocation } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
+  FolderIcon,
   DocumentTextIcon,
   UserGroupIcon,
   CreditCardIcon,
   PencilIcon,
   TrashIcon,
+  CurrencyDollarIcon,
+  ArrowPathIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { landAPI, paymentAPI, reservationAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Land, Payment, Reservation } from '../../types';
 import { canUpdate, canDelete, getDeleteErrorMessage } from '../../utils/landPermissions';
 
-const navItems = [
-  { name: 'Overview', path: '/dashboard/seller', icon: HomeIcon },
-  { name: 'My Lands', path: '/dashboard/seller/lands', icon: DocumentTextIcon },
-  { name: 'Buyer Progress', path: '/dashboard/seller/buyers', icon: UserGroupIcon },
-  { name: 'Payments', path: '/dashboard/seller/payments', icon: CreditCardIcon },
-];
-
 export default function SellerDashboard() {
   const { user } = useAppSelector((state) => state.auth);
+  const location = useLocation();
+  
+  // Determine navigation items based on current route
+  // Note: SellerDashboard is accessed via /dashboard/seller which is for builders
+  // But builder dashboard should be at /dashboard/builder
+  const isBuilderRoute = location.pathname === '/dashboard/builder' || location.pathname.startsWith('/dashboard/builder/');
+  
+  const navItems = isBuilderRoute ? [
+    { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
+    { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
+    { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
+    { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
+    { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
+    { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
+    { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
+    { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
+    { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
+  ] : [
+    { name: 'Overview', path: '/dashboard/seller', icon: HomeIcon },
+    { name: 'My Lands', path: '/dashboard/seller/lands', icon: DocumentTextIcon },
+    { name: 'Buyer Progress', path: '/dashboard/seller/buyers', icon: UserGroupIcon },
+    { name: 'Payments', path: '/dashboard/seller/payments', icon: CreditCardIcon },
+  ];
   const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [myLands, setMyLands] = useState<Land[]>([]);

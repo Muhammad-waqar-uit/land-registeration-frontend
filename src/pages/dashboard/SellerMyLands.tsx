@@ -1,29 +1,47 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
+  FolderIcon,
   DocumentTextIcon,
   UserGroupIcon,
   CreditCardIcon,
   PencilIcon,
   TrashIcon,
   MagnifyingGlassIcon,
+  CurrencyDollarIcon,
+  ArrowPathIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { landAPI, paymentAPI, reservationAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Land, Payment, Reservation } from '../../types';
 import { canUpdate, canDelete, getDeleteErrorMessage } from '../../utils/landPermissions';
 
-const navItems = [
-  { name: 'Overview', path: '/dashboard/seller', icon: HomeIcon },
-  { name: 'My Lands', path: '/dashboard/seller/lands', icon: DocumentTextIcon },
-  { name: 'Buyer Progress', path: '/dashboard/seller/buyers', icon: UserGroupIcon },
-  { name: 'Payments', path: '/dashboard/seller/payments', icon: CreditCardIcon },
-];
-
 export default function SellerMyLands() {
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, isLoading: authLoading } = useAppSelector((state) => state.auth);
+  const location = useLocation();
+  
+  // Determine navigation items based on current route
+  const isBuilderRoute = location.pathname.startsWith('/dashboard/builder');
+  
+  const navItems = isBuilderRoute ? [
+    { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
+    { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
+    { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
+    { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
+    { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
+    { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
+    { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
+    { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
+    { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
+  ] : [
+    { name: 'Overview', path: '/dashboard/seller', icon: HomeIcon },
+    { name: 'My Lands', path: '/dashboard/seller/lands', icon: DocumentTextIcon },
+    { name: 'Buyer Progress', path: '/dashboard/seller/buyers', icon: UserGroupIcon },
+    { name: 'Payments', path: '/dashboard/seller/payments', icon: CreditCardIcon },
+  ];
   const [loading, setLoading] = useState(true);
   const [myLands, setMyLands] = useState<Land[]>([]);
   const [filteredLands, setFilteredLands] = useState<Land[]>([]);
@@ -36,7 +54,11 @@ export default function SellerMyLands() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   const fetchData = useCallback(async () => {
-    if (!user?.id) return;
+    // Wait for user to be loaded before fetching
+    if (!user?.id) {
+      setLoading(true);
+      return;
+    }
     
     try {
       setLoading(true);
@@ -76,8 +98,13 @@ export default function SellerMyLands() {
   }, [user?.id]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    // Only fetch data when user is loaded (not during auth loading)
+    if (!authLoading && user?.id) {
+      fetchData();
+    } else if (!authLoading && !user) {
+      setLoading(false);
+    }
+  }, [fetchData, authLoading, user]);
 
   // Filter lands based on search and status
   useEffect(() => {
@@ -156,7 +183,8 @@ export default function SellerMyLands() {
     return { totalPayments: landPayments.length, totalPaid, verifiedPayments: verifiedPayments.length };
   };
 
-  if (loading) {
+  // Show loading while auth is loading or data is loading
+  if (authLoading || loading) {
     return (
       <DashboardLayout navItems={navItems}>
         <div className="flex items-center justify-center min-h-[400px]">

@@ -242,6 +242,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/builder/buyers"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <SellerBuyerProgress />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/builder/payments"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <SellerPayments />
+            </ProtectedRoute>
+          }
+        />
         {/* Legacy seller routes redirect to builder */}
         <Route
           path="/dashboard/seller"

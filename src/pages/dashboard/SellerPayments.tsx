@@ -1,28 +1,45 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
+  FolderIcon,
   DocumentTextIcon,
   UserGroupIcon,
   CreditCardIcon,
   CheckCircleIcon,
   ClockIcon,
   XCircleIcon,
+  CurrencyDollarIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { paymentAPI, landAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Payment } from '../../types';
 import { Link } from 'react-router-dom';
 
-const navItems = [
-  { name: 'Overview', path: '/dashboard/seller', icon: HomeIcon },
-  { name: 'My Lands', path: '/dashboard/seller/lands', icon: DocumentTextIcon },
-  { name: 'Buyer Progress', path: '/dashboard/seller/buyers', icon: UserGroupIcon },
-  { name: 'Payments', path: '/dashboard/seller/payments', icon: CreditCardIcon },
-];
-
 export default function SellerPayments() {
   const { user } = useAppSelector((state) => state.auth);
+  const location = useLocation();
+  
+  // Determine navigation items based on current route
+  const isBuilderRoute = location.pathname.startsWith('/dashboard/builder');
+  const navItems = isBuilderRoute ? [
+    { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
+    { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
+    { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
+    { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
+    { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
+    { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
+    { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
+    { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
+    { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
+  ] : [
+    { name: 'Overview', path: '/dashboard/seller', icon: HomeIcon },
+    { name: 'My Lands', path: '/dashboard/seller/lands', icon: DocumentTextIcon },
+    { name: 'Buyer Progress', path: '/dashboard/seller/buyers', icon: UserGroupIcon },
+    { name: 'Payments', path: '/dashboard/seller/payments', icon: CreditCardIcon },
+  ];
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'verified' | 'pending' | 'rejected'>('all');
@@ -116,7 +133,7 @@ export default function SellerPayments() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-white">Payment Tracking</h1>
-          <Link to="/dashboard/seller" className="btn btn-ghost text-white">
+          <Link to={isBuilderRoute ? "/dashboard/builder" : "/dashboard/seller"} className="btn btn-ghost text-white">
             Back to Dashboard
           </Link>
         </div>

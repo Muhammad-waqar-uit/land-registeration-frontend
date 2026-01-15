@@ -9,6 +9,8 @@ import {
   ArrowPathIcon,
   CheckCircleIcon,
   XCircleIcon,
+  UserGroupIcon,
+  CreditCardIcon,
 } from '@heroicons/react/24/outline';
 import { paymentAPI } from '../../services/api';
 import type { Payment } from '../../types';
@@ -17,6 +19,8 @@ import { Link } from 'react-router-dom';
 const navItems = [
   { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
   { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
+  { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
+  { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
   { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
   { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
   { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },

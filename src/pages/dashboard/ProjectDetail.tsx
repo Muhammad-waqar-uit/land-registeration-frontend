@@ -25,7 +25,6 @@ import type { Project } from '../../types';
 const navItems = [
   { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
   { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-  { name: 'My Lands', path: '/dashboard/builder/lands', icon: DocumentTextIcon },
   { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
   { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
   { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
@@ -157,7 +156,7 @@ export default function ProjectDetail() {
           <div>
             <Link 
               to="/dashboard/builder/projects" 
-              className="btn btn-ghost btn-sm mb-2"
+              className="btn btn-ghost btn-sm mb-2 text-white flex flex-row items-center gap-2"
             >
               <ArrowLeftIcon className="w-4 h-4 mr-2" />
               Back to Projects
@@ -184,7 +183,7 @@ export default function ProjectDetail() {
             )}
             <button
               onClick={handleDelete}
-              className="btn btn-error btn-sm"
+              className="btn btn-error btn-sm text-white flex flex-row items-center gap-2"
               disabled={deleting}
             >
               {deleting ? (

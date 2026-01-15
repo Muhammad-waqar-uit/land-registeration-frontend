@@ -19,7 +19,6 @@ import type { Payment, User, Land } from '../../types';
 const navItems = [
   { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
   { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-  { name: 'My Lands', path: '/dashboard/builder/lands', icon: DocumentTextIcon },
   { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
   { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
   { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
@@ -30,7 +29,7 @@ const navItems = [
 ];
 
 export default function BuilderDashboard() {
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, isLoading: authLoading } = useAppSelector((state) => state.auth);
   const [builderProfile, setBuilderProfile] = useState<User | null>(null);
   const [pendingPayments, setPendingPayments] = useState<Payment[]>([]);
   const [myLands, setMyLands] = useState<Land[]>([]);
@@ -46,7 +45,11 @@ export default function BuilderDashboard() {
   });
 
   const fetchData = useCallback(async () => {
-    if (!user?.id) return;
+    // Wait for user to be loaded before fetching
+    if (!user?.id) {
+      setLoading(true);
+      return;
+    }
     
     try {
       setLoading(true);
@@ -105,8 +108,13 @@ export default function BuilderDashboard() {
   }, [user?.id]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    // Only fetch data when user is loaded (not during auth loading)
+    if (!authLoading && user?.id) {
+      fetchData();
+    } else if (!authLoading && !user) {
+      setLoading(false);
+    }
+  }, [fetchData, authLoading, user]);
 
   const handleVerify = async (paymentId: string, verified: boolean) => {
     try {
@@ -126,7 +134,8 @@ export default function BuilderDashboard() {
     }
   };
 
-  if (loading) {
+  // Show loading while auth is loading or data is loading
+  if (authLoading || loading) {
     return (
       <DashboardLayout navItems={navItems}>
         <div className="flex justify-center items-center h-64">
@@ -384,7 +393,7 @@ export default function BuilderDashboard() {
                         <td>
                           <Link
                             to={`/land/${land.id}`}
-                            className="btn btn-xs btn-primary text-white"
+                            className="btn btn-xs btn-primary text-white flex flex-row items-center gap-2 w-20"
                           >
                             View
                           </Link>
@@ -393,13 +402,6 @@ export default function BuilderDashboard() {
                     ))}
                   </tbody>
                 </table>
-                {myLands.length > 5 && (
-                  <div className="mt-4 text-center">
-                    <Link to="/dashboard/builder/lands" className="btn btn-ghost btn-sm text-white">
-                      View All ({myLands.length} total)
-                    </Link>
-                  </div>
-                )}
               </div>
             )}
           </div>

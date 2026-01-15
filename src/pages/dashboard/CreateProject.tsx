@@ -17,7 +17,6 @@ import { projectAPI } from '../../services/api';
 const navItems = [
   { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
   { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-  { name: 'My Lands', path: '/dashboard/builder/lands', icon: DocumentTextIcon },
   { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
   { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
   { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
