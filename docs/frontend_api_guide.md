@@ -399,7 +399,9 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 2. Get All Builders
+## Builders
+
+### 2. Get All Builders ✅ Complete
 
 **Endpoint:** `GET /api/builders?verifiedOnly=true`
 
@@ -428,7 +430,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 3. Get Builder by ID
+### 3. Get Builder by ID ✅ Complete
 
 **Endpoint:** `GET /api/builders/:id`
 
@@ -452,7 +454,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 4. Get Current Builder Profile
+### 4. Get Current Builder Profile ✅ Complete
 
 **Endpoint:** `GET /api/builders/me`
 
@@ -608,7 +610,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### 10. Verify Builder (Admin)
+### 10. Verify Builder (Admin) ✅ Complete
 
 **Endpoint:** `POST /api/builders/:id/verify`
 
@@ -634,6 +636,13 @@ Authorization: Bearer <access_token>
   "updatedAt": "2024-01-01T00:00:00.000Z"
 }
 ```
+
+**Frontend Implementation:** ✅
+- Admin can view all builders in table format
+- Filter by verification status (all, pending, verified)
+- One-click verification action
+- Builder dashboard shows verification pending message
+- Located at: [src/pages/dashboard/BuilderVerification.tsx](src/pages/dashboard/BuilderVerification.tsx)
 
 ---
 
