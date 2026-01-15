@@ -179,7 +179,7 @@ const CreateInstallments: React.FC = () => {
                 <option value="" className="bg-gray-800 text-gray-300">Choose a signed agreement...</option>
                 {agreements.map((agr) => (
                   <option key={agr.id} value={agr.id} className="bg-gray-800 text-white">
-                    {agr.property?.title} - {agr.buyer?.name} - ₹
+                    {agr.property?.title} - {agr.buyer?.name} - PKR
                     {agr.terms?.totalAmount?.toLocaleString() || 0}
                   </option>
                 ))}

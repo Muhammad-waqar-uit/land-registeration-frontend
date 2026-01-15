@@ -170,7 +170,7 @@ export default function BuyerDashboard() {
 
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
             <div className="stat-title text-white">Total Paid</div>
-            <div className="stat-value text-success">₹{stats.totalPaid.toLocaleString()}</div>
+            <div className="stat-value text-success">PKR {stats.totalPaid.toLocaleString()}</div>
             <div className="stat-desc text-white">Installments completed</div>
           </div>
 
@@ -198,7 +198,7 @@ export default function BuyerDashboard() {
                         <p className="text-sm text-gray-300">{request.property?.location}</p>
                         {request.offerPrice && (
                           <p className="text-sm text-white mt-1">
-                            Offer: ₹{request.offerPrice.toLocaleString()}
+                            Offer: PKR {request.offerPrice.toLocaleString()}
                           </p>
                         )}
                         {request.message && (
@@ -267,7 +267,7 @@ export default function BuyerDashboard() {
                         <p className="text-sm text-gray-300">{agreement.property?.location}</p>
                         {agreement.terms?.totalAmount && (
                           <p className="text-sm text-white mt-1">
-                            Amount: ₹{agreement.terms.totalAmount.toLocaleString()}
+                            Amount: PKR {agreement.terms.totalAmount.toLocaleString()}
                           </p>
                         )}
                         {agreement.terms?.installmentPlanYears && (
@@ -337,7 +337,7 @@ export default function BuyerDashboard() {
                             <p className="text-sm text-gray-300">{installment.land?.location}</p>
                             <div className="mt-2">
                               <p className="text-lg font-bold text-white">
-                                ₹{installment.amount.toLocaleString()}
+                                PKR {installment.amount.toLocaleString()}
                               </p>
                               <p className="text-sm text-gray-400">
                                 Payment window: {new Date(installment.paymentWindowStart).toLocaleDateString()} -{' '}
@@ -428,7 +428,7 @@ export default function BuyerDashboard() {
                             <>
                               <p className="text-sm text-white">Next Payment</p>
                               <p className="font-semibold text-white">
-                                ₹{nextPayment.amount.toLocaleString()}
+                                PKR {nextPayment.amount.toLocaleString()}
                               </p>
                               <p className="text-xs text-gray-300">
                                 Due: {nextPayment.dueDate ? new Date(nextPayment.dueDate).toLocaleDateString() : 'N/A'}
@@ -479,7 +479,7 @@ export default function BuyerDashboard() {
                             Size: {property.size} sq ft
                           </p>
                           <p className="text-lg font-bold text-primary mt-1">
-                            ₹{property.price.toLocaleString()}
+                            PKR {property.price.toLocaleString()}
                           </p>
                           {resaleRequest && (
                             <div className="mt-2">
@@ -494,7 +494,7 @@ export default function BuyerDashboard() {
                               </span>
                               {resaleRequest.requestedPrice && (
                                 <span className="text-sm text-gray-400 ml-2">
-                                  Requested: ₹{resaleRequest.requestedPrice.toLocaleString()}
+                                  Requested: PKR {resaleRequest.requestedPrice.toLocaleString()}
                                 </span>
                               )}
                             </div>
@@ -553,7 +553,7 @@ export default function BuyerDashboard() {
                     <div className="card-body">
                       <h3 className="card-title text-white">{land.title}</h3>
                       <p className="text-sm text-gray-300">{land.location}</p>
-                      <p className="text-2xl font-bold text-primary">₹{land.price.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-primary">PKR {land.price.toLocaleString()}</p>
                       <div className="card-actions justify-end mt-4">
                         <Link
                           to={`/lands/${land.id}`}

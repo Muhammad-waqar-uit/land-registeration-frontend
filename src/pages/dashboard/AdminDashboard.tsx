@@ -227,7 +227,7 @@ export default function AdminDashboard() {
                         <td className="font-medium text-black">{land.title}</td>
                         <td className="text-gray-600">{land.location}</td>
                         <td className="text-black">{land.size} sq ft</td>
-                        <td className="font-semibold text-black">₹{land.price.toLocaleString()}</td>
+                        <td className="font-semibold text-black">PKR {land.price.toLocaleString()}</td>
                         <td>
                           <span
                             className={`badge ${
@@ -280,7 +280,7 @@ export default function AdminDashboard() {
                     {pendingPayments.slice(0, 5).map((payment) => (
                       <tr key={payment.id} className="text-black">
                         <td className="font-mono text-sm">{payment.landId.slice(0, 8)}...</td>
-                        <td className="font-semibold">₹{payment.amount.toLocaleString()}</td>
+                        <td className="font-semibold">PKR {payment.amount.toLocaleString()}</td>
                         <td>
                           <span className="badge badge-outline">{payment.paymentMode}</span>
                         </td>

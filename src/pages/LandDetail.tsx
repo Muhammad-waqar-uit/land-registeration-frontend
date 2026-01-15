@@ -411,7 +411,7 @@ export default function LandDetail() {
                 </div>
                 <div>
                   <p className="text-sm text-white/70">Price</p>
-                  <p className="font-semibold text-2xl text-primary">₹{land.price.toLocaleString()}</p>
+                  <p className="font-semibold text-2xl text-primary">PKR {land.price.toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-sm text-white/70">Status</p>
@@ -782,7 +782,7 @@ export default function LandDetail() {
                   type="number"
                   value={requestForm.offerPrice}
                   onChange={(e) => setRequestForm({ ...requestForm, offerPrice: e.target.value })}
-                  placeholder={`Listed Price: ₹${land?.price.toLocaleString()}`}
+                  placeholder={`Listed Price: PKR {land?.price.toLocaleString()}`}
                   className="input input-bordered w-full"
                   min="0"
                   step="1000"

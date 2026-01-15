@@ -43,7 +43,7 @@ export default function SellerDashboard() {
     { name: 'Buyer Progress', path: '/dashboard/seller/buyers', icon: UserGroupIcon },
     { name: 'Payments', path: '/dashboard/seller/payments', icon: CreditCardIcon },
   ];
-  const location = useLocation();
+  
   const [loading, setLoading] = useState(true);
   const [myLands, setMyLands] = useState<Land[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -194,7 +194,7 @@ export default function SellerDashboard() {
 
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
             <div className="stat-title text-white">Total Revenue</div>
-            <div className="stat-value text-success">₹{stats.totalRevenue.toLocaleString()}</div>
+            <div className="stat-value text-success">PKR {stats.totalRevenue.toLocaleString()}</div>
             <div className="stat-desc text-white">From sales</div>
           </div>
         </div>
@@ -215,7 +215,7 @@ export default function SellerDashboard() {
                   className="btn btn-sm btn-ghost text-black"
                   onClick={() => setDeleteError(null)}
                 >
-                  ✕
+                  ?
                 </button>
               </div>
             )}
@@ -243,7 +243,7 @@ export default function SellerDashboard() {
                       <tr key={land.id} className="text-black">
                         <td className="text-black">{land.title}</td>
                         <td className="text-black">{land.location}</td>
-                        <td className="text-black">₹{land.price.toLocaleString()}</td>
+                        <td className="text-black">PKR {land.price.toLocaleString()}</td>
                         <td>
                           <span
                             className={`badge ${

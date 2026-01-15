@@ -196,7 +196,7 @@ export default function PropertyRequests() {
                     <div>
                       <p className="text-sm text-gray-400">Listed Price</p>
                       <p className="font-semibold text-lg text-primary">
-                        ₹{request.property?.price?.toLocaleString()}
+                        PKR {request.property?.price?.toLocaleString()}
                       </p>
                     </div>
 
@@ -204,7 +204,7 @@ export default function PropertyRequests() {
                       <div>
                         <p className="text-sm text-gray-400">Offer Price</p>
                         <p className="font-semibold text-lg text-success">
-                          ₹{request.offerPrice.toLocaleString()}
+                          PKR {request.offerPrice.toLocaleString()}
                         </p>
                       </div>
                     )}

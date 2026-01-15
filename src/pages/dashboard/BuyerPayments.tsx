@@ -126,7 +126,7 @@ export default function BuyerPayments() {
 
           <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
             <div className="stat-title text-gray-300">Total Paid</div>
-            <div className="stat-value text-green-400">₹{stats.totalAmount.toLocaleString()}</div>
+            <div className="stat-value text-green-400">PKR {stats.totalAmount.toLocaleString()}</div>
           </div>
         </div>
 
@@ -205,7 +205,7 @@ export default function BuyerPayments() {
                             {payment.land?.location || ''}
                           </div>
                         </td>
-                        <td className="text-white font-semibold">₹{payment.amount.toLocaleString()}</td>
+                        <td className="text-white font-semibold">PKR {payment.amount.toLocaleString()}</td>
                         <td className="text-gray-300 capitalize">{payment.paymentMode}</td>
                         <td>{getStatusBadge(payment.status)}</td>
                         <td>

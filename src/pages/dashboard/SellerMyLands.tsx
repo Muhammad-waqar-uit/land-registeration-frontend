@@ -314,7 +314,7 @@ export default function SellerMyLands() {
                       <div className="flex  text-sm text-white">
                         <span className="text-white mr-2">Price:</span>
                         <span className="text-white font-semibold text-primary">
-                          ₹{land.price.toLocaleString()}
+                          PKR {land.price.toLocaleString()}
                         </span>
                       </div>
                       {land.status === 'locked' && paymentInfo.totalPayments > 0 && (
@@ -328,7 +328,7 @@ export default function SellerMyLands() {
                           <div className="flex justify-between text-sm text-white">
                             <span className="text-white">Total Paid:</span>
                             <span className="text-white font-semibold text-success">
-                              ₹{paymentInfo.totalPaid.toLocaleString()}
+                              PKR {paymentInfo.totalPaid.toLocaleString()}
                             </span>
                           </div>
                           {landReservations.length > 0 && (
@@ -412,7 +412,7 @@ export default function SellerMyLands() {
                           <td className="text-black font-semibold">{land.title}</td>
                           <td className="text-black">{land.location}</td>
                           <td className="text-black">{land.size} sq ft</td>
-                          <td className="text-black">₹{land.price.toLocaleString()}</td>
+                          <td className="text-black">PKR {land.price.toLocaleString()}</td>
                           <td>
                             <span className={`badge ${getStatusBadgeClass(land.status)}`}>
                               {land.status}
@@ -421,7 +421,7 @@ export default function SellerMyLands() {
                           <td className="text-black text-sm">
                             {land.status === 'locked' && paymentInfo.totalPayments > 0 ? (
                               <div>
-                                <div>Paid: ₹{paymentInfo.totalPaid.toLocaleString()}</div>
+                                <div>Paid: PKR {paymentInfo.totalPaid.toLocaleString()}</div>
                                 <div className="text-xs text-gray-600">
                                   ({paymentInfo.verifiedPayments} verified)
                                 </div>

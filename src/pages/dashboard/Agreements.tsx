@@ -203,7 +203,7 @@ export default function Agreements() {
                       <div>
                         <p className="text-sm text-gray-400">Total Amount</p>
                         <p className="font-semibold text-lg text-primary">
-                          ₹{agreement.terms.totalAmount.toLocaleString()}
+                          PKR {agreement.terms.totalAmount.toLocaleString()}
                         </p>
                       </div>
                     )}

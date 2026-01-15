@@ -180,7 +180,7 @@ export default function AdminAllLands() {
                           <td className="text-gray-700">{land.location}</td>
                           <td className="text-gray-700">{land.size} sq ft</td>
                           <td className="font-semibold text-black">
-                            ₹{land.price.toLocaleString()}
+                            PKR {land.price.toLocaleString()}
                           </td>
                           <td>
                             <span className={`badge ${statusBadgeClass(land.status)}`}>

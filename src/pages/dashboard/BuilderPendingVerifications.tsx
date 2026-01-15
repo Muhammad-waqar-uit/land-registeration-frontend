@@ -107,7 +107,7 @@ export default function BuilderPendingVerifications() {
           <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
             <div className="stat-title text-gray-300">Total Amount</div>
             <div className="stat-value text-blue-400">
-              ₹{pendingPayments.reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
+              PKR {pendingPayments.reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
             </div>
           </div>
 
@@ -174,7 +174,7 @@ export default function BuilderPendingVerifications() {
                             {payment.land?.location || ''}
                           </div>
                         </td>
-                        <td className="text-white font-semibold">₹{payment.amount.toLocaleString()}</td>
+                        <td className="text-white font-semibold">PKR {payment.amount.toLocaleString()}</td>
                         <td className="text-gray-300 capitalize">{payment.paymentMode}</td>
                         <td>
                           {payment.transactionHash ? (

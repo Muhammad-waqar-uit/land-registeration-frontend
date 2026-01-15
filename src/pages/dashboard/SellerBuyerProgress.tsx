@@ -185,7 +185,7 @@ export default function SellerBuyerProgress() {
           <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
             <div className="stat-title text-gray-300">Total Revenue</div>
             <div className="stat-value text-green-400">
-              ₹{buyerProgress.reduce((sum, b) => sum + b.totalPaid, 0).toLocaleString()}
+              PKR {buyerProgress.reduce((sum, b) => sum + b.totalPaid, 0).toLocaleString()}
             </div>
           </div>
         </div>
@@ -236,7 +236,7 @@ export default function SellerBuyerProgress() {
                             : '-'}
                         </td>
                         <td className="text-green-400 font-semibold">
-                          ₹{progress.totalPaid.toLocaleString()}
+                          PKR {progress.totalPaid.toLocaleString()}
                         </td>
                         <td className="text-yellow-400">{progress.pendingPayments}</td>
                         <td className="text-gray-300">

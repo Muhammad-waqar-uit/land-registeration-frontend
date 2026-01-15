@@ -312,7 +312,7 @@ export default function RegisterLand() {
 
                 <div className="form-control bg-transparent">
                   <label className="label">
-                    <span className="label-text text-white">Price (₹)</span>
+                    <span className="label-text text-white">Price (PKR)</span>
                     <span className="label-text-alt text-error">*</span>
                   </label>
                   <input

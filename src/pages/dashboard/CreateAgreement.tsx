@@ -202,7 +202,7 @@ export default function CreateAgreement() {
                 </div>
                 <div>
                   <p className="text-sm text-blue-300">Listed Price</p>
-                  <p className="text-white">₹{property.price?.toLocaleString()}</p>
+                  <p className="text-white">PKR {property.price?.toLocaleString()}</p>
                 </div>
               </div>
             </div>
@@ -214,7 +214,7 @@ export default function CreateAgreement() {
           <div className="alert alert-info mb-6">
             <span className="text-black">
               Creating agreement from approved request by <strong>{request.requester?.name}</strong>
-              {request.offerPrice && ` with offer price ₹${request.offerPrice.toLocaleString()}`}
+              {request.offerPrice && ` with offer price PKR {request.offerPrice.toLocaleString()}`}
             </span>
           </div>
         )}
@@ -290,7 +290,7 @@ export default function CreateAgreement() {
             <div className="form-control bg-blue-900/60">
               <label className="label">
                 <span className="label-text text-blue-100 font-medium">
-                  Price (₹) <span className="text-red-400">*</span>
+                  Price (PKR) <span className="text-red-400">*</span>
                 </span>
               </label>
               <input
@@ -309,7 +309,7 @@ export default function CreateAgreement() {
             <div className="form-control bg-blue-900/60">
               <label className="label">
                 <span className="label-text text-blue-100 font-medium">
-                  Total Amount (₹) <span className="text-red-400">*</span>
+                  Total Amount (PKR) <span className="text-red-400">*</span>
                 </span>
               </label>
               <input

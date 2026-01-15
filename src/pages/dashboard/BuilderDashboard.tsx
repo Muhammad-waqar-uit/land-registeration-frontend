@@ -237,7 +237,7 @@ export default function BuilderDashboard() {
 
               <div className="stat bg-base-200 rounded-lg shadow border border-base-300">
                 <div className="stat-title text-white">Total Revenue</div>
-                <div className="stat-value text-success text-3xl">₹{stats.totalRevenue.toLocaleString()}</div>
+                <div className="stat-value text-success text-3xl">PKR {stats.totalRevenue.toLocaleString()}</div>
                 <div className="stat-desc text-white">From sales</div>
               </div>
 
@@ -287,7 +287,7 @@ export default function BuilderDashboard() {
                             <div className="text-xs text-gray-600">{payment.buyer.email}</div>
                           )}
                         </td>
-                        <td className="text-black">₹{payment.amount.toLocaleString()}</td>
+                        <td className="text-black">PKR {payment.amount.toLocaleString()}</td>
                         <td>
                           <span className={`badge ${payment.paymentMode === 'crypto' ? 'badge-info' : 'badge-primary'}`}>
                             {payment.paymentMode}
@@ -376,7 +376,7 @@ export default function BuilderDashboard() {
                       <tr key={land.id} className="text-black">
                         <td className="text-black">{land.title}</td>
                         <td className="text-black">{land.location}</td>
-                        <td className="text-black">₹{land.price.toLocaleString()}</td>
+                        <td className="text-black">PKR {land.price.toLocaleString()}</td>
                         <td>
                           <span
                             className={`badge ${
@@ -495,7 +495,7 @@ export default function BuilderDashboard() {
                             <div className="text-xs text-gray-600">{payment.buyer.email}</div>
                           )}
                         </td>
-                        <td className="text-black">₹{payment.amount.toLocaleString()}</td>
+                        <td className="text-black">PKR {payment.amount.toLocaleString()}</td>
                         <td>
                           <span
                             className={`badge ${

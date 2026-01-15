@@ -245,13 +245,13 @@ export default function AgreementDetail() {
                 {agreement.terms.price && (
                   <div>
                     <p className="text-sm text-gray-400">Price</p>
-                    <p className="text-white text-xl font-bold">₹{agreement.terms.price.toLocaleString()}</p>
+                    <p className="text-white text-xl font-bold">PKR {agreement.terms.price.toLocaleString()}</p>
                   </div>
                 )}
                 {agreement.terms.totalAmount && (
                   <div>
                     <p className="text-sm text-gray-400">Total Amount</p>
-                    <p className="text-white text-xl font-bold">₹{agreement.terms.totalAmount.toLocaleString()}</p>
+                    <p className="text-white text-xl font-bold">PKR {agreement.terms.totalAmount.toLocaleString()}</p>
                   </div>
                 )}
                 {agreement.terms.installmentPlanYears && (
