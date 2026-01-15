@@ -149,7 +149,7 @@ export default function BuilderPendingVerifications() {
                     </tr>
                   </thead>
                   <tbody>
-                    {pendingPayments.map((payment:any) => (
+                    {pendingPayments.map((payment: Payment) => (
                       <tr key={payment.id} className="border-gray-700 hover:bg-gray-700/50">
                         <td className="text-gray-300">
                           {new Date(payment.createdAt ??'').toLocaleDateString('en-IN', {
@@ -187,9 +187,9 @@ export default function BuilderPendingVerifications() {
                           )}
                         </td>
                         <td>
-                          {payment?.proofUrl ? (
+                          {payment.proofCID ? (
                             <a
-                              href={payment.proofUrl}
+                              href={`https://gateway.pinata.cloud/ipfs/${payment.proofCID}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="btn btn-xs btn-ghost text-blue-400 hover:text-blue-300"

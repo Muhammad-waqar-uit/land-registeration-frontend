@@ -13,9 +13,9 @@ import {
   ArrowPathIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-import { landAPI, paymentAPI, reservationAPI } from '../../services/api';
+import { landAPI, paymentAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
-import type { Land, Payment, Reservation } from '../../types';
+import type { Land, Payment } from '../../types';
 import { canUpdate, canDelete, getDeleteErrorMessage } from '../../utils/landPermissions';
 
 export default function SellerDashboard() {
@@ -47,12 +47,10 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true);
   const [myLands, setMyLands] = useState<Land[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalLands: 0,
-    activeReservations: 0,
     totalRevenue: 0,
   });
 
@@ -61,10 +59,9 @@ export default function SellerDashboard() {
     
     try {
       setLoading(true);
-      const [landsData, paymentsData, reservationsData] = await Promise.all([
+      const [landsData, paymentsData] = await Promise.all([
         landAPI.getAll().catch(() => []),
         paymentAPI.getByBuyer().catch(() => []), // This might need to be seller-specific endpoint
-        reservationAPI.getAll().catch(() => []),
       ]);
 
       // Handle paginated or array response
@@ -83,20 +80,12 @@ export default function SellerDashboard() {
       );
       setPayments(sellerPayments);
 
-      // Filter reservations for seller's lands
-      const sellerReservations = (reservationsData || []).filter((reservation) =>
-        sellerLandIds.includes(reservation.landId)
-      );
-      setReservations(sellerReservations);
-
       // Calculate stats
-      const lockedLands = sellerLands.filter((l) => l.status === 'locked').length;
       const verifiedPayments = sellerPayments.filter((p) => p.status === 'verified');
       const totalRevenue = verifiedPayments.reduce((sum, p) => sum + p.amount, 0);
 
       setStats({
         totalLands: sellerLands.length,
-        activeReservations: lockedLands,
         totalRevenue,
       });
     } catch (error) {
@@ -135,8 +124,8 @@ export default function SellerDashboard() {
     if (!land) return;
 
     // Check permissions
-    if (!canDelete(land, user, reservations, payments)) {
-      const errorMsg = getDeleteErrorMessage(land, user, reservations, payments);
+    if (!canDelete(land, user, payments)) {
+      const errorMsg = getDeleteErrorMessage(land, user, payments);
       setDeleteError(errorMsg || 'Cannot delete this land.');
       return;
     }
@@ -187,8 +176,6 @@ export default function SellerDashboard() {
           </div>
 
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-white">Active Reservations</div>
-            <div className="stat-value text-secondary">{stats.activeReservations}</div>
             <div className="stat-desc text-white">Lands with buyers</div>
           </div>
 
@@ -265,7 +252,7 @@ export default function SellerDashboard() {
                             >
                               View
                             </Link>
-                            {canUpdate(land, user, reservations, payments) && (
+                            {canUpdate(land, user, payments) && (
                               <Link
                                 to={`/dashboard/seller/update-land/${land.id}`}
                                 className="btn btn-xs btn-secondary h-7 w-10"
@@ -274,7 +261,7 @@ export default function SellerDashboard() {
                                 <PencilIcon className="h-4 w-4" />
                               </Link>
                             )}
-                            {canDelete(land, user, reservations, payments) && (
+                            {canDelete(land, user, payments) && (
                               <button
                                 onClick={() => handleDelete(land.id)}
                                 className="btn btn-xs btn-error h-7 w-10"
@@ -342,7 +329,6 @@ export default function SellerDashboard() {
                   })}
                 {myLands.filter((l) => l.status === 'locked').length === 0 && (
                   <p className="text-white text-center py-4">
-                    No active reservations
                   </p>
                 )}
               </div>

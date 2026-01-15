@@ -1,19 +1,16 @@
-import type { Land, User, Payment, Reservation } from '../types';
+import type { Land, User, Payment } from '../types';
 
 /**
  * Check if a land can be updated by the current user
- * Based on the guide:
- * - User must be ADMIN or SELLER
+ * - User must be ADMIN or BUILDER
  * - User must be the owner OR admin
- * - For sellers: land status must be 'available'
- * - For sellers: no active reservations
- * - For sellers: no pending payments
+ * - For builders: land status must be 'available'
+ * - For builders: no pending payments
  * - Admins bypass all restrictions
  */
 export const canUpdate = (
   land: Land,
   user: User | null,
-  reservations: Reservation[] = [],
   payments: Payment[] = []
 ): boolean => {
   if (!user) return false;
@@ -30,12 +27,6 @@ export const canUpdate = (
   // For builders: land must be available
   if (land.status !== 'available') return false;
   
-  // For builders: check for active reservations
-  const activeReservations = reservations.filter(
-    (r) => r.landId === land.id && r.status === 'active'
-  );
-  if (activeReservations.length > 0) return false;
-  
   // For builders: check for pending payments
   const pendingPayments = payments.filter(
     (p) => p.landId === land.id && p.status === 'pending'
@@ -47,18 +38,15 @@ export const canUpdate = (
 
 /**
  * Check if a land can be deleted by the current user
- * Based on the guide:
- * - User must be ADMIN or SELLER
+ * - User must be ADMIN or BUILDER
  * - User must be the owner OR admin
- * - For sellers: land status must be 'available'
- * - For sellers: no reservations exist (active or cancelled)
- * - For sellers: no payments exist (any status)
+ * - For builders: land status must be 'available'
+ * - For builders: no payments exist (any status)
  * - Admins bypass all restrictions
  */
 export const canDelete = (
   land: Land,
   user: User | null,
-  reservations: Reservation[] = [],
   payments: Payment[] = []
 ): boolean => {
   if (!user) return false;
@@ -75,10 +63,6 @@ export const canDelete = (
   // For builders: land must be available
   if (land.status !== 'available') return false;
   
-  // For builders: check for any reservations
-  const landReservations = reservations.filter((r) => r.landId === land.id);
-  if (landReservations.length > 0) return false;
-  
   // For builders: check for any payments
   const landPayments = payments.filter((p) => p.landId === land.id);
   if (landPayments.length > 0) return false;
@@ -92,7 +76,6 @@ export const canDelete = (
 export const getUpdateErrorMessage = (
   land: Land,
   user: User | null,
-  reservations: Reservation[] = [],
   payments: Payment[] = []
 ): string | null => {
   if (!user) return 'You must be logged in to update lands.';
@@ -111,13 +94,6 @@ export const getUpdateErrorMessage = (
     return `Cannot update land with status '${land.status}'. Land must be available.`;
   }
   
-  const activeReservations = reservations.filter(
-    (r) => r.landId === land.id && r.status === 'active'
-  );
-  if (activeReservations.length > 0) {
-    return 'Cannot update land with active reservations.';
-  }
-  
   const pendingPayments = payments.filter(
     (p) => p.landId === land.id && p.status === 'pending'
   );
@@ -134,7 +110,6 @@ export const getUpdateErrorMessage = (
 export const getDeleteErrorMessage = (
   land: Land,
   user: User | null,
-  reservations: Reservation[] = [],
   payments: Payment[] = []
 ): string | null => {
   if (!user) return 'You must be logged in to delete lands.';
@@ -151,11 +126,6 @@ export const getDeleteErrorMessage = (
   
   if (land.status !== 'available') {
     return `Cannot delete land with status '${land.status}'. Land must be available.`;
-  }
-  
-  const landReservations = reservations.filter((r) => r.landId === land.id);
-  if (landReservations.length > 0) {
-    return 'Cannot delete land with existing reservations. This land has transaction history.';
   }
   
   const landPayments = payments.filter((p) => p.landId === land.id);

@@ -111,15 +111,14 @@ export default function CreateProject() {
       const createdProject = await projectAPI.create(projectData);
       console.log('✅ Project created:', createdProject.id);
 
-      // Upload approval documents if provided
+      // Upload approval documents if provided (backend accepts single file only)
       if (approvalDocs && approvalDocs.length > 0 && createdProject.id) {
-        console.log('📤 Uploading', approvalDocs.length, 'approval documents...');
+        console.log('📤 Uploading approval document (single file only)...');
         const docsFormData = new FormData();
-        for (let i = 0; i < approvalDocs.length; i++) {
-          docsFormData.append('approvalDocuments', approvalDocs[i]);
-        }
+        // Backend accepts single file with field name 'approvalDocuments'
+        docsFormData.append('approvalDocuments', approvalDocs[0]);
         await projectAPI.uploadDocs(createdProject.id, docsFormData);
-        console.log('✅ Documents uploaded successfully');
+        console.log('✅ Document uploaded successfully');
       }
       
       // Success - navigate to projects list

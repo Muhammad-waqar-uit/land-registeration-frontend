@@ -39,7 +39,6 @@ export default function BuilderDashboard() {
   const [verifying, setVerifying] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalLands: 0,
-    activeReservations: 0,
     totalRevenue: 0,
     totalProjects: 0,
   });
@@ -86,13 +85,11 @@ export default function BuilderDashboard() {
       setPayments(builderPayments);
 
       // Calculate stats
-      const lockedLands = builderLands.filter((l) => l.status === 'locked').length;
       const verifiedPayments = builderPayments.filter((p: Payment) => p.status === 'verified');
       const totalRevenue = verifiedPayments.reduce((sum: number, p: Payment) => sum + p.amount, 0);
 
       setStats({
         totalLands: builderLands.length,
-        activeReservations: lockedLands,
         totalRevenue,
         totalProjects: Array.isArray(projectsData) ? projectsData.length : 0,
       });
@@ -227,12 +224,6 @@ export default function BuilderDashboard() {
                 <div className="stat-title text-white">My Lands</div>
                 <div className="stat-value text-primary text-3xl">{stats.totalLands}</div>
                 <div className="stat-desc text-white">Total properties</div>
-              </div>
-
-              <div className="stat bg-base-200 rounded-lg shadow border border-base-300">
-                <div className="stat-title text-white">Active Reservations</div>
-                <div className="stat-value text-secondary text-3xl">{stats.activeReservations}</div>
-                <div className="stat-desc text-white">Lands with buyers</div>
               </div>
 
               <div className="stat bg-base-200 rounded-lg shadow border border-base-300">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
@@ -100,19 +100,6 @@ export default function AdminAllLands() {
 
     load();
   }, [page, limit, status, projectId, builderId, ownerId, isResale, minPrice, maxPrice]);
-
-  const handleFilterChange = (key: string, value: string) => {
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      if (value) {
-        newParams.set(key, value);
-      } else {
-        newParams.delete(key);
-      }
-      newParams.set('page', '1');
-      return newParams;
-    });
-  };
 
   const handlePageChange = (newPage: number) => {
     setSearchParams((prev) => {

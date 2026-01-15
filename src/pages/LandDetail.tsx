@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
-import { landAPI, paymentAPI, reservationAPI, propertyRequestAPI } from '../services/api';
-import type { Land, Payment, Reservation } from '../types';
+import { landAPI, paymentAPI, propertyRequestAPI } from '../services/api';
+import type { Land, Payment } from '../types';
 import DashboardLayout from '../components/layouts/DashboardLayout';
 import { HomeIcon, DocumentTextIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
@@ -40,7 +40,6 @@ export default function LandDetail() {
   const [land, setLand] = useState<Land | null>(null);
   const [loading, setLoading] = useState(true);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<'checking' | 'completed' | null>(null);
@@ -68,17 +67,17 @@ export default function LandDetail() {
     databaseHash?: string;
     blockchainHash?: string;
     blockchainLandId?: number;
+    blockchainTxHash?: string;
+    transactionHash?: string;
     error?: string | null;
   } | null>(null);
   const [blockchainVerificationError, setBlockchainVerificationError] = useState<string | null>(null);
-  const [reserving, setReserving] = useState(false);
   
   // Property Request state
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requesting, setRequesting] = useState(false);
   const [requestForm, setRequestForm] = useState({
     offerPrice: '',
-    message: '',
   });
   const [requestError, setRequestError] = useState<string | null>(null);
   const [requestSuccess, setRequestSuccess] = useState(false);
@@ -91,20 +90,15 @@ export default function LandDetail() {
     if (!id) return;
     try {
       setLoading(true);
-      const [landData, paymentsData, reservationsData] = await Promise.all([
+      const [landData, paymentsData] = await Promise.all([
         landAPI.getById(id),
         paymentAPI.getByBuyer().catch(() => []),
-        reservationAPI.getAll().catch(() => []),
       ]);
       setLand(landData);
       
       // Filter payments for this land
       const landPayments = (paymentsData || []).filter((p) => p.landId === id);
       setPayments(landPayments);
-      
-      // Filter reservations for this land
-      const landReservations = (reservationsData || []).filter((r) => r.landId === id);
-      setReservations(landReservations);
     } catch (error) {
       console.error('Failed to fetch land:', error);
     } finally {
@@ -120,8 +114,8 @@ export default function LandDetail() {
     if (!land || !user) return;
 
     // Check permissions
-    if (!canDelete(land, user, reservations, payments)) {
-      const errorMsg = getDeleteErrorMessage(land, user, reservations, payments);
+    if (!canDelete(land, user, payments)) {
+      const errorMsg = getDeleteErrorMessage(land, user, payments);
       setDeleteError(errorMsg || 'Cannot delete this land.');
       return;
     }
@@ -220,75 +214,6 @@ export default function LandDetail() {
     }
   };
 
-  const handleReserve = async () => {
-    if (!land?.id || !user) {
-      alert('Please login to reserve a land');
-      return;
-    }
-
-    if (user.role !== 'user') {
-      alert('Only users can reserve lands');
-      return;
-    }
-
-    if (land.status !== 'available') {
-      alert('This land is not available for reservation');
-      return;
-    }
-
-    // Check if user already has an active reservation for this land
-    const existingReservation = reservations.find(
-      (r) => r.buyerId === user.id && r.status === 'active'
-    );
-    if (existingReservation) {
-      alert('You already have an active reservation for this land');
-      return;
-    }
-
-    if (!window.confirm(`Are you sure you want to reserve "${land.title}"?`)) {
-      return;
-    }
-
-    setReserving(true);
-    try {
-      await reservationAPI.create(land.id);
-      // Refresh data after successful reservation
-      await fetchData();
-      alert('Land reserved successfully!');
-    } catch (error: unknown) {
-      console.error('Failed to reserve land:', error);
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
-      const errorMessage = 
-        err.response?.data?.message ||
-        err.message ||
-        'Failed to reserve land. Please try again.';
-      alert(errorMessage);
-    } finally {
-      setReserving(false);
-    }
-  };
-
-  const handleCancelReservation = async (reservationId: string) => {
-    if (!window.confirm('Are you sure you want to cancel this reservation?')) {
-      return;
-    }
-
-    try {
-      await reservationAPI.cancel(reservationId);
-      // Refresh data after cancellation
-      await fetchData();
-      alert('Reservation cancelled successfully!');
-    } catch (error: unknown) {
-      console.error('Failed to cancel reservation:', error);
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
-      const errorMessage = 
-        err.response?.data?.message ||
-        err.message ||
-        'Failed to cancel reservation. Please try again.';
-      alert(errorMessage);
-    }
-  };
-
   const handleRequestProperty = async () => {
     if (!land?.id || !user) {
       alert('Please login to request a property');
@@ -300,8 +225,9 @@ export default function LandDetail() {
       return;
     }
 
-    if (land.status !== 'available') {
-      alert('This property is not available');
+    // Allow request if property is 'available' or 'locked' (locked means it's reserved by a request)
+    if (land.status !== 'available' && land.status !== 'locked') {
+      alert('This property is not available for request');
       return;
     }
 
@@ -309,22 +235,21 @@ export default function LandDetail() {
     setRequesting(true);
 
     try {
-      const data: { propertyId: string; offerPrice?: number; message?: string } = {
+      // Backend expects 'requestedPrice' not 'offerPrice', and no 'message' field
+      const data: { propertyId: string; requestedPrice?: number } = {
         propertyId: land.id,
       };
 
       if (requestForm.offerPrice && parseFloat(requestForm.offerPrice) > 0) {
-        data.offerPrice = parseFloat(requestForm.offerPrice);
-      }
-
-      if (requestForm.message.trim()) {
-        data.message = requestForm.message.trim();
+        data.requestedPrice = parseFloat(requestForm.offerPrice);
       }
 
       await propertyRequestAPI.create(data);
       setRequestSuccess(true);
       setShowRequestModal(false);
-      setRequestForm({ offerPrice: '', message: '' });
+      setRequestForm({ offerPrice: '' });
+      // Refresh land data to get updated status
+      await fetchData();
       
       setTimeout(() => {
         setRequestSuccess(false);
@@ -425,40 +350,8 @@ export default function LandDetail() {
               </div>
 
               <div className="card-actions mt-4 flex gap-2 flex-wrap">
-                {user?.role === 'user' && land.status === 'available' && (
+                {user?.role === 'user' && (land.status === 'available' || land.status === 'locked') && (
                   <>
-                    {reservations.some((r) => r.buyerId === user.id && r.status === 'active') ? (
-                      <div className="alert alert-info">
-                        <span className="text-black">You have an active reservation for this land</span>
-                        {reservations
-                          .filter((r) => r.buyerId === user.id && r.status === 'active')
-                          .map((r) => (
-                            <button
-                              key={r.id}
-                              onClick={() => handleCancelReservation(r.id)}
-                              className="btn btn-sm btn-error ml-2"
-                            >
-                              Cancel Reservation
-                            </button>
-                          ))}
-                      </div>
-                    ) : (
-                      <button
-                        onClick={handleReserve}
-                        className="btn btn-primary"
-                        disabled={reserving}
-                      >
-                        {reserving ? (
-                          <>
-                            <span className="loading loading-spinner loading-sm"></span>
-                            Reserving...
-                          </>
-                        ) : (
-                          'Reserve Now'
-                        )}
-                      </button>
-                    )}
-                    
                     {/* Request Property Button */}
                     <button
                       onClick={() => setShowRequestModal(true)}
@@ -475,7 +368,7 @@ export default function LandDetail() {
                     )}
                   </>
                 )}
-                {canUpdate(land, user, reservations, payments) && (
+                {canUpdate(land, user, payments) && (
                   <Link
                     to={`/dashboard/seller/update-land/${land.id}`}
                     className="btn btn-secondary"
@@ -484,7 +377,7 @@ export default function LandDetail() {
                     Update
                   </Link>
                 )}
-                {canDelete(land, user, reservations, payments) && (
+                {canDelete(land, user, payments) && (
                   <button
                     onClick={handleDelete}
                     className="btn btn-error"
@@ -726,6 +619,32 @@ export default function LandDetail() {
                               {blockchainVerificationResult.blockchainLandId}
                             </p>
                           )}
+                          {(blockchainVerificationResult.blockchainTxHash || blockchainVerificationResult.transactionHash || land?.blockchainTxHash) && (
+                            <p className="mt-2">
+                              <span className="font-mono">Transaction Hash:</span>{' '}
+                              <a
+                                href={`https://sepolia.basescan.org/tx/${
+                                  blockchainVerificationResult.blockchainTxHash ||
+                                  blockchainVerificationResult.transactionHash ||
+                                  land?.blockchainTxHash
+                                }`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:text-blue-300 underline break-all"
+                              >
+                                {(
+                                  blockchainVerificationResult.blockchainTxHash ||
+                                  blockchainVerificationResult.transactionHash ||
+                                  land?.blockchainTxHash
+                                )?.substring(0, 20)}...
+                                {(blockchainVerificationResult.blockchainTxHash ||
+                                  blockchainVerificationResult.transactionHash ||
+                                  land?.blockchainTxHash)?.slice(-8)}
+                                {' '}
+                                <span className="text-xs">(View on Etherscan)</span>
+                              </a>
+                            </p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -782,7 +701,7 @@ export default function LandDetail() {
                   type="number"
                   value={requestForm.offerPrice}
                   onChange={(e) => setRequestForm({ ...requestForm, offerPrice: e.target.value })}
-                  placeholder={`Listed Price: PKR {land?.price.toLocaleString()}`}
+                  placeholder={`Listed Price: PKR ${land?.price.toLocaleString() || '0'}`}
                   className="input input-bordered w-full"
                   min="0"
                   step="1000"
@@ -794,23 +713,6 @@ export default function LandDetail() {
                 </label>
               </div>
 
-              <div>
-                <label className="label">
-                  <span className="label-text text-white">Message (Optional)</span>
-                </label>
-                <textarea
-                  value={requestForm.message}
-                  onChange={(e) => setRequestForm({ ...requestForm, message: e.target.value })}
-                  placeholder="Any additional information or questions..."
-                  className="textarea textarea-bordered w-full h-24"
-                  maxLength={500}
-                />
-                <label className="label">
-                  <span className="label-text-alt text-white/60">
-                    {requestForm.message.length}/500 characters
-                  </span>
-                </label>
-              </div>
             </div>
 
             <div className="modal-action">
@@ -818,7 +720,7 @@ export default function LandDetail() {
                 onClick={() => {
                   setShowRequestModal(false);
                   setRequestError(null);
-                  setRequestForm({ offerPrice: '', message: '' });
+                  setRequestForm({ offerPrice: '' });
                 }}
                 className="btn btn-ghost"
                 disabled={requesting}

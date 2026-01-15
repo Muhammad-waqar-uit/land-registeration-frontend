@@ -37,9 +37,11 @@ import ResaleRequests from './pages/dashboard/ResaleRequests';
 import CreateResaleRequest from './pages/dashboard/CreateResaleRequest';
 import MintTokens from './pages/dashboard/MintTokens';
 import BuyerPayments from './pages/dashboard/BuyerPayments';
+import BuyerPropertyRequests from './pages/dashboard/BuyerPropertyRequests';
 import SellerBuyerProgress from './pages/dashboard/SellerBuyerProgress';
 import SellerPayments from './pages/dashboard/SellerPayments';
 import BuilderPendingVerifications from './pages/dashboard/BuilderPendingVerifications';
+import AdminPropertyRequests from './pages/dashboard/AdminPropertyRequests';
 
 // Other Pages
 import Home from './pages/Home';
@@ -131,6 +133,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminAllLands />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/property-requests"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminPropertyRequests />
             </ProtectedRoute>
           }
         />
@@ -322,6 +332,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <BuyerPayments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/property-requests"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <BuyerPropertyRequests />
             </ProtectedRoute>
           }
         />

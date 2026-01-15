@@ -30,8 +30,7 @@ export default function MintTokens() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userSearch, setUserSearch] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [usersPage, setUsersPage] = useState(1);
-  const [usersTotal, setUsersTotal] = useState(0);
+  const [usersPage] = useState(1);
   const [usersLimit] = useState(50);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,7 +76,6 @@ export default function MintTokens() {
           limit: usersLimit,
         });
         setUsers(response.data.filter(user => user.walletAddress)); // Only show users with wallet addresses
-        setUsersTotal(response.total);
       } catch (error) {
         console.error('Failed to fetch users:', error);
       } finally {

@@ -42,8 +42,9 @@ export default function PropertyRequests() {
   const loadRequests = async () => {
     try {
       setLoading(true);
-      const data = await propertyRequestAPI.getPending();
-      setRequests(data);
+      // Backend returns paginated response: { data, total, page, limit }
+      const response = await propertyRequestAPI.getPending();
+      setRequests(response.data || []);
     } catch (error: unknown) {
       console.error('Failed to load property requests:', error);
     } finally {
@@ -189,22 +190,22 @@ export default function PropertyRequests() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-400">Buyer</p>
-                      <p className="font-semibold text-white">{request.requester?.name}</p>
-                      <p className="text-xs text-gray-500">{request.requester?.email}</p>
+                      <p className="font-semibold text-white">{request.buyer?.name || request.requester?.name || 'Unknown'}</p>
+                      <p className="text-xs text-gray-500">{request.buyer?.email || request.requester?.email || 'N/A'}</p>
                     </div>
 
                     <div>
                       <p className="text-sm text-gray-400">Listed Price</p>
                       <p className="font-semibold text-lg text-primary">
-                        PKR {request.property?.price?.toLocaleString()}
+                        PKR {request.property?.price?.toLocaleString() || '0'}
                       </p>
                     </div>
 
-                    {request.offerPrice && (
+                    {request.requestedPrice && (
                       <div>
                         <p className="text-sm text-gray-400">Offer Price</p>
                         <p className="font-semibold text-lg text-success">
-                          PKR {request.offerPrice.toLocaleString()}
+                          PKR {request.requestedPrice.toLocaleString()}
                         </p>
                       </div>
                     )}
@@ -216,13 +217,6 @@ export default function PropertyRequests() {
                       </p>
                     </div>
                   </div>
-
-                  {request.message && (
-                    <div className="mt-4">
-                      <p className="text-sm text-gray-400">Message from Buyer</p>
-                      <p className="text-white bg-base-300 p-3 rounded mt-1">{request.message}</p>
-                    </div>
-                  )}
 
                   {request.status === 'pending' && (
                     <>
@@ -277,10 +271,15 @@ export default function PropertyRequests() {
                     </>
                   )}
 
-                  {request.response && (
+                  {request.builderResponse && (
                     <div className="mt-4">
                       <p className="text-sm text-gray-400">Your Response</p>
-                      <p className="text-white bg-base-300 p-3 rounded mt-1">{request.response}</p>
+                      <p className="text-white bg-base-300 p-3 rounded mt-1">{request.builderResponse}</p>
+                      {request.respondedAt && (
+                        <p className="text-xs text-gray-400 mt-1">
+                          Responded: {new Date(request.respondedAt).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
                   )}
 

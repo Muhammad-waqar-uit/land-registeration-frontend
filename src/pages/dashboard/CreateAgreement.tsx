@@ -82,9 +82,9 @@ export default function CreateAgreement() {
       setFormData((prev) => ({
         ...prev,
         propertyId: data.propertyId,
-        buyerId: data.requesterId,
-        price: data.offerPrice?.toString() || data.property?.price?.toString() || '',
-        totalAmount: data.offerPrice?.toString() || data.property?.price?.toString() || '',
+        buyerId: data.buyerId || data.requester?.id || '',
+        price: data.requestedPrice?.toString() || data.property?.price?.toString() || '',
+        totalAmount: data.requestedPrice?.toString() || data.property?.price?.toString() || '',
       }));
       
       if (data.property) {
@@ -213,8 +213,8 @@ export default function CreateAgreement() {
         {request && (
           <div className="alert alert-info mb-6">
             <span className="text-black">
-              Creating agreement from approved request by <strong>{request.requester?.name}</strong>
-              {request.offerPrice && ` with offer price PKR {request.offerPrice.toLocaleString()}`}
+              Creating agreement from approved request by <strong>{request.buyer?.name || request.requester?.name || 'Unknown'}</strong>
+              {request.requestedPrice && ` with offer price PKR ${request.requestedPrice.toLocaleString()}`}
             </span>
           </div>
         )}
@@ -257,7 +257,7 @@ export default function CreateAgreement() {
                 className="input w-full p-2 bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none placeholder:text-white"
                 placeholder="Enter buyer ID"
                 required
-                disabled={!!request?.requesterId}
+                disabled={!!request?.buyerId || !!request?.requester?.id}
               />
               {request && (
                 <label className="label">

@@ -14,9 +14,9 @@ import {
   ArrowPathIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-import { landAPI, paymentAPI, reservationAPI } from '../../services/api';
+import { landAPI, paymentAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
-import type { Land, Payment, Reservation } from '../../types';
+import type { Land, Payment } from '../../types';
 import { canUpdate, canDelete, getDeleteErrorMessage } from '../../utils/landPermissions';
 
 export default function SellerMyLands() {
@@ -46,7 +46,6 @@ export default function SellerMyLands() {
   const [myLands, setMyLands] = useState<Land[]>([]);
   const [filteredLands, setFilteredLands] = useState<Land[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,10 +61,9 @@ export default function SellerMyLands() {
     
     try {
       setLoading(true);
-      const [landsData, paymentsData, reservationsData] = await Promise.all([
+      const [landsData, paymentsData] = await Promise.all([
         landAPI.getAll().catch(() => []),
         paymentAPI.getByBuyer().catch(() => []),
-        reservationAPI.getAll().catch(() => []),
       ]);
 
       // Handle paginated or array response
@@ -84,12 +82,6 @@ export default function SellerMyLands() {
         sellerLandIds.includes(payment.landId)
       );
       setPayments(sellerPayments);
-
-      // Filter reservations for seller's lands
-      const sellerReservations = (reservationsData || []).filter((reservation) =>
-        sellerLandIds.includes(reservation.landId)
-      );
-      setReservations(sellerReservations);
     } catch (error) {
       console.error('Failed to fetch seller lands data:', error);
     } finally {
@@ -136,8 +128,8 @@ export default function SellerMyLands() {
     if (!land) return;
 
     // Check permissions
-    if (!canDelete(land, user, reservations, payments)) {
-      const errorMsg = getDeleteErrorMessage(land, user, reservations, payments);
+    if (!canDelete(land, user, payments)) {
+      const errorMsg = getDeleteErrorMessage(land, user, payments);
       setDeleteError(errorMsg || 'Cannot delete this land.');
       return;
     }
@@ -290,7 +282,6 @@ export default function SellerMyLands() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredLands.map((land) => {
               const paymentInfo = getLandPaymentInfo(land.id);
-              const landReservations = reservations.filter((r) => r.landId === land.id && r.status === 'active');
 
               return (
                 <div key={land.id} className="card bg-base-100 shadow-xl border border-base-300 hover:shadow-2xl transition-shadow">
@@ -331,14 +322,6 @@ export default function SellerMyLands() {
                               PKR {paymentInfo.totalPaid.toLocaleString()}
                             </span>
                           </div>
-                          {landReservations.length > 0 && (
-                            <div className="flex justify-between text-sm text-white">
-                              <span className="text-white">Active Reservations:</span>
-                              <span className="text-white font-semibold">
-                                {landReservations.length}
-                              </span>
-                            </div>
-                          )}
                         </>
                       )}
                     </div>
@@ -356,7 +339,7 @@ export default function SellerMyLands() {
                       >
                         View
                       </Link>
-                      {canUpdate(land, user, reservations, payments) && (
+                      {canUpdate(land, user, payments) && (
                         <Link
                           to={`/dashboard/seller/update-land/${land.id}`}
                           className="btn btn-secondary btn-sm"
@@ -365,7 +348,7 @@ export default function SellerMyLands() {
                           <PencilIcon className="h-4 w-4" />
                         </Link>
                       )}
-                      {canDelete(land, user, reservations, payments) && (
+                      {canDelete(land, user, payments) && (
                         <button
                           onClick={() => handleDelete(land.id)}
                           className="btn btn-error btn-sm btn-secondary"
@@ -441,7 +424,7 @@ export default function SellerMyLands() {
                               >
                                 View
                               </Link>
-                              {canUpdate(land, user, reservations, payments) && (
+                              {canUpdate(land, user, payments) && (
                                 <Link
                                   to={`/dashboard/seller/update-land/${land.id}`}
                                   className="btn btn-xs btn-secondary"
@@ -450,7 +433,7 @@ export default function SellerMyLands() {
                                   <PencilIcon className="h-4 w-4" />
                                 </Link>
                               )}
-                              {canDelete(land, user, reservations, payments) && (
+                              {canDelete(land, user, payments) && (
                                 <button
                                   onClick={() => handleDelete(land.id)}
                                   className="btn btn-xs btn-error"

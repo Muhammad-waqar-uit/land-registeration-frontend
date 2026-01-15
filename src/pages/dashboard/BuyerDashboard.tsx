@@ -4,13 +4,15 @@ import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
   CreditCardIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
-import { landAPI, paymentAPI, reservationAPI, propertyRequestAPI, agreementAPI, installmentAPI, resaleRequestAPI } from '../../services/api';
+import { landAPI, paymentAPI, propertyRequestAPI, agreementAPI, installmentAPI, resaleRequestAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Land, Payment, PropertyRequest, Agreement, Installment, ResaleRequest } from '../../types';
 
 const navItems = [
   { name: 'Overview', path: '/dashboard/buyer', icon: HomeIcon },
+  { name: 'Property Requests', path: '/dashboard/buyer/property-requests', icon: DocumentTextIcon },
   { name: 'Payment History', path: '/dashboard/buyer/payments', icon: CreditCardIcon },
 ];
 
@@ -26,7 +28,6 @@ export default function BuyerDashboard() {
   const [installments, setInstallments] = useState<Installment[]>([]);
   const [resaleRequests, setResaleRequests] = useState<ResaleRequest[]>([]);
   const [stats, setStats] = useState({
-    activeReservations: 0,
     totalPaid: 0,
     pendingPayments: 0,
     pendingRequests: 0,
@@ -40,60 +41,63 @@ export default function BuyerDashboard() {
 
     try {
       setLoading(true);
-      const [landsData, paymentsData, reservationsData, requestsData, agreementsData, installmentsData, resaleRequestsData] = await Promise.all([
+      const [landsData, paymentsData, requestsResponse, agreementsData, installmentsData, resaleRequestsData] = await Promise.all([
         landAPI.getAll().catch(() => []),
         paymentAPI.getByBuyer().catch(() => []),
-        reservationAPI.getAll().catch(() => []),
-        propertyRequestAPI.getMyRequests().catch(() => []),
+        propertyRequestAPI.getMyRequests().catch(() => ({ data: [], total: 0, page: 1, limit: 10 })),
         agreementAPI.getAll({ buyerId: user?.id }).catch(() => []),
         installmentAPI.getMyInstallments().catch(() => []),
         resaleRequestAPI.getMyRequests().catch(() => []),
       ]);
 
+      // Handle paginated response from getMyRequests
+      const requestsData = Array.isArray(requestsResponse) ? requestsResponse : (requestsResponse.data || []);
+
       // Set property requests, agreements, installments, and resale requests
-      setPropertyRequests(requestsData || []);
+      setPropertyRequests(requestsData);
       setAgreements(agreementsData || []);
       setInstallments(installmentsData || []);
       setResaleRequests(resaleRequestsData || []);
 
+      // Handle paginated or array response for lands
+      const landsArray: Land[] = Array.isArray(landsData) 
+        ? landsData 
+        : ((landsData && typeof landsData === 'object' && 'data' in landsData ? (landsData as { data: Land[] }).data : null) || []);
+
       // Filter available lands (status = 'available')
-      const available = (landsData || []).filter((land) => land.status === 'available');
+      const available = landsArray.filter((land: Land) => land.status === 'available');
       setAvailableLands(available);
 
       // Filter buyer's payments
-      const buyerPayments = (paymentsData || []).filter((p) => p.buyerId === user.id);
+      const buyerPayments = (paymentsData || []).filter((p: Payment) => p.buyerId === user.id);
       setPayments(buyerPayments);
 
-      // Filter buyer's reservations
-      const buyerReservations = (reservationsData || []).filter((r) => r.buyerId === user.id && r.status === 'active');
+      // Get reserved land IDs from payments and property requests
+      const reservedLandIdsFromPayments = [...new Set(buyerPayments.map((p: Payment) => p.landId))];
+      const reservedLandIdsFromRequests = [...new Set(requestsData.filter((r: PropertyRequest) => r.status === 'approved').map((r: PropertyRequest) => r.propertyId))];
+      const allReservedLandIds = [...new Set([...reservedLandIdsFromPayments, ...reservedLandIdsFromRequests])];
       
-      // Get reserved land IDs from both reservations and payments
-      const reservedLandIdsFromReservations = buyerReservations.map((r) => r.landId);
-      const reservedLandIdsFromPayments = [...new Set(buyerPayments.map((p) => p.landId))];
-      const allReservedLandIds = [...new Set([...reservedLandIdsFromReservations, ...reservedLandIdsFromPayments])];
-      
-      // Filter reserved lands (status = 'locked' where buyer has reservations or payments)
-      const reserved = (landsData || []).filter(
-        (land) => land.status === 'locked' && allReservedLandIds.includes(land.id)
+      // Filter reserved lands (status = 'locked' where buyer has payments or approved requests)
+      const reserved = landsArray.filter(
+        (land: Land) => land.status === 'locked' && allReservedLandIds.includes(land.id)
       );
       setReservedLands(reserved);
 
       // Filter owned properties (status = 'sold' and owned by user)
-      const owned = (landsData || []).filter(
-        (land) => land.status === 'sold' && land.ownerId === user.id
+      const owned = landsArray.filter(
+        (land: Land) => land.status === 'sold' && land.ownerId === user.id
       );
       setOwnedProperties(owned);
 
       // Calculate stats
-      const verifiedPayments = buyerPayments.filter((p) => p.status === 'verified');
-      const pendingPayments = buyerPayments.filter((p) => p.status === 'pending');
-      const totalPaid = verifiedPayments.reduce((sum, p) => sum + p.amount, 0);
-      const pendingRequestsCount = (requestsData || []).filter((r) => r.status === 'pending').length;
-      const pendingAgreementsCount = (agreementsData || []).filter((a) => a.status === 'pending' || a.status === 'buyer_signed').length;
+      const verifiedPayments = buyerPayments.filter((p: Payment) => p.status === 'verified');
+      const pendingPayments = buyerPayments.filter((p: Payment) => p.status === 'pending');
+      const totalPaid = verifiedPayments.reduce((sum: number, p: Payment) => sum + p.amount, 0);
+      const pendingRequestsCount = requestsData.filter((r: PropertyRequest) => r.status === 'pending').length;
+      const pendingAgreementsCount = (agreementsData || []).filter((a: Agreement) => a.status === 'pending' || a.status === 'buyer_signed').length;
       const upcomingInstallmentsCount = (installmentsData || []).filter((i: Installment) => i.status === 'pending').length;
 
       setStats({
-        activeReservations: buyerReservations.length,
         totalPaid,
         pendingPayments: pendingPayments.length,
         pendingRequests: pendingRequestsCount,
@@ -112,7 +116,7 @@ export default function BuyerDashboard() {
     fetchData();
   }, [fetchData]);
 
-  // Refresh when component comes into focus (e.g., after navigation back from payment/reservation)
+  // Refresh when component comes into focus (e.g., after navigation back from payment)
   useEffect(() => {
     const handleFocus = () => {
       fetchData();
@@ -138,12 +142,6 @@ export default function BuyerDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-          <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-white">Active Reservations</div>
-            <div className="stat-value text-primary">{stats.activeReservations}</div>
-            <div className="stat-desc text-white">Lands locked to you</div>
-          </div>
-
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
             <div className="stat-title text-white">Property Requests</div>
             <div className="stat-value text-info">{stats.pendingRequests}</div>
@@ -182,73 +180,82 @@ export default function BuyerDashboard() {
         </div>
 
         {/* My Property Requests */}
-        {propertyRequests.length > 0 && (
-          <div className="card bg-base-100 shadow-xl border border-base-300">
-            <div className="card-body">
+        <div className="card bg-base-100 shadow-xl border border-base-300">
+          <div className="card-body">
+            <div className="flex justify-between items-center mb-4">
               <h2 className="card-title text-white">My Property Requests</h2>
-              <div className="space-y-3">
-                {propertyRequests.slice(0, 3).map((request) => (
-                  <div
-                    key={request.id}
-                    className="p-4 bg-base-200 rounded-lg border border-base-300"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-white">{request.property?.title}</h3>
-                        <p className="text-sm text-gray-300">{request.property?.location}</p>
-                        {request.offerPrice && (
-                          <p className="text-sm text-white mt-1">
-                            Offer: PKR {request.offerPrice.toLocaleString()}
-                          </p>
-                        )}
-                        {request.message && (
-                          <p className="text-sm text-gray-400 mt-2 line-clamp-2">
-                            {request.message}
-                          </p>
-                        )}
-                        {request.response && (
-                          <div className="mt-2 p-2 bg-base-300 rounded">
-                            <p className="text-sm text-gray-400">Builder's Response:</p>
-                            <p className="text-sm text-white">{request.response}</p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-right ml-4">
-                        <div
-                          className={`badge ${
-                            request.status === 'pending'
-                              ? 'badge-warning'
-                              : request.status === 'approved'
-                              ? 'badge-success'
-                              : 'badge-error'
-                          }`}
-                        >
-                          {request.status}
+              <Link to="/dashboard/buyer/property-requests" className="btn btn-ghost btn-sm text-white">
+                View All
+              </Link>
+            </div>
+            {propertyRequests.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400 mb-4">No property requests yet</p>
+                <Link to="/" className="btn btn-primary btn-sm">
+                  Browse Properties
+                </Link>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-3">
+                  {propertyRequests.slice(0, 3).map((request) => (
+                    <div
+                      key={request.id}
+                      className="p-4 bg-base-200 rounded-lg border border-base-300"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-white">{request.property?.title}</h3>
+                          <p className="text-sm text-gray-300">{request.property?.location}</p>
+                          {request.requestedPrice && (
+                            <p className="text-sm text-white mt-1">
+                              Offer: PKR {request.requestedPrice.toLocaleString()}
+                            </p>
+                          )}
+                          {request.builderResponse && (
+                            <div className="mt-2 p-2 bg-base-300 rounded">
+                              <p className="text-sm text-gray-400">Builder's Response:</p>
+                              <p className="text-sm text-white">{request.builderResponse}</p>
+                            </div>
+                          )}
                         </div>
-                        <p className="text-xs text-gray-400 mt-2">
-                          {new Date(request.createdAt).toLocaleDateString()}
-                        </p>
-                        <Link
-                          to={`/lands/${request.propertyId}`}
-                          className="btn btn-ghost btn-xs mt-2"
-                        >
-                          View Property
-                        </Link>
+                        <div className="text-right ml-4">
+                          <div
+                            className={`badge ${
+                              request.status === 'pending'
+                                ? 'badge-warning'
+                                : request.status === 'approved'
+                                ? 'badge-success'
+                                : 'badge-error'
+                            }`}
+                          >
+                            {request.status}
+                          </div>
+                          <p className="text-xs text-gray-400 mt-2">
+                            {new Date(request.createdAt).toLocaleDateString()}
+                          </p>
+                          <Link
+                            to={`/lands/${request.propertyId}`}
+                            className="btn btn-ghost btn-xs mt-2"
+                          >
+                            View Property
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              {propertyRequests.length > 3 && (
-                <div className="text-center mt-4">
-                  <button className="btn btn-ghost btn-sm text-white">
-                    View All Requests ({propertyRequests.length})
-                  </button>
+                  ))}
                 </div>
-              )}
-            </div>
+                {propertyRequests.length > 3 && (
+                  <div className="text-center mt-4">
+                    <Link to="/dashboard/buyer/property-requests" className="btn btn-ghost btn-sm text-white">
+                      View All Requests ({propertyRequests.length})
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-        )}
+        </div>
 
         {/* My Agreements */}
         {agreements.length > 0 && (
@@ -385,15 +392,12 @@ export default function BuyerDashboard() {
           </div>
         )}
 
-        {/* My Reservations */}
+        {/* My Reserved Properties */}
         {reservedLands.length > 0 && (
           <div className="card bg-base-100 shadow-xl border border-base-300">
             <div className="card-body">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="card-title text-white">My Reservations</h2>
-                <Link to="/dashboard/buyer/reservations" className="btn btn-ghost btn-sm text-white">
-                  View All
-                </Link>
+                <h2 className="card-title text-white">My Reserved Properties</h2>
               </div>
               <div className="space-y-4">
                 {reservedLands.slice(0, 3).map((land) => {

@@ -1,26 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { projectAPI } from '../../services/api';
+import type { Project } from '../../types';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
   FolderIcon,
+  DocumentTextIcon,
   PencilIcon,
   TrashIcon,
-  CheckCircleIcon,
-  XCircleIcon,
   ShieldCheckIcon,
-  MapPinIcon,
-  CalendarIcon,
   UserGroupIcon,
-  ArrowLeftIcon,
-  DocumentTextIcon,
   CreditCardIcon,
   CurrencyDollarIcon,
   ArrowPathIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-import { projectAPI } from '../../services/api';
-import type { Project } from '../../types';
+import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
 
 const navItems = [
   { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
@@ -45,6 +41,10 @@ export default function ProjectDetail() {
   const [verificationResult, setVerificationResult] = useState<{
     verified: boolean;
     message: string;
+    databaseHash?: string;
+    blockchainHash?: string;
+    blockchainTxHash?: string;
+    transactionHash?: string;
   } | null>(null);
 
   const formatProjectStatus = (status?: Project['status']) =>
@@ -83,18 +83,21 @@ export default function ProjectDetail() {
   }, [id, loadProject]);
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this project? This will also affect all associated properties.')) {
+    if (!project) return;
+
+    if (!window.confirm(`Are you sure you want to delete "${project.name}"? This will also affect all associated properties.`)) {
       return;
     }
 
     try {
       setDeleting(true);
-      await projectAPI.delete(id!);
+      await projectAPI.delete(project.id);
       navigate('/dashboard/builder/projects');
     } catch (err: unknown) {
       console.error('Failed to delete project:', err);
       const error = err as { response?: { data?: { message?: string } } };
       alert(error.response?.data?.message || 'Failed to delete project');
+    } finally {
       setDeleting(false);
     }
   };
@@ -138,12 +141,8 @@ export default function ProjectDetail() {
     return (
       <DashboardLayout navItems={navItems}>
         <div className="alert alert-error">
-          <span>{error || 'Project not found'}</span>
+          <span className="text-black">{error || 'Project not found'}</span>
         </div>
-        <Link to="/dashboard/builder/projects" className="btn btn-ghost mt-4 text-white">
-          <ArrowLeftIcon className="w-5 h-5 mr-2" />
-          Back to Projects
-        </Link>
       </DashboardLayout>
     );
   }
@@ -152,25 +151,17 @@ export default function ProjectDetail() {
     <DashboardLayout navItems={navItems}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-center">
           <div>
-            <Link 
-              to="/dashboard/builder/projects" 
-              className="btn btn-ghost btn-sm mb-2 text-white flex flex-row items-center gap-2"
+            <button
+              onClick={() => navigate('/dashboard/builder/projects')}
+              className="btn btn-outline btn-primary btn-sm gap-2 mb-2 inline-flex items-center justify-center"
             >
-              <ArrowLeftIcon className="w-4 h-4 mr-2" />
-              Back to Projects
-            </Link>
+              ← Back to Projects
+            </button>
             <h1 className="text-3xl font-bold text-white">{project.name}</h1>
-            <div className="flex items-center gap-2 mt-2">
-              {project.status && (
-                <div className="badge badge-info">
-                  {formatProjectStatus(project.status)}
-                </div>
-              )}
-            </div>
+            <p className="text-gray-400 mt-1">{project.location}</p>
           </div>
-
           <div className="flex gap-2">
             {project.status !== 'approved' && (
               <Link
@@ -181,11 +172,7 @@ export default function ProjectDetail() {
                 Edit
               </Link>
             )}
-            <button
-              onClick={handleDelete}
-              className="btn btn-error btn-sm text-white flex flex-row items-center gap-2"
-              disabled={deleting}
-            >
+            <button onClick={handleDelete} className="btn btn-error btn-sm" disabled={deleting}>
               {deleting ? (
                 <span className="loading loading-spinner loading-xs"></span>
               ) : (
@@ -196,152 +183,118 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        {/* Project Details Card */}
-        {project.status === 'pending_approval' && (
-          <div className="alert alert-warning">
-            <span className="text-black">
-              This project is <strong>pending admin approval</strong>. You won’t be able to create lands/properties under it until it’s approved.
-            </span>
-          </div>
-        )}
-        <div className="card bg-base-100 shadow-xl border border-base-300">
-          <div className="card-body">
-            <h2 className="card-title text-white">Project Information</h2>
-            
-            <div className="grid md:grid-cols-2 gap-6 mt-4">
-              {/* Location */}
-              <div className="flex items-start gap-3">
-                <MapPinIcon className="w-5 h-5 text-primary mt-1" />
+        {/* Project Details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Basic Information */}
+          <div className="card bg-base-100 shadow-xl border border-base-300">
+            <div className="card-body">
+              <h2 className="card-title text-white">Project Information</h2>
+              <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-gray-400">Location</p>
-                  <p className="text-white font-semibold">{project.location}</p>
+                  <p className="text-sm text-gray-400">Status</p>
+                  <span className={`badge badge-lg ${
+                    project.status === 'approved' ? 'badge-success' :
+                    project.status === 'pending_approval' ? 'badge-warning' :
+                    project.status === 'active' ? 'badge-info' :
+                    'badge-error'
+                  }`}>
+                    {formatProjectStatus(project.status)}
+                  </span>
                 </div>
-              </div>
-
-              {/* Total Units */}
-              {project.totalUnits && (
-                <div className="flex items-start gap-3">
-                  <UserGroupIcon className="w-5 h-5 text-primary mt-1" />
+                {project.locationDetails && (
                   <div>
-                    <p className="text-sm text-gray-400">Total Units</p>
-                    <p className="text-white font-semibold">{project.totalUnits}</p>
+                    <p className="text-sm text-gray-400">Location Details</p>
+                    <p className="text-white">{project.locationDetails}</p>
                   </div>
+                )}
+                {project.description && (
+                  <div>
+                    <p className="text-sm text-gray-400">Description</p>
+                    <p className="text-white">{project.description}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm text-gray-400">Total Units</p>
+                  <p className="text-white font-semibold text-xl">{project.totalUnits ?? 'N/A'}</p>
                 </div>
-              )}
-
-              {/* Sold Units */}
-              <div className="flex items-start gap-3">
-                <UserGroupIcon className="w-5 h-5 text-primary mt-1" />
                 <div>
                   <p className="text-sm text-gray-400">Sold Units</p>
-                  <p className="text-white font-semibold">{project.soldUnits ?? 0}</p>
+                  <p className="text-white font-semibold text-xl">{project.soldUnits ?? 0}</p>
                 </div>
-              </div>
-
-              {/* Total Properties */}
-              <div className="flex items-start gap-3">
-                <UserGroupIcon className="w-5 h-5 text-primary mt-1" />
                 <div>
                   <p className="text-sm text-gray-400">Total Properties</p>
-                  <p className="text-white font-semibold">{project._count?.lands ?? project.lands?.length ?? 0}</p>
-                </div>
-              </div>
-
-              {/* Created Date */}
-              <div className="flex items-start gap-3">
-                <CalendarIcon className="w-5 h-5 text-primary mt-1" />
-                <div>
-                  <p className="text-sm text-gray-400">Created On</p>
-                  <p className="text-white font-semibold">
-                    {new Date(project.createdAt).toLocaleDateString()}
-                  </p>
+                  <p className="text-white font-semibold text-xl">{project._count?.lands ?? project.lands?.length ?? 0}</p>
                 </div>
               </div>
             </div>
-
-            {/* Description */}
-            {project.description && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-white mb-2">Description</h3>
-                <p className="text-gray-300 whitespace-pre-line">{project.description}</p>
-              </div>
-            )}
-
-            {/* Location Details */}
-            {project.locationDetails && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold text-white mb-2">Location Details</h3>
-                <p className="text-gray-300 whitespace-pre-line">{project.locationDetails}</p>
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* Approval Documents */}
-        {project.approvalDocumentsHash && (
-          <div className="card bg-base-100 shadow-xl border border-base-300">
-            <div className="card-body">
-              <h2 className="card-title text-white">
-                <ShieldCheckIcon className="w-6 h-6 text-primary" />
-                Document Verification
-              </h2>
+          {/* Document Verification */}
+          {project.approvalDocumentsHash && (
+            <div className="card bg-base-100 shadow-xl border border-base-300">
+              <div className="card-body">
+                <h2 className="card-title text-white">
+                  <ShieldCheckIcon className="w-6 h-6 text-primary" />
+                  Document Verification
+                </h2>
 
-              <div className="space-y-4 mt-4">
-                <div>
-                  <p className="text-sm text-gray-400">Document Hash</p>
-                  <p className="text-white font-mono text-sm break-all">
-                    {project.approvalDocumentsHash}
-                  </p>
-                </div>
-
-                {project.approvalDocumentsCID && (
+                <div className="space-y-4 mt-4">
                   <div>
-                    <p className="text-sm text-gray-400 mb-2">Document CID</p>
-                    <p className="text-white font-mono text-xs break-all">
-                      {project.approvalDocumentsCID}
+                    <p className="text-sm text-gray-400">Document Hash</p>
+                    <p className="text-white font-mono text-sm break-all">
+                      {project.approvalDocumentsHash}
                     </p>
                   </div>
-                )}
 
-                {project.approvalDocumentsIPFSHash && (
-                  <div>
-                    <p className="text-sm text-gray-400 mb-2">IPFS Hash</p>
-                    {(() => {
-                      try {
-                        const ipfsData = JSON.parse(project.approvalDocumentsIPFSHash) as {
-                          hash?: string;
-                          gateway?: string;
-                          timestamp?: string;
-                        };
-                        const ipfsHash = ipfsData?.hash || project.approvalDocumentsIPFSHash;
-                        return (
-                          <div className="space-y-1">
-                            <p className="text-white font-mono text-xs break-all">{ipfsHash}</p>
-                            {ipfsData?.gateway && (
-                              <a
-                                href={`${ipfsData.gateway}${ipfsHash}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-400 hover:text-blue-300 underline inline-block"
-                              >
-                                View on IPFS →
-                              </a>
-                            )}
-                            {ipfsData?.timestamp && (
-                              <p className="text-xs text-gray-500">Pinned: {new Date(ipfsData.timestamp).toLocaleString()}</p>
-                            )}
-                          </div>
-                        );
-                      } catch {
-                        return (
-                          <p className="text-white font-mono text-xs break-all">
-                            {project.approvalDocumentsIPFSHash}
-                          </p>
-                        );
-                      }
-                    })()}
-                  </div>
-                )}
+                  {project.approvalDocumentsCID && (
+                    <div>
+                      <p className="text-sm text-gray-400 mb-2">Document CID</p>
+                      <p className="text-white font-mono text-xs break-all">
+                        {project.approvalDocumentsCID}
+                      </p>
+                    </div>
+                  )}
+
+                  {project.approvalDocumentsIPFSHash && (
+                    <div>
+                      <p className="text-sm text-gray-400 mb-2">IPFS Hash</p>
+                      {(() => {
+                        try {
+                          const ipfsData = JSON.parse(project.approvalDocumentsIPFSHash) as {
+                            hash?: string;
+                            gateway?: string;
+                            timestamp?: string;
+                          };
+                          const ipfsHash = ipfsData?.hash || project.approvalDocumentsIPFSHash;
+                          return (
+                            <div className="space-y-1">
+                              <p className="text-white font-mono text-xs break-all">{ipfsHash}</p>
+                              {ipfsData?.gateway && (
+                                <a
+                                  href={`${ipfsData.gateway}${ipfsHash}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-400 hover:text-blue-300 underline inline-block"
+                                >
+                                  View on IPFS →
+                                </a>
+                              )}
+                              {ipfsData?.timestamp && (
+                                <p className="text-xs text-gray-500">Pinned: {new Date(ipfsData.timestamp).toLocaleString()}</p>
+                              )}
+                            </div>
+                          );
+                        } catch {
+                          return (
+                            <p className="text-white font-mono text-xs break-all">
+                              {project.approvalDocumentsIPFSHash}
+                            </p>
+                          );
+                        }
+                      })()}
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex gap-2">
                   <button
@@ -371,23 +324,45 @@ export default function ProjectDetail() {
                 </div>
 
                 {verificationResult && (
-                  <div
-                    className={`alert ${
-                      verificationResult.verified ? 'alert-success' : 'alert-error'
-                    }`}
-                  >
-                    {verificationResult.verified ? (
-                      <CheckCircleIcon className="w-6 h-6" />
-                    ) : (
-                      <XCircleIcon className="w-6 h-6" />
-                    )}
-                    <span>{verificationResult.message}</span>
+                  <div className="space-y-2">
+                    <div
+                      className={`alert ${
+                        verificationResult.verified ? 'alert-success' : 'alert-error'
+                      }`}
+                    >
+                      {verificationResult.verified ? (
+                        <CheckCircleIcon className="h-6 w-6" />
+                      ) : (
+                        <XCircleIcon className="h-6 w-6" />
+                      )}
+                      <span>{verificationResult.message}</span>
+                    </div>
+                    {(verificationResult.blockchainTxHash || verificationResult.transactionHash) && (() => {
+                      const txHash = verificationResult.blockchainTxHash || verificationResult.transactionHash;
+                      if (!txHash) return null;
+                      return (
+                        <div className="bg-base-200 p-3 rounded">
+                          <p className="text-sm font-semibold mb-2">Blockchain Transaction:</p>
+                          <a
+                            href={`https://sepolia.basescan.org/tx/${txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 underline break-all text-xs"
+                          >
+                            {txHash.substring(0, 20)}...
+                            {txHash.slice(-8)}
+                            {' '}
+                            <span className="text-xs">→ View on Base Sepolia Etherscan</span>
+                          </a>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Associated Properties */}
         <div className="card bg-base-100 shadow-xl border border-base-300">

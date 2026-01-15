@@ -100,28 +100,6 @@ export interface Payment {
   };
 }
 
-export interface Reservation {
-  id: string;
-  landId: string;
-  buyerId: string;
-  status: 'active' | 'cancelled';
-  createdAt?: string;
-  updatedAt?: string;
-  land?: {
-    id: string;
-    title: string;
-    location: string;
-    price: number;
-    ownerId: string;
-  };
-  buyer?: {
-    id: string;
-    name: string;
-    email: string;
-    walletAddress: string | null;
-  };
-}
-
 export interface Project {
   id: string;
   name: string;
@@ -147,15 +125,21 @@ export interface Project {
 export interface PropertyRequest {
   id: string;
   propertyId: string;
-  requesterId: string;
+  buyerId: string;  // Backend uses buyerId, not requesterId
   status: 'pending' | 'approved' | 'rejected' | 'cancelled';
-  offerPrice?: number;
-  message?: string;
-  response?: string;
+  requestedPrice?: number | null;  // Backend uses requestedPrice, not offerPrice
+  builderResponse?: string | null;  // Backend uses builderResponse, not response
+  respondedAt?: string | null;  // When builder responded
   createdAt: string;
   updatedAt?: string;
-  property?: Land;
-  requester?: {
+  property?: Land;  // Property details
+  requester?: {  // Alias for buyer (for backward compatibility)
+    id: string;
+    name: string;
+    email: string;
+    walletAddress: string | null;
+  };
+  buyer?: {  // Buyer details (preferred)
     id: string;
     name: string;
     email: string;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
@@ -44,7 +44,7 @@ export default function SellerPayments() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'verified' | 'pending' | 'rejected'>('all');
 
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
       const [paymentsData, landsData] = await Promise.all([
@@ -68,11 +68,11 @@ export default function SellerPayments() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     fetchPayments();
-  }, [user?.id]);
+  }, [fetchPayments]);
 
   const filteredPayments = payments.filter((payment) => {
     if (filter === 'all') return true;

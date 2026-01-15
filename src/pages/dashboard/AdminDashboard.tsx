@@ -7,6 +7,7 @@ import {
   FolderIcon,
   BuildingOfficeIcon,
   MapPinIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { landAPI, paymentAPI, builderAPI, projectAPI } from '../../services/api';
 import type { Land, Payment } from '../../types';
@@ -19,6 +20,7 @@ const navItems = [
   { name: 'All Lands', path: '/dashboard/admin/all-lands', icon: MapPinIcon },
   { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
   { name: 'Mint Tokens', path: '/dashboard/admin/mint-tokens', icon: CurrencyDollarIcon },
+  { name: 'Property Requests', path: '/dashboard/admin/property-requests', icon: DocumentTextIcon },
 ];
 
 export default function AdminDashboard() {

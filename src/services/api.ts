@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Reservation, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus } from '../types';
+import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -407,6 +407,8 @@ export const landAPI = {
     databaseHash?: string;
     blockchainHash?: string;
     blockchainLandId?: number;
+    blockchainTxHash?: string;
+    transactionHash?: string;
     error?: string | null;
   }> => {
     const response = await api.post(`/lands/${id}/verify-blockchain`);
@@ -474,28 +476,6 @@ export const paymentAPI = {
     const response = await api.get('/payments/pending');
     // Backend returns: Payment[] array directly (includes land and buyer objects)
     // Note: This endpoint is for Builder role - returns pending payments for builder's lands
-    return response.data.data || response.data;
-  },
-};
-
-// Reservation API
-export const reservationAPI = {
-  create: async (landId: string): Promise<Reservation> => {
-    const response = await api.post('/reservations', { landId });
-    // Backend returns: Reservation object directly
-    return response.data.data || response.data;
-  },
-
-  getAll: async (): Promise<Reservation[]> => {
-    const response = await api.get('/reservations');
-    // Backend returns: Reservation[] array directly (includes land and buyer objects)
-    // Buyers see only their own, admins see all
-    return response.data.data || response.data;
-  },
-
-  cancel: async (id: string): Promise<{ message: string }> => {
-    const response = await api.delete(`/reservations/${id}`);
-    // Backend returns: { message: string }
     return response.data.data || response.data;
   },
 };
@@ -598,6 +578,8 @@ export const projectAPI = {
     message: string;
     databaseHash?: string;
     blockchainHash?: string;
+    blockchainTxHash?: string;
+    transactionHash?: string;
     error?: string | null;
   }> => {
     const response = await api.post(`/projects/${id}/verify-blockchain`);
@@ -637,71 +619,101 @@ export const propertyRequestAPI = {
   // Create a new property request
   create: async (data: {
     propertyId: string;
-    offerPrice?: number;
-    message?: string;
+    requestedPrice?: number;  // Note: No 'message' field - backend doesn't support it
   }): Promise<PropertyRequest> => {
     console.log('📤 Creating property request:', data);
     const response = await api.post('/property-requests', data);
     console.log('✅ Property request created:', response.data);
-    return response.data.data || response.data;
+    // Backend returns direct object, not wrapped in { data }
+    return response.data;
   },
 
-  // Get all property requests (Admin only)
-  getAll: async (): Promise<PropertyRequest[]> => {
-    const response = await api.get('/property-requests');
-    return response.data.data || response.data;
+  // Get all property requests (Admin only) - Returns paginated response
+  getAll: async (query?: { page?: number; limit?: number; status?: string }): Promise<{
+    data: PropertyRequest[];
+    total: number;
+    page: number;
+    limit: number;
+  }> => {
+    const response = await api.get('/property-requests', { params: query });
+    // Backend returns paginated response: { data, total, page, limit }
+    return response.data;
   },
 
-  // Get buyer's own requests
-  getMyRequests: async (): Promise<PropertyRequest[]> => {
-    const response = await api.get('/property-requests/my-requests');
-    return response.data.data || response.data;
+  // Get buyer's own requests - Returns paginated response
+  getMyRequests: async (query?: { page?: number; limit?: number; status?: string; propertyId?: string }): Promise<{
+    data: PropertyRequest[];
+    total: number;
+    page: number;
+    limit: number;
+  }> => {
+    const response = await api.get('/property-requests/my-requests', { params: query });
+    // Backend returns paginated response
+    return response.data;
   },
 
-  // Get pending requests for builder
-  getPending: async (): Promise<PropertyRequest[]> => {
-    const response = await api.get('/property-requests/pending');
-    return response.data.data || response.data;
+  // Get pending requests for builder - Returns paginated response
+  getPending: async (query?: { page?: number; limit?: number }): Promise<{
+    data: PropertyRequest[];
+    total: number;
+    page: number;
+    limit: number;
+  }> => {
+    const response = await api.get('/property-requests/pending', { params: query });
+    // Backend returns paginated response
+    return response.data;
   },
 
   // Get single request by ID
   getById: async (id: string): Promise<PropertyRequest> => {
     const response = await api.get(`/property-requests/${id}`);
-    return response.data.data || response.data;
+    // Backend returns direct object
+    return response.data;
   },
 
-  // Respond to request (generic)
+  // Respond to request (PRIMARY endpoint) - Approve or Reject
   respond: async (id: string, data: {
-    status: 'approved' | 'rejected';
-    response?: string;
+    status: 'approved' | 'rejected';  // Required enum
+    builderResponse?: string;  // Optional message
   }): Promise<PropertyRequest> => {
     console.log(`📤 Responding to request ${id}:`, data);
     const response = await api.post(`/property-requests/${id}/respond`, data);
     console.log('✅ Request response sent:', response.data);
-    return response.data.data || response.data;
+    // Backend returns direct object
+    return response.data;
   },
 
-  // Approve request
-  approve: async (id: string, response?: string): Promise<PropertyRequest> => {
+  // Approve request (convenience endpoint - uses /respond internally)
+  approve: async (id: string, builderResponse?: string): Promise<PropertyRequest> => {
     console.log(`✅ Approving request ${id}`);
-    const res = await api.post(`/property-requests/${id}/approve`, { response });
+    // Use /respond endpoint with status='approved'
+    const res = await api.post(`/property-requests/${id}/respond`, {
+      status: 'approved',
+      builderResponse: builderResponse || undefined,
+    });
     console.log('✅ Request approved:', res.data);
-    return res.data.data || res.data;
+    return res.data;
   },
 
-  // Reject request
-  reject: async (id: string, response?: string): Promise<PropertyRequest> => {
+  // Reject request (convenience endpoint - uses /respond internally)
+  reject: async (id: string, builderResponse?: string): Promise<PropertyRequest> => {
     console.log(`❌ Rejecting request ${id}`);
-    const res = await api.post(`/property-requests/${id}/reject`, { response });
+    // Use /respond endpoint with status='rejected'
+    const res = await api.post(`/property-requests/${id}/respond`, {
+      status: 'rejected',
+      builderResponse: builderResponse || undefined,
+    });
     console.log('✅ Request rejected:', res.data);
-    return res.data.data || res.data;
+    return res.data;
   },
 
-  // Cancel/delete request
-  delete: async (id: string): Promise<void> => {
+  // Cancel request (Buyer only)
+  cancel: async (id: string): Promise<PropertyRequest> => {
     console.log(`🗑️ Cancelling request ${id}`);
-    await api.delete(`/property-requests/${id}`);
-    console.log('✅ Request cancelled');
+    const res = await api.delete(`/property-requests/${id}`);
+    console.log('✅ Request cancelled:', res.data);
+    // Backend returns direct object
+    return res.data;
   },
 };
 

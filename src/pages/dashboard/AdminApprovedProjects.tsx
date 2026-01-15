@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
@@ -8,7 +8,6 @@ import {
   CurrencyDollarIcon,
   BuildingOfficeIcon,
   MapPinIcon,
-  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { projectAPI } from '../../services/api';
 import type { Project, ProjectStatus } from '../../types';
@@ -75,19 +74,6 @@ export default function AdminApprovedProjects() {
 
     load();
   }, [page, limit, search, builderId]);
-
-  const handleSearch = (value: string) => {
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      if (value) {
-        newParams.set('search', value);
-      } else {
-        newParams.delete('search');
-      }
-      newParams.set('page', '1');
-      return newParams;
-    });
-  };
 
   const handlePageChange = (newPage: number) => {
     setSearchParams((prev) => {

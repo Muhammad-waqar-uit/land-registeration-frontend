@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
@@ -11,9 +11,9 @@ import {
   ArrowPathIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-import { paymentAPI, reservationAPI } from '../../services/api';
+import { paymentAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
-import type { Payment, Reservation } from '../../types';
+import type { Payment } from '../../types';
 import { Link } from 'react-router-dom';
 
 interface BuyerProgress {
@@ -22,7 +22,6 @@ interface BuyerProgress {
   buyerEmail: string;
   landId: string;
   landTitle: string;
-  reservationDate?: string;
   totalPaid: number;
   pendingPayments: number;
   lastPaymentDate?: string;
@@ -54,36 +53,13 @@ export default function SellerBuyerProgress() {
     { name: 'Payments', path: '/dashboard/seller/payments', icon: CreditCardIcon },
   ];
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [paymentsData, reservationsData] = await Promise.all([
-        paymentAPI.getByBuyer().catch(() => []),
-        reservationAPI.getAll().catch(() => []),
-      ]);
+      const paymentsData = await paymentAPI.getByBuyer().catch(() => []);
 
       // Group by buyer and land
       const progressMap = new Map<string, BuyerProgress>();
-
-      // Process reservations
-      (reservationsData || []).forEach((reservation: Reservation) => {
-        if (reservation.land?.ownerId === user?.id) {
-          const key = `${reservation.buyerId}-${reservation.landId}`;
-          if (!progressMap.has(key)) {
-            progressMap.set(key, {
-              buyerId: reservation.buyerId,
-              buyerName: reservation.buyer?.name || 'Unknown',
-              buyerEmail: reservation.buyer?.email || 'N/A',
-              landId: reservation.landId,
-              landTitle: reservation.land?.title || 'N/A',
-              reservationDate: reservation.createdAt,
-              totalPaid: 0,
-              pendingPayments: 0,
-              status: 'reserved',
-            });
-          }
-        }
-      });
 
       // Process payments
       (paymentsData || []).forEach((payment: Payment) => {
@@ -121,11 +97,11 @@ export default function SellerBuyerProgress() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     fetchData();
-  }, [user?.id]);
+  }, [fetchData]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -211,7 +187,6 @@ export default function SellerBuyerProgress() {
                     <tr className="border-gray-700">
                       <th className="text-gray-300">Buyer</th>
                       <th className="text-gray-300">Property</th>
-                      <th className="text-gray-300">Reservation Date</th>
                       <th className="text-gray-300">Total Paid</th>
                       <th className="text-gray-300">Pending Payments</th>
                       <th className="text-gray-300">Last Payment</th>
@@ -226,15 +201,6 @@ export default function SellerBuyerProgress() {
                           <div className="text-sm text-gray-400">{progress.buyerEmail}</div>
                         </td>
                         <td className="text-white">{progress.landTitle}</td>
-                        <td className="text-gray-300">
-                          {progress.reservationDate
-                            ? new Date(progress.reservationDate).toLocaleDateString('en-IN', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric',
-                              })
-                            : '-'}
-                        </td>
                         <td className="text-green-400 font-semibold">
                           PKR {progress.totalPaid.toLocaleString()}
                         </td>
