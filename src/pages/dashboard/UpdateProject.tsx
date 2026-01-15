@@ -24,7 +24,6 @@ export default function UpdateProject() {
     locationDetails: '',
     description: '',
     totalUnits: '',
-    status: 'draft',
   });
   const [approvalDocs, setApprovalDocs] = useState<FileList | null>(null);
   const [existingDocs, setExistingDocs] = useState<Array<{ id?: string; name?: string; url?: string; path?: string; filename?: string }>>([]);
@@ -55,7 +54,6 @@ export default function UpdateProject() {
         locationDetails: project.locationDetails || '',
         description: project.description || '',
         totalUnits: project.totalUnits ? String(project.totalUnits) : '',
-        status: project.status || 'draft',
       });
       
       // Store project metadata
@@ -121,7 +119,6 @@ export default function UpdateProject() {
       const projectData: Record<string, string | number> = {
         name: formData.name.trim(),
         location: formData.location.trim(),
-        status: 'draft',
       };
       
       if (formData.locationDetails.trim()) {
@@ -234,9 +231,10 @@ export default function UpdateProject() {
                   <div>
                     <p className="text-xs text-blue-300 mb-1">Status</p>
                     <span className={`badge ${
-                      projectMetadata.status === 'active' ? 'badge-success' :
-                      projectMetadata.status === 'draft' ? 'badge-warning' :
-                      projectMetadata.status === 'completed' ? 'badge-info' :
+                      projectMetadata.status === 'approved' ? 'badge-success' :
+                      projectMetadata.status === 'pending_approval' ? 'badge-warning' :
+                      projectMetadata.status === 'active' ? 'badge-info' :
+                      projectMetadata.status === 'completed' ? 'badge-neutral' :
                       'badge-ghost'
                     }`}>
                       {projectMetadata.status}

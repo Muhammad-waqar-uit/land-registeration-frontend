@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { fetchCurrentUser } from './store/slices/authSlice';
+import type { RootState } from './store';
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -11,6 +12,8 @@ import ResetPassword from './pages/auth/ResetPassword';
 
 // Dashboard Pages
 import AdminDashboard from './pages/dashboard/AdminDashboard';
+import AdminProjects from './pages/dashboard/AdminProjects';
+import AdminProjectDetail from './pages/dashboard/AdminProjectDetail';
 import BuilderVerification from './pages/dashboard/BuilderVerification';
 import SellerDashboard from './pages/dashboard/SellerDashboard';
 import SellerMyLands from './pages/dashboard/SellerMyLands';
@@ -48,7 +51,7 @@ import type { UserRole } from './types';
 
 function App() {
   const dispatch = useAppDispatch();
-  const { token, user, isLoading } = useAppSelector((state) => state.auth);
+  const { token, user, isLoading } = useAppSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     // Fetch current user if token exists but user is not loaded
@@ -93,6 +96,23 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <MintTokens />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/admin/projects"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminProjects />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/projects/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminProjectDetail />
             </ProtectedRoute>
           }
         />

@@ -1,5 +1,7 @@
 export type UserRole = 'admin' | 'user' | 'builder';
 
+export type ProjectStatus = 'pending_approval' | 'approved' | 'active' | 'completed';
+
 export interface User {
   id: string;
   name: string;
@@ -126,7 +128,7 @@ export interface Project {
   location: string;
   locationDetails?: string;
   description?: string;
-  status?: string;
+  status?: ProjectStatus;
   totalUnits?: number;
   soldUnits?: number;
   builderId: string;

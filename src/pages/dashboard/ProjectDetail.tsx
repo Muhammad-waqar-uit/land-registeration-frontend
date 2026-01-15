@@ -35,6 +35,9 @@ export default function ProjectDetail() {
     message: string;
   } | null>(null);
 
+  const formatProjectStatus = (status?: Project['status']) =>
+    (status || 'pending_approval').replace(/_/g, ' ');
+
   const loadProject = useCallback(async () => {
     try {
       setLoading(true);
@@ -114,7 +117,7 @@ export default function ProjectDetail() {
         <div className="alert alert-error">
           <span>{error || 'Project not found'}</span>
         </div>
-        <Link to="/dashboard/builder/projects" className="btn btn-ghost mt-4">
+        <Link to="/dashboard/builder/projects" className="btn btn-ghost mt-4 text-white">
           <ArrowLeftIcon className="w-5 h-5 mr-2" />
           Back to Projects
         </Link>
@@ -139,7 +142,7 @@ export default function ProjectDetail() {
             <div className="flex items-center gap-2 mt-2">
               {project.status && (
                 <div className="badge badge-info">
-                  {project.status}
+                  {formatProjectStatus(project.status)}
                 </div>
               )}
             </div>
@@ -169,6 +172,13 @@ export default function ProjectDetail() {
         </div>
 
         {/* Project Details Card */}
+        {project.status === 'pending_approval' && (
+          <div className="alert alert-warning">
+            <span className="text-black">
+              This project is <strong>pending admin approval</strong>. You won’t be able to create lands/properties under it until it’s approved.
+            </span>
+          </div>
+        )}
         <div className="card bg-base-100 shadow-xl border border-base-300">
           <div className="card-body">
             <h2 className="card-title text-white">Project Information</h2>
@@ -275,16 +285,47 @@ export default function ProjectDetail() {
                 {project.approvalDocumentsIPFSHash && (
                   <div>
                     <p className="text-sm text-gray-400 mb-2">IPFS Hash</p>
-                    <p className="text-white font-mono text-xs break-all">
-                      {project.approvalDocumentsIPFSHash}
-                    </p>
+                    {(() => {
+                      try {
+                        const ipfsData = JSON.parse(project.approvalDocumentsIPFSHash) as {
+                          hash?: string;
+                          gateway?: string;
+                          timestamp?: string;
+                        };
+                        const ipfsHash = ipfsData?.hash || project.approvalDocumentsIPFSHash;
+                        return (
+                          <div className="space-y-1">
+                            <p className="text-white font-mono text-xs break-all">{ipfsHash}</p>
+                            {ipfsData?.gateway && (
+                              <a
+                                href={`${ipfsData.gateway}${ipfsHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-400 hover:text-blue-300 underline inline-block"
+                              >
+                                View on IPFS →
+                              </a>
+                            )}
+                            {ipfsData?.timestamp && (
+                              <p className="text-xs text-gray-500">Pinned: {new Date(ipfsData.timestamp).toLocaleString()}</p>
+                            )}
+                          </div>
+                        );
+                      } catch {
+                        return (
+                          <p className="text-white font-mono text-xs break-all">
+                            {project.approvalDocumentsIPFSHash}
+                          </p>
+                        );
+                      }
+                    })()}
                   </div>
                 )}
 
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleVerify(false)}
-                    className="btn btn-primary btn-sm flex flex-row items-center"
+                    className="btn btn-primary btn-sm flex items-center"
                     disabled={verifying}
                   >
                     {verifying ? (

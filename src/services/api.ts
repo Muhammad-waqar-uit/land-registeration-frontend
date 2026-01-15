@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { LoginCredentials, RegisterData, User, Land, Payment, Reservation, Project, PropertyRequest, Agreement, Installment, ResaleRequest } from '../types';
+import type { LoginCredentials, RegisterData, User, Land, Payment, Reservation, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -454,9 +454,24 @@ export const projectAPI = {
     return response.data.data || response.data;
   },
 
-  getAll: async (): Promise<Project[]> => {
-    const response = await api.get('/projects');
-    return response.data.data || response.data;
+  getAll: async (params?: {
+    status?: ProjectStatus;
+    builderId?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<Project[]> => {
+    const response = await api.get('/projects', params ? { params } : undefined);
+    const payload = response.data;
+
+    // Handles:
+    // 1) Success wrapper: { data: Project[], success: true }
+    // 2) Paginated (returned as-is): { data: Project[], total, page, limit }
+    // 3) Direct array (legacy): Project[]
+    const data = payload?.data ?? payload;
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.data)) return data.data;
+    return [];
   },
 
   getById: async (id: string): Promise<Project> => {
@@ -475,6 +490,24 @@ export const projectAPI = {
 
   getProperties: async (id: string): Promise<Land[]> => {
     const response = await api.get(`/projects/${id}/properties`);
+    return response.data.data || response.data;
+  },
+
+  getApprovalStatus: async (id: string): Promise<{
+    projectId: string;
+    status: ProjectStatus;
+    isApproved: boolean;
+    canCreateLands: boolean;
+    totalUnits: number;
+    landsCount: number;
+    remainingUnits: number;
+  }> => {
+    const response = await api.get(`/projects/${id}/approval-status`);
+    return response.data.data || response.data;
+  },
+
+  approve: async (id: string): Promise<Project> => {
+    const response = await api.patch(`/projects/${id}/approve`);
     return response.data.data || response.data;
   },
 

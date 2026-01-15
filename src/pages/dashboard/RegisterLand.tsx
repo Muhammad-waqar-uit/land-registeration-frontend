@@ -27,6 +27,16 @@ export default function RegisterLand() {
   const [document, setDocument] = useState<File | null>(null);
   const [image, setImage] = useState<File | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [approvalStatus, setApprovalStatus] = useState<null | {
+    projectId: string;
+    status: string;
+    isApproved: boolean;
+    canCreateLands: boolean;
+    totalUnits: number;
+    landsCount: number;
+    remainingUnits: number;
+  }>(null);
+  const [checkingProjectRules, setCheckingProjectRules] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +46,8 @@ export default function RegisterLand() {
 
   const loadProjects = async () => {
     try {
-      const data = await projectAPI.getAll();
+      // Only approved projects can accept lands/properties
+      const data = await projectAPI.getAll({ status: 'approved', page: 1, limit: 100 });
       setProjects(data);
     } catch (err: unknown) {
       console.error('Failed to load projects:', err);
@@ -45,10 +56,38 @@ export default function RegisterLand() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (name === 'projectId') {
+      if (!value) {
+        setApprovalStatus(null);
+      } else {
+        setCheckingProjectRules(true);
+        setApprovalStatus(null);
+        projectAPI
+          .getApprovalStatus(value)
+          .then((status) => setApprovalStatus(status))
+          .catch((err: unknown) => {
+            console.error('Failed to load approval status:', err);
+            setApprovalStatus({
+              projectId: value,
+              status: 'unknown',
+              isApproved: false,
+              canCreateLands: false,
+              totalUnits: 0,
+              landsCount: 0,
+              remainingUnits: 0,
+            });
+          })
+          .finally(() => setCheckingProjectRules(false));
+      }
+    }
+
     if (error) setError(null);
   };
 
@@ -69,6 +108,11 @@ export default function RegisterLand() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (formData.projectId && approvalStatus && !approvalStatus.canCreateLands) {
+      setError('Selected project is not eligible for land creation yet.');
+      return;
+    }
 
     // Validation
     if (!document) {
@@ -166,7 +210,7 @@ export default function RegisterLand() {
                   value={formData.projectId}
                   onChange={handleChange}
                   className="select select-bordered w-full bg-base-200 text-white border-base-300 focus:bg-base-200 focus:border-primary"
-                  disabled={isLoading}
+                  disabled={isLoading || checkingProjectRules}
                 >
                   <option value="">No Project (Standalone Property)</option>
                   {projects.map((project) => (
@@ -187,6 +231,29 @@ export default function RegisterLand() {
                     + Create Project
                   </button>
                 </label>
+
+                {checkingProjectRules && formData.projectId && (
+                  <div className="mt-2 text-sm text-white/70 flex items-center gap-2">
+                    <span className="loading loading-spinner loading-xs"></span>
+                    Checking project approval status...
+                  </div>
+                )}
+
+                {approvalStatus && formData.projectId && (
+                  <div className={`mt-3 alert ${approvalStatus.canCreateLands ? 'alert-success' : 'alert-warning'}`}>
+                    <span className="text-black">
+                      {approvalStatus.canCreateLands ? (
+                        <>
+                          Project approved. Remaining units: <strong>{approvalStatus.remainingUnits}</strong>
+                        </>
+                      ) : (
+                        <>
+                          Cannot create lands for this project yet (status: <strong>{String(approvalStatus.status).replace(/_/g, ' ')}</strong>).
+                        </>
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="form-control bg-transparent">
@@ -340,7 +407,11 @@ export default function RegisterLand() {
                   <button
                     type="submit"
                     className="btn btn-primary text-white"
-                    disabled={isLoading}
+                    disabled={
+                      isLoading ||
+                      checkingProjectRules ||
+                      (Boolean(formData.projectId) && approvalStatus?.canCreateLands === false)
+                    }
                   >
                     {isLoading ? (
                       <>

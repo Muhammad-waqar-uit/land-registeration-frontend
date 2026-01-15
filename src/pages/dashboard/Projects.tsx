@@ -98,6 +98,9 @@ export default function Projects() {
     }
   };
 
+  const formatProjectStatus = (status?: Project['status']) =>
+    (status || 'pending_approval').replace(/_/g, ' ');
+
   return (
     <DashboardLayout navItems={navItems}>
       <div className="space-y-6">
@@ -182,12 +185,13 @@ export default function Projects() {
                       <FolderIcon className="w-8 h-8 text-primary" />
                       {/* Status Badge */}
                       <span className={`badge badge-sm ${
-                        project.status === 'active' ? 'badge-success' :
-                        project.status === 'draft' ? 'badge-warning' :
-                        project.status === 'completed' ? 'badge-info' :
+                        project.status === 'approved' ? 'badge-success' :
+                        project.status === 'pending_approval' ? 'badge-warning' :
+                        project.status === 'active' ? 'badge-info' :
+                        project.status === 'completed' ? 'badge-neutral' :
                         'badge-ghost'
                       }`}>
-                        {project.status || 'draft'}
+                        {formatProjectStatus(project.status)}
                       </span>
                     </div>
                     <div className="flex gap-2">

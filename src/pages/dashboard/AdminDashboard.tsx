@@ -4,13 +4,15 @@ import {
   HomeIcon,
   UserGroupIcon,
   CurrencyDollarIcon,
+  FolderIcon,
 } from '@heroicons/react/24/outline';
-import { landAPI, paymentAPI, builderAPI } from '../../services/api';
+import { landAPI, paymentAPI, builderAPI, projectAPI } from '../../services/api';
 import type { Land, Payment } from '../../types';
 import { Link } from 'react-router-dom';
 
 const navItems = [
   { name: 'Overview', path: '/dashboard/admin', icon: HomeIcon },
+  { name: 'Project Approvals', path: '/dashboard/admin/projects', icon: FolderIcon },
   { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
   { name: 'Mint Tokens', path: '/dashboard/admin/mint-tokens', icon: CurrencyDollarIcon },
 ];
@@ -26,6 +28,7 @@ export default function AdminDashboard() {
     soldLands: 0,
     pendingPayments: 0,
     pendingBuilders: 0,
+    pendingProjects: 0,
     totalBuilders: 0,
   });
 
@@ -37,6 +40,8 @@ export default function AdminDashboard() {
         paymentAPI.getPending().catch(() => []), // Handle if endpoint doesn't exist
         builderAPI.getAll().catch(() => []),
       ]);
+
+      const pendingProjects = await projectAPI.getAll({ status: 'pending_approval', page: 1, limit: 50 }).catch(() => []);
 
       setLands(landsData || []);
       setPendingPayments(paymentsData || []);
@@ -55,6 +60,7 @@ export default function AdminDashboard() {
         soldLands,
         pendingPayments: paymentsData?.length || 0,
         pendingBuilders,
+        pendingProjects: pendingProjects?.length || 0,
         totalBuilders: buildersData?.length || 0,
       });
     } catch (error) {
@@ -95,7 +101,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
             <div className="stat-title text-white">Total Lands</div>
             <div className="stat-value text-primary text-3xl">{stats.totalLands}</div>
@@ -119,6 +125,12 @@ export default function AdminDashboard() {
             <div className="stat-value text-error text-3xl">{stats.pendingPayments}</div>
             <div className="stat-desc text-gray-400">Awaiting verification</div>
           </div>
+
+          <Link to="/dashboard/admin/projects" className="stat bg-base-100 rounded-lg shadow border border-base-300 hover:border-warning hover:shadow-lg transition-all cursor-pointer">
+            <div className="stat-title text-white">Pending Projects</div>
+            <div className="stat-value text-warning text-3xl">{stats.pendingProjects}</div>
+            <div className="stat-desc text-gray-400">Awaiting approval</div>
+          </Link>
 
           <Link to="/dashboard/admin/builders" className="stat bg-base-100 rounded-lg shadow border border-base-300 hover:border-warning hover:shadow-lg transition-all cursor-pointer">
             <div className="stat-title text-white">Pending Builders</div>
@@ -161,6 +173,24 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <UserGroupIcon className="h-12 w-12 opacity-80" />
+              </div>
+            </div>
+          </Link>
+
+          {/* Project Approval Card */}
+          <Link
+            to="/dashboard/admin/projects"
+            className="card bg-gradient-to-br from-warning to-warning-focus text-white shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+          >
+            <div className="card-body">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="card-title text-lg">Approve Projects</h3>
+                  <p className="text-sm opacity-90 mt-1">
+                    {stats.pendingProjects} pending
+                  </p>
+                </div>
+                <FolderIcon className="h-12 w-12 opacity-80" />
               </div>
             </div>
           </Link>

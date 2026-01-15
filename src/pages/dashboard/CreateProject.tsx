@@ -54,6 +54,27 @@ export default function CreateProject() {
       return;
     }
 
+    if (!formData.locationDetails.trim()) {
+      setError('Location details are required');
+      return;
+    }
+
+    if (!formData.description.trim()) {
+      setError('Description is required');
+      return;
+    }
+
+    const totalUnitsValue = parseInt(formData.totalUnits, 10);
+    if (!formData.totalUnits || Number.isNaN(totalUnitsValue) || totalUnitsValue < 1) {
+      setError('Total units is required and must be at least 1');
+      return;
+    }
+
+    if (!approvalDocs || approvalDocs.length === 0) {
+      setError('Approval documents are required');
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -62,20 +83,10 @@ export default function CreateProject() {
       const projectData: Record<string, string | number> = {
         name: formData.name.trim(),
         location: formData.location.trim(),
-        status: 'draft',
+        locationDetails: formData.locationDetails.trim(),
+        description: formData.description.trim(),
+        totalUnits: totalUnitsValue,
       };
-      
-      if (formData.locationDetails.trim()) {
-        projectData.locationDetails = formData.locationDetails.trim();
-      }
-      
-      if (formData.description.trim()) {
-        projectData.description = formData.description.trim();
-      }
-      
-      if (formData.totalUnits && parseInt(formData.totalUnits) > 0) {
-        projectData.totalUnits = parseInt(formData.totalUnits);
-      }
 
       // Debug: Log what we're sending
       console.log('=== CREATE PROJECT REQUEST ===');
@@ -134,6 +145,11 @@ export default function CreateProject() {
         {/* Form */}
         <div className="card bg-blue-950 shadow-2xl border border-blue-800">
           <div className="card-body">
+            <div className="alert alert-info mb-6">
+              <span className="text-black">
+                New projects are created as <strong>pending approval</strong>. An admin must approve the project before you can create lands/properties under it.
+              </span>
+            </div>
             <form onSubmit={handleSubmit} className="space-y-6 ">
               {/* Project Name */}
               <div className="form-control bg-blue-900/60">
@@ -174,7 +190,7 @@ export default function CreateProject() {
               {/* Location Details */}
               <div className="form-control bg-blue-900/60">
                 <label className="label">
-                  <span className="label-text text-blue-100 font-medium">Location Details</span>
+                  <span className="label-text text-blue-100 font-medium">Location Details <span className="text-red-400">*</span></span>
                 </label>
                 <input
                   type="text"
@@ -183,16 +199,17 @@ export default function CreateProject() {
                   onChange={handleChange}
                   placeholder="e.g., Near Central Park, next to shopping mall, 5 minutes from airport"
                   className="input w-full p-2 bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none placeholder:text-white"
+                  required
                 />
                 <label className="label">
-                  <span className="label-text-alt text-blue-300">Optional</span>
+                  <span className="label-text-alt text-blue-300">Required</span>
                 </label>
               </div>
 
               {/* Description */}
               <div className="form-control bg-blue-900/60">
                 <label className="label">
-                  <span className="label-text text-blue-100 font-medium">Description</span>
+                  <span className="label-text text-blue-100 font-medium">Description <span className="text-red-400">*</span></span>
                 </label>
                 <textarea
                   name="description"
@@ -201,16 +218,17 @@ export default function CreateProject() {
                   placeholder="Describe your project, its features, amenities, etc."
                   className="textarea h-32 p-2 w-full bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none placeholder:text-white"
                   rows={4}
+                  required
                 />
                 <label className="label">
-                  <span className="label-text-alt text-blue-300">Optional</span>
+                  <span className="label-text-alt text-blue-300">Required</span>
                 </label>
               </div>
 
               {/* Total Units */}
               <div className="form-control bg-blue-900/60">
                 <label className="label">
-                  <span className="label-text text-blue-100 font-medium">Total Units</span>
+                  <span className="label-text text-blue-100 font-medium">Total Units <span className="text-red-400">*</span></span>
                 </label>
                 <input
                   type="number"
@@ -220,10 +238,11 @@ export default function CreateProject() {
                   placeholder="e.g., 50"
                   min="1"
                   className="input w-full p-2 bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none placeholder:text-white"
+                  required
                 />
                 <label className="label">
                   <span className="label-text-alt text-blue-300">
-                    Optional - How many properties/units in this project
+                    Required - How many properties/units in this project
                   </span>
                 </label>
               </div>
@@ -231,7 +250,7 @@ export default function CreateProject() {
               {/* Approval Documents */}
               <div className="form-control bg-blue-900/60">
                 <label className="label">
-                  <span className="label-text text-blue-100 font-medium">Approval Documents</span>
+                  <span className="label-text text-blue-100 font-medium">Approval Documents<span className="text-red-400">*</span></span>
                 </label>
                 <input
                   type="file"
@@ -239,10 +258,11 @@ export default function CreateProject() {
                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                   multiple
                   className="file-input w-full bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 file:bg-blue-600 file:text-white file:font-medium file:mr-4 file:py-2 file:px-4 hover:file:bg-blue-500"
+                  required
                 />
                 <label className="label">
                   <span className="label-text-alt text-blue-300">
-                    Optional - Upload NOC, approval letters, plans, etc. (PDF, Images)
+                    Required - Upload NOC, approval letters, plans, etc. (PDF, Images)
                   </span>
                 </label>
               </div>
