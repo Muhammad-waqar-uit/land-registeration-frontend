@@ -501,7 +501,7 @@ export default function BuyerDashboard() {
                         </p>
                         <Link
                           to={`/dashboard/buyer/agreements/${agreement.id}`}
-                          className="btn btn-ghost btn-xs mt-2"
+                          className="btn btn-ghost btn-xs mt-2 text-white border-white"
                         >
                           {agreement.status === 'pending' ? 'Sign Agreement' : 'View Details'}
                         </Link>

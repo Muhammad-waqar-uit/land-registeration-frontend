@@ -28,42 +28,32 @@ export default function BuyerMyProperties() {
 
     try {
       setLoading(true);
-      // Get all lands and filter by ownerId and status='sold'
-      // Note: landAPI.getAll returns array, not paginated response
-      const response = await landAPI.getAll();
-      
-      console.log('📦 All lands response:', response);
-      console.log('👤 Current user ID:', user.id);
-      
-      // Handle array response and filter by ownerId and status
-      const landsArray: Land[] = Array.isArray(response) 
-        ? response 
-        : [];
-      
-      console.log('📋 Lands array length:', landsArray.length);
-      
-      // Filter by sold status AND ownerId matching current user
-      const ownedLands = landsArray.filter((land: Land) => {
-        const matchesOwner = land.ownerId === user.id;
-        const matchesStatus = land.status === 'sold';
-        return matchesOwner && matchesStatus;
+      // Use the new /lands/my-properties endpoint
+      // This automatically filters by current user and status='owned'
+      const response = await landAPI.getMyProperties({
+        page,
+        limit,
       });
       
-      console.log('🏠 Owned lands count:', ownedLands.length);
-      console.log('🏠 Owned lands:', ownedLands);
+      console.log('🏠 My properties response:', response);
       
-      // Calculate pagination manually
-      const startIndex = (page - 1) * limit;
-      const endIndex = startIndex + limit;
-      const paginatedProperties = ownedLands.slice(startIndex, endIndex);
+      // Handle paginated response
+      const propertiesList: Land[] = Array.isArray(response.data) 
+        ? response.data 
+        : [];
       
-      setProperties(paginatedProperties);
-      setTotal(ownedLands.length);
+      console.log('📋 Properties count:', propertiesList.length);
+      console.log('📊 Total:', response.total);
+      
+      setProperties(propertiesList);
+      setTotal(response.total || propertiesList.length);
     } catch (error: unknown) {
       console.error('❌ Failed to load properties:', error);
       const err = error as { response?: { data?: { message?: string } } };
       const errorMessage = err.response?.data?.message || 'Failed to load properties';
       console.error('Error details:', errorMessage);
+      setProperties([]);
+      setTotal(0);
       // Don't show alert on error - just log it and show empty state
     } finally {
       setLoading(false);
@@ -125,7 +115,7 @@ export default function BuyerMyProperties() {
                   <div className="card-body">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="card-title text-white">{property.title}</h3>
-                      <span className="badge badge-success">
+                      <span className="badge badge-success flex flex-row">
                         <CheckCircleIcon className="w-4 h-4 mr-1" />
                         Owned
                       </span>
@@ -143,6 +133,14 @@ export default function BuyerMyProperties() {
                           PKR {property.price.toLocaleString()}
                         </span>
                       </div>
+                      {(property as any).projectName && (
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-400">Project</span>
+                          <span className="text-blue-400 text-sm font-semibold">
+                            {(property as any).projectName}
+                          </span>
+                        </div>
+                      )}
                       {property.createdAt && (
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-400">Purchased</span>

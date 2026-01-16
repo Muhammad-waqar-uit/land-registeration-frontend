@@ -223,7 +223,7 @@ export default function AdminDashboard() {
                                 : 'badge-error'
                             }`}
                           >
-                            {land.status}
+                            {land.status === 'owned' ?'Sold':land.status}
                           </span>
                         </td>
                       </tr>

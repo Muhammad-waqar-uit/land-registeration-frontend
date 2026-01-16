@@ -50,7 +50,7 @@ export interface Land {
   location: string;
   size: number;
   price: number;
-  status: 'available' | 'locked' | 'sold';
+  status: 'available' | 'locked' | 'sold' | 'owned' | 'payment_in_progress';
   ownerId: string;
   owner?: {
     id: string;

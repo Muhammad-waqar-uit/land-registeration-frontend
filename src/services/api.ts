@@ -352,6 +352,66 @@ export const landAPI = {
     return response.data.data || response.data;
   },
 
+  // Get my owned properties (Buyer only)
+  getMyProperties: async (params?: {
+    page?: number;
+    limit?: number;
+    projectId?: string;
+    minPrice?: number;
+    maxPrice?: number;
+  }): Promise<LandListResponse> => {
+    console.log('🏠 Fetching my properties with params:', params);
+    const response = await api.get('/lands/my-properties', { params });
+    console.log('✅ My properties fetched (raw):', response.data);
+    
+    // Backend returns: { data: Land[], total: number, page: number, limit: number }
+    // Handle both wrapped { data: {...} } and direct {...} responses
+    let result = response.data;
+    
+    // If response.data has a nested data property (double wrapped), unwrap it
+    if (result && typeof result === 'object' && 'data' in result && !Array.isArray(result.data) && typeof result.data === 'object' && 'data' in result.data) {
+      // Double wrapped: { data: { data: [...], total: ..., page: ..., limit: ... } }
+      result = result.data;
+    }
+    
+    // Ensure we have the correct structure
+    if (!result || typeof result !== 'object') {
+      console.error('❌ Invalid response structure:', result);
+      return { data: [], total: 0, page: params?.page || 1, limit: params?.limit || 20 };
+    }
+    
+    // If result.data exists and is an array, we have the correct structure
+    // Response structure: { data: [...], total: 1, page: 1, limit: 20 }
+    if (Array.isArray(result.data) && typeof result.total === 'number') {
+      console.log('📦 Processed my properties result:', {
+        dataLength: result.data.length,
+        total: result.total,
+        page: result.page,
+        limit: result.limit,
+      });
+      return {
+        data: result.data,
+        total: result.total || 0,
+        page: result.page || params?.page || 1,
+        limit: result.limit || params?.limit || 20,
+      };
+    }
+    
+    // If result is directly an array (shouldn't happen, but handle it)
+    if (Array.isArray(result)) {
+      console.warn('⚠️ Response is directly an array, missing pagination info');
+      return {
+        data: result,
+        total: result.length,
+        page: params?.page || 1,
+        limit: params?.limit || 20,
+      };
+    }
+    
+    console.error('❌ Unexpected response structure:', result);
+    return { data: [], total: 0, page: params?.page || 1, limit: params?.limit || 20 };
+  },
+
   getById: async (id: string): Promise<Land> => {
     const response = await api.get(`/lands/${id}`);
     // Backend returns: Land object directly (may include owner object)
@@ -872,6 +932,14 @@ export const agreementAPI = {
     return response.data.data || response.data;
   },
 
+  // Transfer ownership (Builder only) - After all payments are completed
+  transferOwnership: async (id: string): Promise<Agreement> => {
+    console.log(`🏠 Transferring ownership for agreement ${id}`);
+    const response = await api.post(`/agreements/${id}/transfer-ownership`);
+    console.log('✅ Ownership transferred:', response.data);
+    return response.data.data || response.data;
+  },
+
   // Upload signed document
   uploadSigned: async (id: string, document: File): Promise<Agreement> => {
     console.log(`📤 Uploading signed document for agreement ${id}`);
@@ -900,14 +968,6 @@ export const agreementAPI = {
     console.log(`🔍 Verifying agreement ${id}`);
     const response = await api.post(`/agreements/${id}/verify`);
     console.log('✅ Agreement verified:', response.data);
-    return response.data.data || response.data;
-  },
-
-  // Transfer ownership (Builder only) - Final step after all payments completed
-  transferOwnership: async (id: string): Promise<Agreement> => {
-    console.log(`🏠 Transferring ownership for agreement ${id}`);
-    const response = await api.post(`/agreements/${id}/transfer-ownership`);
-    console.log('✅ Ownership transferred:', response.data);
     return response.data.data || response.data;
   },
 };

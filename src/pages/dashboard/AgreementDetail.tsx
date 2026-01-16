@@ -7,6 +7,7 @@ import {
   ShieldCheckIcon,
   CreditCardIcon,
   CurrencyDollarIcon,
+  HomeIcon,
 } from '@heroicons/react/24/outline';
 import { agreementAPI, paymentAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
@@ -27,6 +28,7 @@ export default function AgreementDetail() {
     totalAmount: number;
   } | null>(null);
   const [loadingPaymentSummary, setLoadingPaymentSummary] = useState(false);
+  const [transferringOwnership, setTransferringOwnership] = useState(false);
 
   const loadAgreement = useCallback(async () => {
     try {
@@ -34,7 +36,8 @@ export default function AgreementDetail() {
       const data = await agreementAPI.getById(id!);
       
       // Load payment summary if agreement is signed and has propertyId
-      if ((data.status === 'signed' || data.status === 'completed') && data.propertyId && user?.role === 'user') {
+      // Load for both buyers (to see payment status) and builders (to check if ready for ownership transfer)
+      if ((data.status === 'signed' || data.status === 'completed') && data.propertyId && (user?.role === 'user' || user?.role === 'builder')) {
         try {
           setLoadingPaymentSummary(true);
           const summary = await paymentAPI.getInstallmentSummary(data.propertyId);
@@ -108,6 +111,50 @@ export default function AgreementDetail() {
       alert(errorMessage || 'Failed to sign agreement');
     } finally {
       setSigning(false);
+    }
+  };
+
+  const handleTransferOwnership = async () => {
+    if (!agreement || !paymentSummary) return;
+
+    // Validate prerequisites
+    if (paymentSummary.remainingBalance > 0) {
+      alert(`Cannot transfer ownership. Remaining balance: PKR ${paymentSummary.remainingBalance.toLocaleString()}`);
+      return;
+    }
+
+    if (agreement.status !== 'signed') {
+      alert('Agreement must be signed before ownership transfer');
+      return;
+    }
+
+    // Confirm with builder
+    const confirmed = window.confirm(
+      'Are you sure you want to transfer ownership to the buyer?\n\n' +
+      'This will:\n' +
+      '• Generate final ownership document\n' +
+      '• Upload to IPFS\n' +
+      '• Transfer property ownership to buyer\n' +
+      '• Mark agreement as completed\n\n' +
+      'This action cannot be undone.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setTransferringOwnership(true);
+      const result = await agreementAPI.transferOwnership(id!);
+      console.log('✅ Ownership transferred:', result);
+      await loadAgreement(); // Reload to get updated agreement status
+      alert('Ownership transferred successfully! The property is now owned by the buyer.');
+    } catch (error: unknown) {
+      console.error('Failed to transfer ownership:', error);
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      alert(errorMessage || 'Failed to transfer ownership');
+    } finally {
+      setTransferringOwnership(false);
     }
   };
 
@@ -496,7 +543,7 @@ export default function AgreementDetail() {
                       </Link>
                     </div>
                   )}
-                  {paymentSummary.remainingBalance === 0 && (
+                  {paymentSummary.remainingBalance === 0 && user?.role === 'user' && (
                     <div className="alert alert-success">
                       <CheckCircleIcon className="w-6 h-6" />
                       <span>All payments completed! Waiting for builder to transfer ownership.</span>
@@ -505,6 +552,109 @@ export default function AgreementDetail() {
                 </div>
               ) : (
                 <p className="text-blue-200">Loading payment information...</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Ownership Transfer Section (Builder Only) */}
+        {user?.role === 'builder' && agreement && agreement.status === 'signed' && (
+          <div className="card bg-gradient-to-r from-purple-900/90 to-blue-900/90 border border-purple-500 shadow-xl">
+            <div className="card-body">
+              <h3 className="card-title text-white">
+                <HomeIcon className="w-6 h-6" />
+                Ownership Transfer
+              </h3>
+              {loadingPaymentSummary ? (
+                <div className="flex justify-center py-4">
+                  <span className="loading loading-spinner loading-md"></span>
+                </div>
+              ) : paymentSummary ? (
+                <div className="space-y-4">
+                  {paymentSummary.remainingBalance === 0 ? (
+                    <>
+                      <div className="alert alert-success">
+                        <CheckCircleIcon className="w-6 h-6" />
+                        <div>
+                          <h4 className="font-bold">✅ Ready for Ownership Transfer</h4>
+                          <p className="text-sm">All payments have been completed. You can now transfer ownership to the buyer.</p>
+                        </div>
+                      </div>
+                      <div className="bg-base-200/50 rounded-lg p-4 space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Total Amount:</span>
+                          <span className="text-white font-semibold">PKR {paymentSummary.totalAmount.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Total Paid:</span>
+                          <span className="text-success font-semibold">PKR {paymentSummary.totalPaid.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Remaining Balance:</span>
+                          <span className="text-success font-semibold">PKR {paymentSummary.remainingBalance.toLocaleString()}</span>
+                        </div>
+                      </div>
+                      <div className="card-actions justify-end mt-4">
+                        <button
+                          onClick={handleTransferOwnership}
+                          className="btn btn-success text-white border-white flex flex-row"
+                          disabled={transferringOwnership}
+                        >
+                          {transferringOwnership ? (
+                            <>
+                              <span className="loading loading-spinner loading-sm"></span>
+                              <span className="ml-2">Transferring...</span>
+                            </>
+                          ) : (
+                            <>
+                              <HomeIcon className="w-5 h-5 mr-2" />
+                              Transfer Ownership
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="alert alert-warning">
+                      <span className="text-warning">⏳ Not Ready Yet</span>
+                      <p className="text-sm mt-2">
+                        Remaining balance: <strong>PKR {paymentSummary.remainingBalance.toLocaleString()}</strong>
+                      </p>
+                      <p className="text-sm">
+                        All payments must be completed before ownership can be transferred.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-purple-200">Loading payment information...</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Completed Ownership Transfer Status */}
+        {agreement && agreement.status === 'completed' && agreement.agreementType === 'final_ownership' && (
+          <div className="card bg-gradient-to-r from-green-900/90 to-emerald-900/90 border border-green-500 shadow-xl">
+            <div className="card-body">
+              <h3 className="card-title text-white">
+                <CheckCircleIcon className="w-6 h-6" />
+                Ownership Transferred
+              </h3>
+              <div className="alert alert-success">
+                <CheckCircleIcon className="w-6 h-6" />
+                <div>
+                  <h4 className="font-bold">✅ Ownership Successfully Transferred</h4>
+                  <p className="text-sm mt-1">
+                    This property has been transferred to the buyer. The final ownership agreement has been generated and stored.
+                  </p>
+                </div>
+              </div>
+              {agreement.blockchainTxHash && (
+                <div className="bg-base-200/50 rounded-lg p-4 mt-4">
+                  <p className="text-sm text-gray-300 mb-1">Blockchain Transaction:</p>
+                  <p className="text-white font-mono text-xs break-all">{agreement.blockchainTxHash}</p>
+                </div>
               )}
             </div>
           </div>
