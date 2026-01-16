@@ -126,6 +126,7 @@ export interface PropertyRequest {
   id: string;
   propertyId: string;
   buyerId: string;  // Backend uses buyerId, not requesterId
+  agreementId: string;
   status: 'pending' | 'approved' | 'rejected' | 'cancelled';
   requestedPrice?: number | null;  // Backend uses requestedPrice, not offerPrice
   builderResponse?: string | null;  // Backend uses builderResponse, not response
@@ -234,4 +235,72 @@ export interface ResaleRequest {
     email: string;
     companyName?: string;
   };
+}
+
+// Buyer Progress Tracking Types
+export interface BuyerProgressItem {
+  buyerId: string;
+  buyerName: string;
+  buyerEmail: string;
+  buyerPhone: string | null;
+  landId: string;
+  landTitle: string;
+  landLocation: string;
+  landPrice: number;
+  projectId?: string | null; // Project ID if property belongs to a project
+  projectName?: string | null; // Project name for display
+  totalPaid: number;
+  remainingBalance: number;
+  pendingPayments: number;
+  verifiedPayments: number;
+  lastPaymentDate: string | null;
+  lastPaymentAmount: number | null;
+  status: 'reserved' | 'paying' | 'completed';
+  agreementId: string | null;
+  agreementStatus: string | null;
+  reservationDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BuyerProgressStats {
+  totalBuyers: number;
+  reserved: number;
+  inProgress: number;
+  completed: number;
+  totalRevenue: number;
+  pendingRevenue: number;
+  // Per-status stats
+  byStatus?: {
+    reserved: {
+      count: number;
+      revenue: number;
+    };
+    paying: {
+      count: number;
+      revenue: number;
+    };
+    completed: {
+      count: number;
+      revenue: number;
+    };
+  };
+  // Per-project stats (if projectId filter is used)
+  byProject?: {
+    [projectId: string]: {
+      projectName: string;
+      totalBuyers: number;
+      reserved: number;
+      inProgress: number;
+      completed: number;
+      totalRevenue: number;
+      pendingRevenue: number;
+    };
+  };
+}
+
+export interface BuyerProgressResponse {
+  data: BuyerProgressItem[];
+  total: number;
+  stats: BuyerProgressStats;
 }

@@ -36,7 +36,6 @@ export const builderNavItems: NavItem[] = [
   { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
   { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
   { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
-  { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
   { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
   { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
 ];

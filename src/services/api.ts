@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus } from '../types';
+import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus, BuyerProgressResponse, BuyerProgressStats } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -506,6 +506,67 @@ export const paymentAPI = {
   }> => {
     const response = await api.get(`/payments/installment-summary/${propertyId}`);
     return response.data.data || response.data;
+  },
+};
+
+// Buyer Progress API
+export const buyerProgressAPI = {
+  // Get buyer progress for builder/seller
+  getProgress: async (params?: {
+    status?: 'reserved' | 'paying' | 'completed';
+    landId?: string;
+    buyerId?: string;
+    projectId?: string; // Filter by project
+  }): Promise<BuyerProgressResponse> => {
+    console.log('📊 Fetching buyer progress with params:', params);
+    const response = await api.get('/buyers/progress', { params });
+    console.log('✅ Buyer progress fetched (raw):', response.data);
+    
+    // Backend returns: { data: BuyerProgressItem[], total: number, stats: BuyerProgressStats }
+    // Handle both wrapped { data: {...} } and direct {...} responses
+    let result = response.data;
+    
+    // If response.data has a nested data property (double wrapped), unwrap it
+    if (result && typeof result === 'object' && 'data' in result && !Array.isArray(result.data) && typeof result.data === 'object' && 'data' in result.data) {
+      // Double wrapped: { data: { data: [...], stats: {...}, total: ... } }
+      result = result.data;
+    }
+    
+    // Ensure result has the correct structure
+    if (!result || typeof result !== 'object') {
+      console.error('❌ Invalid response structure:', result);
+      return { data: [], total: 0, stats: {} as any };
+    }
+    
+    // If result.data exists and is an array, we have the correct structure
+    if (Array.isArray(result.data) && result.stats) {
+      console.log('📦 Processed buyer progress result:', {
+        dataLength: result.data.length,
+        total: result.total,
+        hasStats: !!result.stats,
+        hasByStatus: !!result.stats?.byStatus,
+        hasByProject: !!result.stats?.byProject,
+        statsKeys: result.stats ? Object.keys(result.stats) : [],
+      });
+      return {
+        data: result.data,
+        total: result.total || result.data.length,
+        stats: result.stats,
+      };
+    }
+    
+    // If result is directly an array (shouldn't happen, but handle it)
+    if (Array.isArray(result)) {
+      console.warn('⚠️ Response is directly an array, missing stats');
+      return {
+        data: result,
+        total: result.length,
+        stats: {} as any,
+      };
+    }
+    
+    console.error('❌ Unexpected response structure:', result);
+    return { data: [], total: 0, stats: {} as any };
   },
 };
 

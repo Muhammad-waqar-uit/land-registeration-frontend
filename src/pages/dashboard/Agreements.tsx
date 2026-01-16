@@ -280,7 +280,7 @@ export default function Agreements() {
                   <div className="card-actions justify-end mt-4">
                     <Link
                       to={`/dashboard/builder/agreements/${agreement.id}`}
-                      className="btn btn-ghost btn-sm text-white border-white"
+                      className="btn btn-ghost btn-sm text-white border-white flex flex-row"
                     >
                       <EyeIcon className="w-4 h-4 mr-2" />
                       View Details

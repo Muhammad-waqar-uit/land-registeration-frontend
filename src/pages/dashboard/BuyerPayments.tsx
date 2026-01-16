@@ -219,7 +219,7 @@ export default function BuyerPayments() {
                         </td>
                         <td>
                           {payment.remarks ? (
-                            <span className="text-sm text-gray-300">{payment.remarks}</span>
+                            <span className="text-sm text-black">{payment.remarks}</span>
                           ) : (
                             <span className="text-gray-500">-</span>
                           )}
