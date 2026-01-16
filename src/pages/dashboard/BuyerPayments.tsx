@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
-  HomeIcon,
-  CreditCardIcon,
   CheckCircleIcon,
   ClockIcon,
   XCircleIcon,
@@ -11,11 +9,7 @@ import {
 import { paymentAPI } from '../../services/api';
 import type { Payment } from '../../types';
 import { Link } from 'react-router-dom';
-
-const navItems = [
-  { name: 'Overview', path: '/dashboard/buyer', icon: HomeIcon },
-  { name: 'Payment History', path: '/dashboard/buyer/payments', icon: CreditCardIcon },
-];
+import { buyerNavItems } from '../../constants/navigation';
 
 export default function BuyerPayments() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -83,7 +77,7 @@ export default function BuyerPayments() {
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={buyerNavItems}>
         <div className="flex items-center justify-center min-h-[400px]">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -92,7 +86,7 @@ export default function BuyerPayments() {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={buyerNavItems}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">

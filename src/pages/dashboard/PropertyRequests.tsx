@@ -2,55 +2,101 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
-  HomeIcon,
-  DocumentTextIcon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
-  FolderIcon,
-  UserGroupIcon,
-  CreditCardIcon,
-  CurrencyDollarIcon,
-  ArrowPathIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
-import { propertyRequestAPI } from '../../services/api';
-import type { PropertyRequest } from '../../types';
-
-const navItems = [
-  { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
-  { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-  { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
-  { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
-  { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
-  { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
-  { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
-  { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
-  { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
-];
+import { propertyRequestAPI, agreementAPI } from '../../services/api';
+import type { PropertyRequest, Agreement } from '../../types';
+import { builderNavItems } from '../../constants/navigation';
 
 export default function PropertyRequests() {
   const [requests, setRequests] = useState<PropertyRequest[]>([]);
+  const [agreements, setAgreements] = useState<Record<string, Agreement>>({}); // Map propertyRequestId -> Agreement
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [processing, setProcessing] = useState<string | null>(null);
   const [responseText, setResponseText] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    loadRequests();
-  }, []);
-
+  // Load requests function - used both in useEffect and manual calls
+  // Uses GET /api/property-requests/builder/all with status filter (recommended for builder)
   const loadRequests = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Loading property requests with filter:', filter);
+      
+      // Use builder/all endpoint with status filter for all tabs
+      const statusParam = filter === 'all' ? undefined : filter;
+      console.log('📡 API: propertyRequestAPI.getBuilderAll()');
+      console.log('🌐 Endpoint: GET /api/property-requests/builder/all?status=' + (statusParam || 'undefined (all)'));
+      
       // Backend returns paginated response: { data, total, page, limit }
-      const response = await propertyRequestAPI.getPending();
-      setRequests(response.data || []);
+      // Includes buyer.name and property.title/price for table display
+      const response = await propertyRequestAPI.getBuilderAll({
+        status: statusParam,
+        page: 1,
+        limit: 100, // Load all for now, can add pagination later
+      });
+      
+      console.log('📋 Property Requests Response:', {
+        dataCount: response.data?.length || 0,
+        total: response.total,
+        filter: filter,
+        statusParam: statusParam,
+        firstRequest: response.data?.[0] || null,
+      });
+      
+      const requestsData = response.data || [];
+      setRequests(requestsData);
+      
+      // Fetch agreements for approved requests to check if agreement exists
+      const approvedRequests = requestsData.filter((r) => r.status === 'approved');
+      if (approvedRequests.length > 0) {
+        try {
+          console.log('🔍 Fetching agreements for approved requests...');
+          // Fetch all agreements - returns Agreement[] directly (not paginated)
+          const agreementsData = await agreementAPI.getAll();
+          
+          // Create a map: propertyRequestId -> Agreement
+          const agreementsMap: Record<string, Agreement> = {};
+          approvedRequests.forEach((request) => {
+            const matchingAgreement = agreementsData.find(
+              (agreement: Agreement) =>
+                agreement.propertyId === request.propertyId &&
+                agreement.buyerId === request.buyerId
+            );
+            if (matchingAgreement) {
+              agreementsMap[request.id] = matchingAgreement;
+            }
+          });
+          
+          console.log('✅ Agreements mapped:', {
+            approvedRequestsCount: approvedRequests.length,
+            agreementsFound: Object.keys(agreementsMap).length,
+            agreementsMap: agreementsMap,
+          });
+          
+          setAgreements(agreementsMap);
+        } catch (agreementError) {
+          console.error('⚠️ Failed to fetch agreements (non-critical):', agreementError);
+          // Don't fail the entire request if agreement fetch fails
+          setAgreements({});
+        }
+      } else {
+        setAgreements({});
+      }
     } catch (error: unknown) {
-      console.error('Failed to load property requests:', error);
+      console.error('❌ Failed to load property requests:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Reload requests when filter changes
+  useEffect(() => {
+    loadRequests();
+  }, [filter]);
 
   const handleApprove = async (requestId: string) => {
     if (!window.confirm('Are you sure you want to approve this request?')) {
@@ -90,14 +136,12 @@ export default function PropertyRequests() {
     }
   };
 
-  const filteredRequests = requests.filter((req) => {
-    if (filter === 'all') return true;
-    return req.status === filter;
-  });
+  // No need for client-side filtering - API handles it via status param
+  const filteredRequests = requests;
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
         <div className="flex justify-center items-center h-64">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -106,7 +150,7 @@ export default function PropertyRequests() {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={builderNavItems}>
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -222,7 +266,7 @@ export default function PropertyRequests() {
                     <>
                       <div className="divider"></div>
 
-                      <div className="form-control">
+                      <div className="form-control bg-transparent flex flex-col items-start gap-2">
                         <label className="label">
                           <span className="label-text text-white">Response Message (Optional)</span>
                         </label>
@@ -232,20 +276,20 @@ export default function PropertyRequests() {
                             setResponseText({ ...responseText, [request.id]: e.target.value })
                           }
                           placeholder="Add a message with your decision..."
-                          className="textarea textarea-bordered h-20"
+                          className="p-3 textarea textarea-bordered h-20 w-full text-white  border-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
 
                       <div className="card-actions justify-end mt-4">
                         <Link
                           to={`/dashboard/seller/lands/${request.propertyId}`}
-                          className="btn btn-ghost btn-sm"
+                          className="btn btn-ghost btn-sm text-white border-white"
                         >
                           View Property
                         </Link>
                         <button
                           onClick={() => handleReject(request.id)}
-                          className="btn btn-error btn-sm"
+                          className="btn btn-error btn-sm text-white border-white hover:bg-red-600 hover:text-white flex flex-row items-center gap-2"
                           disabled={processing === request.id}
                         >
                           {processing === request.id ? (
@@ -257,7 +301,7 @@ export default function PropertyRequests() {
                         </button>
                         <button
                           onClick={() => handleApprove(request.id)}
-                          className="btn btn-success btn-sm"
+                          className="btn btn-success btn-sm text-white border-white hover:bg-green-600 hover:text-white flex flex-row items-center gap-2"
                           disabled={processing === request.id}
                         >
                           {processing === request.id ? (
@@ -283,7 +327,7 @@ export default function PropertyRequests() {
                     </div>
                   )}
 
-                  {request.status === 'approved' && (
+                  {request.status === 'approved' && !agreements[request.id] && (
                     <>
                       <div className="divider"></div>
                       <div className="card-actions justify-end">
@@ -292,6 +336,20 @@ export default function PropertyRequests() {
                           className="btn btn-primary btn-sm"
                         >
                           Create Agreement
+                        </Link>
+                      </div>
+                    </>
+                  )}
+                  
+                  {request.status === 'approved' && agreements[request.id] && (
+                    <>
+                      <div className="divider"></div>
+                      <div className="card-actions justify-end">
+                        <Link
+                          to={`/dashboard/builder/agreements/${agreements[request.id].id}`}
+                          className="btn btn-info btn-sm"
+                        >
+                          View Agreement ({agreements[request.id].status})
                         </Link>
                       </div>
                     </>

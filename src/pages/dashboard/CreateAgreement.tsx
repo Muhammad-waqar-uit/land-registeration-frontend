@@ -2,36 +2,20 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
-  HomeIcon,
-  FolderIcon,
   DocumentTextIcon,
   ArrowLeftIcon,
-  UserGroupIcon,
-  CreditCardIcon,
-  CurrencyDollarIcon,
-  ArrowPathIcon,
-  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { agreementAPI, landAPI, propertyRequestAPI } from '../../services/api';
 import type { Land, PropertyRequest } from '../../types';
-
-const navItems = [
-  { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
-  { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-  { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
-  { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
-  { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
-  { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
-  { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
-  { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
-  { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
-];
+import { useAppSelector } from '../../store/hooks';
+import { builderNavItems } from '../../constants/navigation';
 
 export default function CreateAgreement() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestId = searchParams.get('requestId');
   const propertyId = searchParams.get('propertyId');
+  const user = useAppSelector((state) => state.auth.user);
 
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -39,10 +23,13 @@ export default function CreateAgreement() {
   const [property, setProperty] = useState<Land | null>(null);
   const [request, setRequest] = useState<PropertyRequest | null>(null);
 
+  // If requestId exists, set agreementType to 'final_ownership' and make fields prefilled/disabled
+  const isFromRequest = !!requestId;
+
   const [formData, setFormData] = useState({
     propertyId: propertyId || '',
     buyerId: '',
-    agreementType: 'initial' as 'initial' | 'final',
+    agreementType: isFromRequest ? ('final_ownership' as const) : ('initial' as 'initial' | 'final_ownership'),
     price: '',
     totalAmount: '',
     installmentPlanYears: '3',
@@ -78,20 +65,70 @@ export default function CreateAgreement() {
   const loadRequest = async (id: string) => {
     try {
       const data = await propertyRequestAPI.getById(id);
+      console.log('📋 Property Request Data from API (GET /api/property-requests/:id):', {
+        id: data.id,
+        propertyId: data.propertyId,
+        buyerId: data.buyerId,
+        status: data.status,
+        requestedPrice: data.requestedPrice,
+        buyer: data.buyer ? {
+          id: data.buyer.id,
+          name: data.buyer.name,
+          email: data.buyer.email,
+          walletAddress: data.buyer.walletAddress,
+        } : 'NOT POPULATED',
+        property: data.property ? {
+          id: data.property.id,
+          title: data.property.title,
+          price: data.property.price,
+          location: data.property.location,
+        } : 'NOT POPULATED',
+      });
+      
       setRequest(data);
+      
+      // Validate that buyer and property are populated
+      if (!data.buyer) {
+        console.warn('⚠️ WARNING: Buyer object is not populated in API response');
+      }
+      if (!data.property) {
+        console.warn('⚠️ WARNING: Property object is not populated in API response');
+      }
+      
+      // Use requestedPrice if exists, otherwise use property price
+      // Handle property.price as string or number
+      const propertyPrice = typeof data.property?.price === 'string' 
+        ? parseFloat(data.property.price) 
+        : (data.property?.price || 0);
+      const agreedPrice = data.requestedPrice || propertyPrice;
+      
+      // Use buyer.id or buyerId (backend should populate buyer.id)
+      const buyerIdValue = data.buyer?.id || data.buyerId || data.requester?.id || '';
+      
       setFormData((prev) => ({
         ...prev,
         propertyId: data.propertyId,
-        buyerId: data.buyerId || data.requester?.id || '',
-        price: data.requestedPrice?.toString() || data.property?.price?.toString() || '',
-        totalAmount: data.requestedPrice?.toString() || data.property?.price?.toString() || '',
+        buyerId: buyerIdValue,
+        agreementType: 'final_ownership', // Always 'final_ownership' when creating from request (hidden in UI)
+        price: agreedPrice.toString(),
+        totalAmount: agreedPrice.toString(), // Same amount for both price and totalAmount
       }));
       
+      // Set property if populated
       if (data.property) {
         setProperty(data.property);
       }
+      
+      console.log('✅ Form data prefilled:', {
+        propertyId: data.propertyId,
+        buyerId: buyerIdValue,
+        buyerName: data.buyer?.name || 'NOT AVAILABLE',
+        agreedPrice: agreedPrice,
+        agreementType: 'final_ownership',
+      });
     } catch (error: unknown) {
-      console.error('Failed to load request:', error);
+      console.error('❌ Failed to load request:', error);
+      setError('Failed to load property request. Please try again.');
     } finally {
       setLoadingData(false);
     }
@@ -103,6 +140,11 @@ export default function CreateAgreement() {
 
     if (!formData.propertyId || !formData.buyerId) {
       setError('Property and buyer are required');
+      return;
+    }
+
+    if (!signedDocument) {
+      setError('Signed agreement document is required');
       return;
     }
 
@@ -152,7 +194,7 @@ export default function CreateAgreement() {
 
   if (loadingData) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
         <div className="flex justify-center items-center h-64">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -161,7 +203,7 @@ export default function CreateAgreement() {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={builderNavItems}>
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -202,7 +244,7 @@ export default function CreateAgreement() {
                 </div>
                 <div>
                   <p className="text-sm text-blue-300">Listed Price</p>
-                  <p className="text-white">PKR {property.price?.toLocaleString()}</p>
+                  <p className="text-white">PKR {typeof property.price === 'string' ? parseFloat(property.price).toLocaleString() : property.price?.toLocaleString()}</p>
                 </div>
               </div>
             </div>
@@ -213,9 +255,15 @@ export default function CreateAgreement() {
         {request && (
           <div className="alert alert-info mb-6">
             <span className="text-black">
-              Creating agreement from approved request by <strong>{request.buyer?.name || request.requester?.name || 'Unknown'}</strong>
+              Agreement accepted by <strong>{user?.name || 'me'}</strong> for buyer <strong>{request.buyer?.name || request.requester?.name || 'Buyer'}</strong>
+              {request.buyer?.email && ` (${request.buyer.email})`}
               {request.requestedPrice && ` with offer price PKR ${request.requestedPrice.toLocaleString()}`}
             </span>
+            {!request.buyer && !request.requester && (
+              <span className="text-warning text-sm mt-2 block">
+                ⚠️ Buyer information not available. Please check backend API response.
+              </span>
+            )}
           </div>
         )}
 
@@ -239,8 +287,13 @@ export default function CreateAgreement() {
                 className="input w-full p-2 bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none placeholder:text-white"
                 placeholder="Enter property ID"
                 required
-                disabled={!!propertyId}
+                disabled={isFromRequest || !!propertyId}
               />
+              {isFromRequest && (
+                <label className="label">
+                  <span className="label-text-alt text-blue-300">Prefilled from property request</span>
+                </label>
+              )}
             </div>
 
             {/* Buyer ID */}
@@ -257,32 +310,35 @@ export default function CreateAgreement() {
                 className="input w-full p-2 bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none placeholder:text-white"
                 placeholder="Enter buyer ID"
                 required
-                disabled={!!request?.buyerId || !!request?.requester?.id}
+                disabled={isFromRequest}
               />
-              {request && (
+              {isFromRequest && request && (
                 <label className="label">
-                  <span className="label-text-alt text-blue-300">From request by {request.requester?.name}</span>
+                  <span className="label-text-alt text-blue-300">Prefilled from property request ({request.buyer?.name || request.requester?.name || 'Buyer'})</span>
                 </label>
               )}
             </div>
 
-            {/* Agreement Type */}
-            <div className="form-control bg-blue-900/60">
-              <label className="label">
-                <span className="label-text text-blue-100 font-medium">
-                  Agreement Type <span className="text-red-400">*</span>
-                </span>
-              </label>
-              <select
-                value={formData.agreementType}
-                onChange={(e) => setFormData({ ...formData, agreementType: e.target.value as 'initial' | 'final' })}
-                className="select w-full p-2 bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none"
-                required
-              >
-                <option value="initial">Initial Agreement</option>
-                <option value="final">Final Agreement</option>
-              </select>
-            </div>
+            {/* Agreement Type - Only show when NOT creating from request */}
+            {!isFromRequest && (
+              <div className="form-control bg-blue-900/60">
+                <label className="label">
+                  <span className="label-text text-blue-100 font-medium">
+                    Agreement Type <span className="text-red-400">*</span>
+                  </span>
+                </label>
+                <select
+                  value={formData.agreementType}
+                  onChange={(e) => setFormData({ ...formData, agreementType: e.target.value as 'initial' | 'final_ownership' })}
+                  className="select w-full p-2 bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none"
+                  required
+                >
+                  <option value="initial">Initial Agreement</option>
+                  <option value="final_ownership">Final Ownership Agreement</option>
+                </select>
+              </div>
+            )}
+            {/* When creating from request, agreement type is automatically 'final_ownership' and hidden from UI */}
 
             <div className="divider text-blue-100">Payment Terms</div>
 
@@ -296,33 +352,54 @@ export default function CreateAgreement() {
               <input
                 type="number"
                 value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                onChange={(e) => {
+                  const newPrice = e.target.value;
+                  // When creating from request, update both price and totalAmount together
+                  setFormData({ 
+                    ...formData, 
+                    price: newPrice,
+                    totalAmount: isFromRequest ? newPrice : formData.totalAmount 
+                  });
+                }}
                 className="input w-full p-2 bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none placeholder:text-white"
                 placeholder="Enter price"
                 min="0"
                 step="1000"
                 required
               />
+              {isFromRequest && (
+                <label className="label">
+                  <span className="label-text-alt text-blue-300">Price from property request (used as total amount)</span>
+                </label>
+              )}
             </div>
 
-            {/* Total Amount */}
-            <div className="form-control bg-blue-900/60">
-              <label className="label">
-                <span className="label-text text-blue-100 font-medium">
-                  Total Amount (PKR) <span className="text-red-400">*</span>
-                </span>
-              </label>
-              <input
-                type="number"
-                value={formData.totalAmount}
-                onChange={(e) => setFormData({ ...formData, totalAmount: e.target.value })}
-                className="input w-full p-2 bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none placeholder:text-white"
-                placeholder="Enter total amount"
-                min="0"
-                step="1000"
-                required
-              />
-            </div>
+            {/* Total Amount - Hidden when creating from request */}
+            {!isFromRequest && (
+              <div className="form-control bg-blue-900/60">
+                <label className="label">
+                  <span className="label-text text-blue-100 font-medium">
+                    Total Amount (PKR) <span className="text-red-400">*</span>
+                  </span>
+                </label>
+                <input
+                  type="number"
+                  value={formData.totalAmount}
+                  onChange={(e) => {
+                    const newTotal = e.target.value;
+                    setFormData({ 
+                      ...formData, 
+                      totalAmount: newTotal 
+                    });
+                  }}
+                  className="input w-full p-2 bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none placeholder:text-white"
+                  placeholder="Enter total amount"
+                  min="0"
+                  step="1000"
+                  required
+                />
+              </div>
+            )}
 
             {/* Installment Plan */}
             <div className="form-control bg-blue-900/60">
@@ -364,22 +441,32 @@ export default function CreateAgreement() {
             {/* Signed Agreement Document */}
             <div className="form-control bg-blue-900/60">
               <label className="label">
-                <span className="label-text text-blue-100 font-medium">Signed Agreement Document</span>
+                <span className="label-text text-blue-100 font-medium">
+                  Signed Agreement Document <span className="text-red-400">*</span>
+                </span>
               </label>
               <input
                 type="file"
                 onChange={(e) => setSignedDocument(e.target.files?.[0] || null)}
                 className="file-input w-full bg-blue-900/60 text-blue-50 border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none"
                 accept=".pdf,.doc,.docx"
+                required
               />
               <label className="label">
                 <span className="label-text-alt text-blue-300">
-                  Upload signed agreement (PDF, DOC, DOCX) - Optional
+                  Upload signed agreement document (PDF, DOC, DOCX) - Required
                 </span>
               </label>
+              {!signedDocument && (
+                <label className="label">
+                  <span className="label-text-alt text-red-400">
+                    ⚠️ Document is required to create agreement
+                  </span>
+                </label>
+              )}
               {signedDocument && (
-                <div className="alert alert-info mt-2">
-                  <span className="text-black">Selected: {signedDocument.name}</span>
+                <div className="alert alert-success mt-2">
+                  <span className="text-black">✅ Selected: {signedDocument.name}</span>
                 </div>
               )}
             </div>

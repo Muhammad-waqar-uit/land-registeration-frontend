@@ -4,31 +4,12 @@ import { projectAPI } from '../../services/api';
 import type { Project } from '../../types';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
-  HomeIcon,
-  FolderIcon,
-  DocumentTextIcon,
   PencilIcon,
   TrashIcon,
   ShieldCheckIcon,
-  UserGroupIcon,
-  CreditCardIcon,
-  CurrencyDollarIcon,
-  ArrowPathIcon,
-  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
-
-const navItems = [
-  { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
-  { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-  { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
-  { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
-  { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
-  { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
-  { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
-  { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
-  { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
-];
+import { builderNavItems } from '../../constants/navigation';
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -129,7 +110,7 @@ export default function ProjectDetail() {
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
         <div className="flex justify-center items-center h-64">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -139,7 +120,7 @@ export default function ProjectDetail() {
 
   if (error || !project) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
         <div className="alert alert-error">
           <span className="text-black">{error || 'Project not found'}</span>
         </div>
@@ -148,7 +129,7 @@ export default function ProjectDetail() {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={builderNavItems}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">

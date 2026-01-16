@@ -3,16 +3,12 @@ import DashboardLayout from '../../components/layouts/DashboardLayout';
 import { tokenAPI, authAPI } from '../../services/api';
 import type { User } from '../../types';
 import {
-  HomeIcon,
-  FolderIcon,
-  UserGroupIcon,
-  CurrencyDollarIcon,
-  BuildingOfficeIcon,
-  MapPinIcon,
   CheckCircleIcon,
   XCircleIcon,
   MagnifyingGlassIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
+import { adminNavItems } from '../../constants/navigation';
 
 export default function MintTokens() {
   const [toAddress, setToAddress] = useState('');
@@ -32,9 +28,19 @@ export default function MintTokens() {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [usersPage] = useState(1);
   const [usersLimit] = useState(50);
+  const [userFieldTouched, setUserFieldTouched] = useState(false); // Track if user field has been interacted with
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Mark user field as touched when form is submitted
+    setUserFieldTouched(true);
+    
+    // Validate before submitting
+    if (!selectedUser || !toAddress || !amount || !isValidAddress(toAddress)) {
+      return;
+    }
+    
     setLoading(true);
     setResult(null);
 
@@ -48,6 +54,7 @@ export default function MintTokens() {
         setAmount('');
         setSelectedUser(null);
         setUserSearch('');
+        setUserFieldTouched(false); // Reset touched state on success
       }
     } catch (error: unknown) {
       console.error('Mint tokens error:', error);
@@ -115,17 +122,8 @@ export default function MintTokens() {
     setUserSearch('');
   };
 
-  const navItems = [
-    { name: 'Overview', path: '/dashboard/admin', icon: HomeIcon },
-    { name: 'Project Approvals', path: '/dashboard/admin/projects', icon: FolderIcon },
-    { name: 'Approved Projects', path: '/dashboard/admin/approved-projects', icon: BuildingOfficeIcon },
-    { name: 'All Lands', path: '/dashboard/admin/all-lands', icon: MapPinIcon },
-    { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
-    { name: 'Mint Tokens', path: '/dashboard/admin/mint-tokens', icon: CurrencyDollarIcon },
-  ];
-
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={adminNavItems}>
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -144,10 +142,12 @@ export default function MintTokens() {
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* User Selection */}
+              {/* User Selection - MANDATORY */}
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-semibold text-gray-800">Select User (Optional)</span>
+                  <span className="label-text font-semibold text-gray-800">
+                    Select User <span className="text-red-400">*</span>
+                  </span>
                 </label>
                 <div className="relative">
                   {selectedUser ? (
@@ -221,33 +221,43 @@ export default function MintTokens() {
                     </>
                   )}
                 </div>
-                <label className="label">
-                  <span className="label-text-alt text-gray-400">
-                    Select a user to automatically fill their wallet address, or enter address manually below
-                  </span>
-                </label>
+                {!selectedUser && userFieldTouched && (
+                  <label className="label">
+                    <span className="label-text-alt text-red-400">
+                      User selection is required to mint tokens
+                    </span>
+                  </label>
+                )}
+                {!selectedUser && !userFieldTouched && (
+                  <label className="label">
+                    <span className="label-text-alt text-gray-400">
+                      Select a user to automatically fill their wallet address
+                    </span>
+                  </label>
+                )}
+                {selectedUser && (
+                  <label className="label">
+                    <span className="label-text-alt text-green-400">
+                      User selected - address will be filled automatically
+                    </span>
+                  </label>
+                )}
               </div>
 
-              {/* Recipient Address */}
+              {/* Recipient Address - Read-only from selected user */}
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-semibold text-gray-800">Recipient Address</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="0x..."
-                  className={`input w-full font-mono bg-gray-700 border-gray-600 p-2 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500  ${
+                  placeholder={selectedUser ? "Address will be filled automatically" : "Select a user first..."}
+                  className={`input w-full font-mono bg-gray-700 border-gray-600 p-2 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 ${
                     toAddress && !isValidAddress(toAddress) ? 'border-red-500' : ''
-                  }`}
+                  } ${!selectedUser ? 'opacity-50 cursor-not-allowed' : ''}`}
                   value={toAddress}
-                  onChange={(e) => {
-                    setToAddress(e.target.value);
-                    // Clear selected user if address is manually edited
-                    if (selectedUser && e.target.value !== selectedUser.walletAddress) {
-                      setSelectedUser(null);
-                    }
-                  }}
-                  required
+                  readOnly
+                  disabled={!selectedUser}
                 />
                 {toAddress && !isValidAddress(toAddress) && (
                   <label className="label">
@@ -258,7 +268,7 @@ export default function MintTokens() {
                 )}
                 <label className="label">
                   <span className="label-text-alt text-gray-400">
-                    Enter the wallet address that will receive the tokens
+                    Wallet address from selected user (automatically filled)
                   </span>
                 </label>
               </div>
@@ -290,10 +300,17 @@ export default function MintTokens() {
                 <button
                   type="submit"
                   className={`btn bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 ${loading ? 'loading opacity-75' : ''}`}
-                  disabled={loading || !toAddress || !amount || !isValidAddress(toAddress)}
+                  disabled={loading || !selectedUser || !toAddress || !amount || !isValidAddress(toAddress)}
                 >
                   {loading ? 'Minting Tokens...' : 'Mint Tokens'}
                 </button>
+                {!selectedUser && userFieldTouched && (
+                  <label className="label">
+                    <span className="label-text-alt text-red-400 mt-2">
+                      Please select a user before minting tokens
+                    </span>
+                  </label>
+                )}
               </div>
             </form>
 

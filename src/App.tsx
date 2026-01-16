@@ -38,6 +38,8 @@ import CreateResaleRequest from './pages/dashboard/CreateResaleRequest';
 import MintTokens from './pages/dashboard/MintTokens';
 import BuyerPayments from './pages/dashboard/BuyerPayments';
 import BuyerPropertyRequests from './pages/dashboard/BuyerPropertyRequests';
+import BuyerMyProperties from './pages/dashboard/BuyerMyProperties';
+import BuyerAgreements from './pages/dashboard/BuyerAgreements';
 import SellerBuyerProgress from './pages/dashboard/SellerBuyerProgress';
 import SellerPayments from './pages/dashboard/SellerPayments';
 import BuilderPendingVerifications from './pages/dashboard/BuilderPendingVerifications';
@@ -340,6 +342,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <BuyerPropertyRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/agreements"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <BuyerAgreements />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/properties"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <BuyerMyProperties />
             </ProtectedRoute>
           }
         />

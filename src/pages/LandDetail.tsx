@@ -74,11 +74,7 @@ export default function LandDetail() {
   const [blockchainVerificationError, setBlockchainVerificationError] = useState<string | null>(null);
   
   // Property Request state
-  const [showRequestModal, setShowRequestModal] = useState(false);
   const [requesting, setRequesting] = useState(false);
-  const [requestForm, setRequestForm] = useState({
-    offerPrice: '',
-  });
   const [requestError, setRequestError] = useState<string | null>(null);
   const [requestSuccess, setRequestSuccess] = useState(false);
   
@@ -216,52 +212,44 @@ export default function LandDetail() {
 
   const handleRequestProperty = async () => {
     if (!land?.id || !user) {
-      alert('Please login to request a property');
+      setRequestError('Please login to request a property');
       return;
     }
 
     if (user.role !== 'user') {
-      alert('Only users can request properties');
+      setRequestError('Only users (buyers) can request properties');
       return;
     }
 
-    // Allow request if property is 'available' or 'locked' (locked means it's reserved by a request)
     if (land.status !== 'available' && land.status !== 'locked') {
-      alert('This property is not available for request');
+      setRequestError(`This property is not available for request. Current status: ${land.status}`);
       return;
     }
 
     setRequestError(null);
+    setRequestSuccess(false);
     setRequesting(true);
 
     try {
-      // Backend expects 'requestedPrice' not 'offerPrice', and no 'message' field
-      const data: { propertyId: string; requestedPrice?: number } = {
+      // Request at listed price - no offer price needed
+      await propertyRequestAPI.create({
         propertyId: land.id,
-      };
-
-      if (requestForm.offerPrice && parseFloat(requestForm.offerPrice) > 0) {
-        data.requestedPrice = parseFloat(requestForm.offerPrice);
-      }
-
-      await propertyRequestAPI.create(data);
+      });
+      
       setRequestSuccess(true);
-      setShowRequestModal(false);
-      setRequestForm({ offerPrice: '' });
-      // Refresh land data to get updated status
+      setRequestError(null);
       await fetchData();
       
       setTimeout(() => {
         setRequestSuccess(false);
       }, 5000);
     } catch (error: unknown) {
-      console.error('Failed to create property request:', error);
       const err = error as { response?: { data?: { message?: string } }; message?: string };
-      setRequestError(
-        err.response?.data?.message ||
+      const errorMessage = err.response?.data?.message ||
         err.message ||
-        'Failed to submit request. Please try again.'
-      );
+        'Failed to submit request. Please try again.';
+      setRequestError(errorMessage);
+      setRequestSuccess(false);
     } finally {
       setRequesting(false);
     }
@@ -344,30 +332,40 @@ export default function LandDetail() {
                     land.status === 'available' ? 'badge-success' :
                     land.status === 'locked' ? 'badge-warning' : 'badge-error'
                   }`}>
-                    {land.status}
+                    {land.status.replace('_', " ")}
                   </span>
                 </div>
               </div>
 
               <div className="card-actions mt-4 flex gap-2 flex-wrap">
+                {/* Request Property Button - Only show for users when property is available or locked */}
                 {user?.role === 'user' && (land.status === 'available' || land.status === 'locked') && (
-                  <>
-                    {/* Request Property Button */}
-                    <button
-                      onClick={() => setShowRequestModal(true)}
-                      className="btn btn-success"
-                    >
-                      Request Property
-                    </button>
-                    
-                    {/* Success Message */}
-                    {requestSuccess && (
-                      <div className="alert alert-success">
-                        <span className="text-black">✅ Property request submitted successfully!</span>
-                      </div>
+                  <button
+                    onClick={handleRequestProperty}
+                    className="btn btn-success btn-lg"
+                    disabled={requesting}
+                  >
+                    {requesting ? (
+                      <>
+                        <span className="loading loading-spinner loading-sm"></span>
+                        Requesting...
+                      </>
+                    ) : (
+                      '🏠 Request Property'
                     )}
-                  </>
+                  </button>
                 )}
+                
+                {/* Show message if user is not logged in */}
+                {!user && (
+                  <div className="alert alert-info col-span-full">
+                    <span className="text-black">Please login as a buyer to request this property</span>
+                    <Link to="/login" className="btn btn-sm btn-primary">
+                      Login
+                    </Link>
+                  </div>
+                )}
+                
                 {canUpdate(land, user, payments) && (
                   <Link
                     to={`/dashboard/seller/update-land/${land.id}`}
@@ -397,6 +395,34 @@ export default function LandDetail() {
                   </button>
                 )}
               </div>
+              
+              {/* Request Success/Error Messages */}
+              {requestSuccess && (
+                <div className="alert alert-success mt-4">
+                  <CheckCircleIcon className="h-6 w-6" />
+                  <span className="text-black">Property request submitted successfully at listed price (PKR {land?.price.toLocaleString() || '0'})</span>
+                  <button
+                    className="btn btn-sm btn-ghost text-black"
+                    onClick={() => setRequestSuccess(false)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+              
+              {requestError && (
+                <div className="alert alert-error mt-4">
+                  <ExclamationTriangleIcon className="h-6 w-6" />
+                  <span className="text-black">{requestError}</span>
+                  <button
+                    className="btn btn-sm btn-ghost text-black"
+                    onClick={() => setRequestError(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+              
               {deleteError && (
                 <div className="alert alert-error mt-4">
                   <ExclamationTriangleIcon className="h-6 w-6" />
@@ -600,7 +626,7 @@ export default function LandDetail() {
                     </div>
 
                     {blockchainVerificationResult.databaseHash && (
-                      <div className="bg-base-200 p-3 rounded">
+                      <div className="bg-base-200 p-3 rounded text-white">
                         <p className="text-sm font-semibold mb-2">Hash Comparison:</p>
                         <div className="space-y-1 text-xs">
                           <p>
@@ -680,71 +706,6 @@ export default function LandDetail() {
         </div>
       </div>
 
-      {/* Request Property Modal */}
-      {showRequestModal && (
-        <div className="modal modal-open">
-          <div className="modal-box bg-base-200">
-            <h3 className="font-bold text-lg text-white mb-4">Request Property</h3>
-            
-            {requestError && (
-              <div className="alert alert-error mb-4">
-                <span className="text-black">{requestError}</span>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div>
-                <label className="label">
-                  <span className="label-text text-white">Offer Price (Optional)</span>
-                </label>
-                <input
-                  type="number"
-                  value={requestForm.offerPrice}
-                  onChange={(e) => setRequestForm({ ...requestForm, offerPrice: e.target.value })}
-                  placeholder={`Listed Price: PKR ${land?.price.toLocaleString() || '0'}`}
-                  className="input input-bordered w-full"
-                  min="0"
-                  step="1000"
-                />
-                <label className="label">
-                  <span className="label-text-alt text-white/60">
-                    Leave empty to offer listed price
-                  </span>
-                </label>
-              </div>
-
-            </div>
-
-            <div className="modal-action">
-              <button
-                onClick={() => {
-                  setShowRequestModal(false);
-                  setRequestError(null);
-                  setRequestForm({ offerPrice: '' });
-                }}
-                className="btn btn-ghost"
-                disabled={requesting}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRequestProperty}
-                className="btn btn-success"
-                disabled={requesting}
-              >
-                {requesting ? (
-                  <>
-                    <span className="loading loading-spinner loading-sm"></span>
-                    Submitting...
-                  </>
-                ) : (
-                  'Submit Request'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </DashboardLayout>
   );
 }

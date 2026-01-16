@@ -664,11 +664,25 @@ export const propertyRequestAPI = {
     return response.data;
   },
 
+  // Get all property requests for builder (recommended) - Returns paginated response
+  // Supports status filter: 'pending' | 'approved' | 'rejected' | 'cancelled' | undefined (all)
+  getBuilderAll: async (query?: { page?: number; limit?: number; status?: string }): Promise<{
+    data: PropertyRequest[];
+    total: number;
+    page: number;
+    limit: number;
+  }> => {
+    const response = await api.get('/property-requests/builder/all', { params: query });
+    // Backend returns paginated response with buyer.name and property.title/price
+    return response.data;
+  },
+
   // Get single request by ID
   getById: async (id: string): Promise<PropertyRequest> => {
     const response = await api.get(`/property-requests/${id}`);
-    // Backend returns direct object
-    return response.data;
+    // Backend returns: { data: PropertyRequest, success: boolean }
+    // Extract the data field if it exists, otherwise return response.data directly
+    return response.data.data || response.data;
   },
 
   // Respond to request (PRIMARY endpoint) - Approve or Reject
@@ -723,7 +737,7 @@ export const agreementAPI = {
   create: async (data: {
     propertyId: string;
     buyerId: string;
-    agreementType: 'initial' | 'final';
+    agreementType: 'initial' | 'final_ownership';
     terms: Record<string, unknown>;
   }): Promise<Agreement> => {
     console.log('📤 Creating agreement:', data);
@@ -747,6 +761,8 @@ export const agreementAPI = {
   // Get agreement by ID
   getById: async (id: string): Promise<Agreement> => {
     const response = await api.get(`/agreements/${id}`);
+    // Backend may return: { data: Agreement, success: boolean } or Agreement directly
+    // Should include populated buyer, builder, and property objects
     return response.data.data || response.data;
   },
 
@@ -757,9 +773,11 @@ export const agreementAPI = {
   },
 
   // Sign agreement (Buyer or Builder)
-  sign: async (id: string, signatureData?: string): Promise<Agreement> => {
-    console.log(`✍️ Signing agreement ${id}`);
-    const response = await api.post(`/agreements/${id}/sign`, { signatureData });
+  // Backend accepts: { confirmed?: boolean } (optional, defaults to true)
+  sign: async (id: string, confirmed: boolean = true): Promise<Agreement> => {
+    console.log(`✍️ Signing agreement ${id} with confirmed: ${confirmed}`);
+    // Send confirmed explicitly (backend will default to true if not provided)
+    const response = await api.post(`/agreements/${id}/sign`, { confirmed });
     console.log('✅ Agreement signed:', response.data);
     return response.data.data || response.data;
   },
@@ -792,6 +810,14 @@ export const agreementAPI = {
     console.log(`🔍 Verifying agreement ${id}`);
     const response = await api.post(`/agreements/${id}/verify`);
     console.log('✅ Agreement verified:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // Transfer ownership (Builder only) - Final step after all payments completed
+  transferOwnership: async (id: string): Promise<Agreement> => {
+    console.log(`🏠 Transferring ownership for agreement ${id}`);
+    const response = await api.post(`/agreements/${id}/transfer-ownership`);
+    console.log('✅ Ownership transferred:', response.data);
     return response.data.data || response.data;
   },
 };

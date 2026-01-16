@@ -2,29 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
-  HomeIcon,
-  FolderIcon,
-  UserGroupIcon,
-  CurrencyDollarIcon,
-  BuildingOfficeIcon,
-  MapPinIcon,
-  DocumentTextIcon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { propertyRequestAPI } from '../../services/api';
 import type { PropertyRequest } from '../../types';
-
-const navItems = [
-  { name: 'Overview', path: '/dashboard/admin', icon: HomeIcon },
-  { name: 'Project Approvals', path: '/dashboard/admin/projects', icon: FolderIcon },
-  { name: 'Approved Projects', path: '/dashboard/admin/approved-projects', icon: BuildingOfficeIcon },
-  { name: 'All Lands', path: '/dashboard/admin/all-lands', icon: MapPinIcon },
-  { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
-  { name: 'Mint Tokens', path: '/dashboard/admin/mint-tokens', icon: CurrencyDollarIcon },
-  { name: 'Property Requests', path: '/dashboard/admin/property-requests', icon: DocumentTextIcon },
-];
+import { adminNavItems } from '../../constants/navigation';
 
 export default function AdminPropertyRequests() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -39,15 +24,51 @@ export default function AdminPropertyRequests() {
   const loadRequests = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('🔄 Fetching all property requests...');
+      console.log('🌐 API Endpoint: GET /api/property-requests');
+      console.log('📡 API Method: propertyRequestAPI.getAll()');
+      console.log('📋 Query Params:', { page, limit, status: statusFilter !== 'all' ? statusFilter : undefined });
+      
       const response = await propertyRequestAPI.getAll({
         page,
         limit,
         status: statusFilter !== 'all' ? statusFilter : undefined,
       });
+      
+      console.log('📋 Property Requests API Response:', {
+        dataCount: response.data?.length || 0,
+        total: response.total,
+        page: response.page,
+        limit: response.limit,
+        firstRequest: response.data?.[0] || null,
+      });
+      
+      // Debug: Log first request structure
+      if (response.data && response.data.length > 0) {
+        const firstRequest = response.data[0];
+        console.log('📋 First Property Request Full Structure:', {
+          id: firstRequest.id,
+          propertyId: firstRequest.propertyId,
+          buyerId: firstRequest.buyerId,
+          status: firstRequest.status,
+          hasBuyer: !!firstRequest.buyer,
+          buyerName: firstRequest.buyer?.name,
+          buyerEmail: firstRequest.buyer?.email,
+          hasRequester: !!firstRequest.requester,
+          requesterName: firstRequest.requester?.name,
+          hasProperty: !!firstRequest.property,
+          propertyTitle: firstRequest.property?.title,
+          propertyPrice: firstRequest.property?.price,
+          requestedPrice: firstRequest.requestedPrice,
+          allKeys: Object.keys(firstRequest),
+          fullObject: JSON.stringify(firstRequest, null, 2),
+        });
+      }
+      
       setRequests(response.data || []);
       setTotal(response.total || 0);
     } catch (error: unknown) {
-      console.error('Failed to load property requests:', error);
+      console.error('❌ Failed to load property requests:', error);
       const err = error as { response?: { data?: { message?: string } } };
       alert(err.response?.data?.message || 'Failed to load property requests');
     } finally {
@@ -84,7 +105,7 @@ export default function AdminPropertyRequests() {
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={adminNavItems}>
         <div className="flex justify-center items-center h-64">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -93,7 +114,7 @@ export default function AdminPropertyRequests() {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={adminNavItems}>
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -159,10 +180,9 @@ export default function AdminPropertyRequests() {
                   <table className="table table-zebra">
                     <thead>
                       <tr className="text-black">
-                        <th className="text-black">Property</th>
-                        <th className="text-black">Buyer</th>
-                        <th className="text-black">Listed Price</th>
-                        <th className="text-black">Offer Price</th>
+                        <th className="text-black">Property Name</th>
+                        <th className="text-black">Buyer Name</th>
+                        <th className="text-black">Price</th>
                         <th className="text-black">Status</th>
                         <th className="text-black">Requested</th>
                         <th className="text-black">Response</th>
@@ -170,72 +190,75 @@ export default function AdminPropertyRequests() {
                       </tr>
                     </thead>
                     <tbody>
-                      {requests.map((request) => (
-                        <tr key={request.id} className="text-black">
-                          <td>
-                            <div>
-                              <div className="font-medium">{request.property?.title || 'N/A'}</div>
-                              <div className="text-sm text-gray-600">{request.property?.location || ''}</div>
-                            </div>
-                          </td>
-                          <td>
-                            <div>
-                              <div className="font-medium">{request.buyer?.name || request.requester?.name || 'Unknown'}</div>
-                              <div className="text-sm text-gray-600">{request.buyer?.email || request.requester?.email || 'N/A'}</div>
-                            </div>
-                          </td>
-                          <td className="font-semibold">
-                            PKR {request.property?.price?.toLocaleString() || '0'}
-                          </td>
-                          <td className="font-semibold">
-                            {request.requestedPrice ? (
-                              <span className="text-green-600">PKR {request.requestedPrice.toLocaleString()}</span>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td>
-                            <span
-                              className={`badge ${
-                                request.status === 'pending'
-                                  ? 'badge-warning'
-                                  : request.status === 'approved'
-                                  ? 'badge-success'
-                                  : request.status === 'rejected'
-                                  ? 'badge-error'
-                                  : 'badge-ghost'
-                              }`}
-                            >
-                              {request.status}
-                            </span>
-                          </td>
-                          <td className="text-gray-700">
-                            {new Date(request.createdAt).toLocaleDateString()}
-                          </td>
-                          <td>
-                            {request.builderResponse ? (
-                              <div>
-                                <p className="text-sm">{request.builderResponse}</p>
-                                {request.respondedAt && (
-                                  <p className="text-xs text-gray-500">
-                                    {new Date(request.respondedAt).toLocaleDateString()}
-                                  </p>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
-                          </td>
-                          <td>
-                            <Link
-                              to={`/lands/${request.propertyId}`}
-                              className="btn btn-ghost btn-xs"
-                            >
-                              View Property
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
+                      {requests.map((request) => {
+                        // Debug each request
+                        console.log('📦 Rendering property request:', {
+                          id: request.id,
+                          propertyId: request.propertyId,
+                          hasBuyer: !!request.buyer,
+                          buyerName: request.buyer?.name,
+                          hasRequester: !!request.requester,
+                          requesterName: request.requester?.name,
+                          hasProperty: !!request.property,
+                          propertyTitle: request.property?.title,
+                          propertyPrice: request.property?.price,
+                          status: request.status,
+                        });
+
+                        return (
+                          <tr key={request.id} className="text-black">
+                            <td className="font-medium">
+                              {request.property?.title || 'N/A'}
+                            </td>
+                            <td className="font-medium">
+                              {request.buyer?.name || request.requester?.name || 'N/A'}
+                            </td>
+                            <td className="font-semibold">
+                              PKR {request.property?.price?.toLocaleString() || '0'}
+                            </td>
+                            <td>
+                              <span
+                                className={`badge ${
+                                  request.status === 'pending'
+                                    ? 'badge-warning'
+                                    : request.status === 'approved'
+                                    ? 'badge-success'
+                                    : request.status === 'rejected'
+                                    ? 'badge-error'
+                                    : 'badge-ghost'
+                                }`}
+                              >
+                                {request.status}
+                              </span>
+                            </td>
+                            <td className="text-gray-700">
+                              {new Date(request.createdAt).toLocaleDateString()}
+                            </td>
+                            <td>
+                              {request.builderResponse ? (
+                                <div>
+                                  <p className="text-sm">{request.builderResponse}</p>
+                                  {request.respondedAt && (
+                                    <p className="text-xs text-gray-500">
+                                      {new Date(request.respondedAt).toLocaleDateString()}
+                                    </p>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
+                            </td>
+                            <td>
+                              <Link
+                                to={`/lands/${request.propertyId}`}
+                                className="btn btn-ghost btn-xs"
+                              >
+                                View Property
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

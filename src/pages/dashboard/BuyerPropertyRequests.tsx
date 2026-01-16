@@ -2,20 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
-  HomeIcon,
-  DocumentTextIcon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
   TrashIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { propertyRequestAPI } from '../../services/api';
 import type { PropertyRequest } from '../../types';
-
-const navItems = [
-  { name: 'Overview', path: '/dashboard/buyer', icon: HomeIcon },
-  { name: 'Property Requests', path: '/dashboard/buyer/property-requests', icon: DocumentTextIcon },
-];
+import { buyerNavItems } from '../../constants/navigation';
 
 export default function BuyerPropertyRequests() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -94,7 +89,7 @@ export default function BuyerPropertyRequests() {
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={buyerNavItems}>
         <div className="flex justify-center items-center h-64">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -103,7 +98,7 @@ export default function BuyerPropertyRequests() {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={buyerNavItems}>
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -203,15 +198,6 @@ export default function BuyerPropertyRequests() {
                           PKR {request.property?.price?.toLocaleString() || '0'}
                         </p>
                       </div>
-
-                      {request.requestedPrice && (
-                        <div>
-                          <p className="text-sm text-gray-400">Your Offer Price</p>
-                          <p className="font-semibold text-lg text-success">
-                            PKR {request.requestedPrice.toLocaleString()}
-                          </p>
-                        </div>
-                      )}
 
                       <div>
                         <p className="text-sm text-gray-400">Requested On</p>

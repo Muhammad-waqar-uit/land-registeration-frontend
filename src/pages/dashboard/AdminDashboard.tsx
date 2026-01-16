@@ -1,27 +1,10 @@
 import { useEffect, useState } from 'react';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import {
-  HomeIcon,
-  UserGroupIcon,
-  CurrencyDollarIcon,
-  FolderIcon,
-  BuildingOfficeIcon,
-  MapPinIcon,
-  DocumentTextIcon,
-} from '@heroicons/react/24/outline';
 import { landAPI, paymentAPI, builderAPI, projectAPI } from '../../services/api';
 import type { Land, Payment } from '../../types';
 import { Link } from 'react-router-dom';
-
-const navItems = [
-  { name: 'Overview', path: '/dashboard/admin', icon: HomeIcon },
-  { name: 'Project Approvals', path: '/dashboard/admin/projects', icon: FolderIcon },
-  { name: 'Approved Projects', path: '/dashboard/admin/approved-projects', icon: BuildingOfficeIcon },
-  { name: 'All Lands', path: '/dashboard/admin/all-lands', icon: MapPinIcon },
-  { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
-  { name: 'Mint Tokens', path: '/dashboard/admin/mint-tokens', icon: CurrencyDollarIcon },
-  { name: 'Property Requests', path: '/dashboard/admin/property-requests', icon: DocumentTextIcon },
-];
+import { adminNavItems } from '../../constants/navigation';
+import { CurrencyDollarIcon, UserGroupIcon, FolderIcon } from '@heroicons/react/24/outline';
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -91,7 +74,7 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={adminNavItems}>
         <div className="flex items-center justify-center min-h-[400px]">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -100,7 +83,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={adminNavItems}>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>

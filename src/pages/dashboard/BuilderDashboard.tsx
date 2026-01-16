@@ -1,32 +1,14 @@
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
-  HomeIcon,
-  ClockIcon,
-  FolderIcon,
   ExclamationTriangleIcon,
-  DocumentTextIcon,
-  CurrencyDollarIcon,
-  ArrowPathIcon,
-  UserGroupIcon,
-  CreditCardIcon,
+  FolderIcon,
 } from '@heroicons/react/24/outline';
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { paymentAPI, builderAPI, landAPI, projectAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Payment, User, Land } from '../../types';
-
-const navItems = [
-  { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
-  { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-  { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
-  { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
-  { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
-  { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
-  { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
-  { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
-  { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
-];
+import { builderNavItems } from '../../constants/navigation';
 
 export default function BuilderDashboard() {
   const { user, isLoading: authLoading } = useAppSelector((state) => state.auth);
@@ -134,7 +116,7 @@ export default function BuilderDashboard() {
   // Show loading while auth is loading or data is loading
   if (authLoading || loading) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
         <div className="flex justify-center items-center h-64">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -145,7 +127,7 @@ export default function BuilderDashboard() {
   // Show verification pending message if builder is not verified
   if (builderProfile && !builderProfile.isBuilderVerified) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
         <div className="space-y-6">
           <h1 className="text-3xl font-bold text-white">Builder Dashboard</h1>
           
@@ -194,7 +176,7 @@ export default function BuilderDashboard() {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={builderNavItems}>
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-4xl font-bold text-white">Builder Dashboard</h1>

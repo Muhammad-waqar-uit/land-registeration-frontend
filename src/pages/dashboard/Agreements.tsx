@@ -2,41 +2,24 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
-  HomeIcon,
-  FolderIcon,
   DocumentTextIcon,
   PlusIcon,
   CheckCircleIcon,
   ClockIcon,
   EyeIcon,
-  UserGroupIcon,
-  CreditCardIcon,
-  CurrencyDollarIcon,
-  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { agreementAPI } from '../../services/api';
 import type { Agreement } from '../../types';
-
-const navItems = [
-  { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
-  { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-  { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
-  { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
-  { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
-  { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
-  { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
-  { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
-  { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
-];
+import { builderNavItems } from '../../constants/navigation';
 
 export default function Agreements() {
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'buyer_signed' | 'builder_signed' | 'signed' | 'completed'>('all');
+  const [filter, setFilter] = useState<'all' | 'draft' | 'pending_signature' | 'buyer_signed' | 'builder_signed' | 'signed' | 'completed'>('all');
 
   useEffect(() => {
     loadAgreements();
-  }, []);
+  }, [filter]);
 
   const loadAgreements = async () => {
     try {
@@ -51,9 +34,14 @@ export default function Agreements() {
   };
 
   const handleSign = async (agreementId: string) => {
+    if (!window.confirm('Are you sure you want to sign this agreement? This action cannot be undone.')) {
+      return;
+    }
+
     try {
-      await agreementAPI.sign(agreementId);
+      await agreementAPI.sign(agreementId, true); // confirmed: true
       await loadAgreements();
+      alert('Agreement signed successfully!');
     } catch (error: unknown) {
       console.error('Failed to sign agreement:', error);
       const errorMessage = error && typeof error === 'object' && 'response' in error
@@ -65,12 +53,46 @@ export default function Agreements() {
 
   const filteredAgreements = agreements.filter((agreement) => {
     if (filter === 'all') return true;
-    return agreement.status === filter;
+    
+    // Handle status mapping
+    switch (filter) {
+      case 'draft':
+        return agreement.status === 'draft';
+      case 'pending_signature':
+        // Show agreements where one party has signed but not both
+        return (
+          agreement.status === 'pending_signature' ||
+          agreement.status === 'buyer_signed' ||
+          agreement.status === 'builder_signed'
+        );
+      case 'buyer_signed':
+        // Show agreements where buyer signed but builder hasn't
+        return (
+          agreement.status === 'buyer_signed' ||
+          (agreement.buyerSignedAt && !agreement.builderSignedAt)
+        );
+      case 'builder_signed':
+        // Show agreements where builder signed but buyer hasn't
+        return (
+          agreement.status === 'builder_signed' ||
+          (agreement.builderSignedAt && !agreement.buyerSignedAt)
+        );
+      case 'signed':
+        // Show fully signed agreements
+        return (
+          agreement.status === 'signed' ||
+          (agreement.buyerSignedAt && agreement.builderSignedAt && agreement.status !== 'completed')
+        );
+      case 'completed':
+        return agreement.status === 'completed';
+      default:
+        return agreement.status === filter;
+    }
   });
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
         <div className="flex justify-center items-center h-64">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -79,7 +101,7 @@ export default function Agreements() {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={builderNavItems}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -105,11 +127,18 @@ export default function Agreements() {
             All
           </a>
           <a
-            className={`tab text-white ${filter === 'pending' ? 'tab-active bg-yellow-600' : 'hover:bg-gray-700'}`}
-            onClick={() => setFilter('pending')}
+            className={`tab text-white ${filter === 'draft' ? 'tab-active bg-gray-600' : 'hover:bg-gray-700'}`}
+            onClick={() => setFilter('draft')}
           >
             <ClockIcon className="w-4 h-4 mr-2" />
-            Pending
+            Draft
+          </a>
+          <a
+            className={`tab text-white ${filter === 'pending_signature' ? 'tab-active bg-yellow-600' : 'hover:bg-gray-700'}`}
+            onClick={() => setFilter('pending_signature')}
+          >
+            <ClockIcon className="w-4 h-4 mr-2" />
+            Pending Signature
           </a>
           <a
             className={`tab text-white ${filter === 'buyer_signed' ? 'tab-active bg-blue-600' : 'hover:bg-gray-700'}`}
@@ -251,18 +280,25 @@ export default function Agreements() {
                   <div className="card-actions justify-end mt-4">
                     <Link
                       to={`/dashboard/builder/agreements/${agreement.id}`}
-                      className="btn btn-ghost btn-sm"
+                      className="btn btn-ghost btn-sm text-white border-white"
                     >
                       <EyeIcon className="w-4 h-4 mr-2" />
                       View Details
                     </Link>
-                    {agreement.status === 'buyer_signed' && (
+                    {/* Show sign button if builder can sign (buyer has signed OR builder can sign first) */}
+                    {(!agreement.builderSignedAt && (
+                      agreement.status === 'draft' ||
+                      agreement.status === 'buyer_signed' ||
+                      agreement.status === 'pending_signature' ||
+                      (agreement.buyerSignedAt && !agreement.builderSignedAt)
+                    )) && (
                       <button
                         onClick={() => handleSign(agreement.id)}
-                        className="btn btn-primary btn-sm"
+                        className="btn btn-primary btn-sm text-white border-white flex flex-col"
+                        title={agreement.buyerSignedAt ? 'Buyer has signed - Click to sign as builder' : 'Click to sign this agreement'}
                       >
                         <CheckCircleIcon className="w-4 h-4 mr-2" />
-                        Sign Agreement
+                        {agreement.buyerSignedAt ? 'Sign Agreement' : 'Sign Agreement'}
                       </button>
                     )}
                   </div>

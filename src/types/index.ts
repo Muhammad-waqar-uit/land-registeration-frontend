@@ -152,8 +152,8 @@ export interface Agreement {
   propertyId: string;
   buyerId: string;
   builderId: string;
-  agreementType: 'initial' | 'final';
-  status: 'pending' | 'buyer_signed' | 'builder_signed' | 'signed' | 'completed';
+  agreementType: 'initial' | 'final_ownership';
+  status: 'draft' | 'pending' | 'pending_signature' | 'buyer_signed' | 'builder_signed' | 'signed' | 'completed';
   documentUrl?: string;
   documentIPFSHash?: string;
   documentHash?: string;

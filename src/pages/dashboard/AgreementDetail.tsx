@@ -2,37 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
-  HomeIcon,
-  FolderIcon,
-  DocumentTextIcon,
   ArrowLeftIcon,
   CheckCircleIcon,
   ShieldCheckIcon,
-  UserGroupIcon,
-  CreditCardIcon,
-  CurrencyDollarIcon,
-  ArrowPathIcon,
-  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { agreementAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Agreement } from '../../types';
-
-const navItems = [
-  { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
-  { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-  { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
-  { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
-  { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
-  { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
-  { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
-  { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
-  { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
-];
-
-const buyerNavItems = [
-  { name: 'Dashboard', path: '/dashboard/buyer', icon: HomeIcon },
-];
+import { builderNavItems, buyerNavItems } from '../../constants/navigation';
 
 export default function AgreementDetail() {
   const { id } = useParams<{ id: string }>();
@@ -47,6 +24,37 @@ export default function AgreementDetail() {
     try {
       setLoading(true);
       const data = await agreementAPI.getById(id!);
+      console.log('📋 Agreement Data from API (GET /api/agreements/:id):', {
+        id: data.id,
+        propertyId: data.propertyId,
+        buyerId: data.buyerId,
+        builderId: data.builderId,
+        agreementType: data.agreementType,
+        status: data.status,
+        // Direct populated objects (if API includes them)
+        buyer: data.buyer ? {
+          id: data.buyer.id,
+          name: data.buyer.name,
+          email: data.buyer.email,
+        } : 'NOT POPULATED',
+        builder: data.builder ? {
+          id: data.builder.id,
+          name: data.builder.name,
+          email: data.builder.email,
+        } : 'NOT POPULATED',
+        property: data.property ? {
+          id: data.property.id,
+          title: data.property.title,
+          location: data.property.location,
+          price: data.property.price,
+        } : 'NOT POPULATED',
+        // Data in terms (always available)
+        buyerDetails: data.terms?.buyerDetails || 'NOT IN TERMS',
+        builderDetails: data.terms?.builderDetails || 'NOT IN TERMS',
+        propertyDetails: data.terms?.propertyDetails || 'NOT IN TERMS',
+        documentIPFSHash: data.documentIPFSHash,
+        signedDocumentIPFSHash: data.signedDocumentIPFSHash,
+      });
       setAgreement(data);
     } catch (error: unknown) {
       console.error('Failed to load agreement:', error);
@@ -62,10 +70,15 @@ export default function AgreementDetail() {
   }, [id, loadAgreement]);
 
   const handleSign = async () => {
+    if (!window.confirm('Are you sure you want to sign this agreement? This action cannot be undone.')) {
+      return;
+    }
+
     try {
       setSigning(true);
-      await agreementAPI.sign(id!);
+      await agreementAPI.sign(id!, true); // confirmed: true
       await loadAgreement();
+      alert('Agreement signed successfully!');
     } catch (error: unknown) {
       console.error('Failed to sign agreement:', error);
       const errorMessage = error && typeof error === 'object' && 'response' in error
@@ -100,16 +113,33 @@ export default function AgreementDetail() {
     if (!agreement || !user) return false;
     
     if (user.role === 'builder') {
-      return agreement.status === 'buyer_signed' && !agreement.builderSignedAt;
+      // Builder can sign if:
+      // 1. Agreement is draft (can sign first)
+      // 2. Buyer has signed and builder hasn't (buyer_signed or pending_signature)
+      // 3. Builder hasn't signed yet
+      return (
+        !agreement.builderSignedAt &&
+        (
+          agreement.status === 'draft' ||
+          agreement.status === 'pending_signature' ||
+          agreement.status === 'buyer_signed' ||
+          (agreement.buyerSignedAt && !agreement.builderSignedAt)
+        )
+      );
     } else if (user.role === 'user') {
-      return agreement.status === 'pending' && !agreement.buyerSignedAt;
+      // Buyer can sign if agreement is draft or pending_signature and buyer hasn't signed
+      return (
+        (agreement.status === 'draft' || agreement.status === 'pending_signature') &&
+        !agreement.buyerSignedAt &&
+        agreement.buyerId === user.id
+      );
     }
     return false;
   };
 
   if (loading) {
     return (
-      <DashboardLayout navItems={user?.role === 'builder' ? navItems : buyerNavItems}>
+      <DashboardLayout navItems={user?.role === 'builder' ? builderNavItems : buyerNavItems}>
         <div className="flex justify-center items-center h-64">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -119,7 +149,7 @@ export default function AgreementDetail() {
 
   if (!agreement) {
     return (
-      <DashboardLayout navItems={user?.role === 'builder' ? navItems : buyerNavItems}>
+      <DashboardLayout navItems={user?.role === 'builder' ? builderNavItems : buyerNavItems}>
         <div className="alert alert-error">
           <span>Agreement not found</span>
         </div>
@@ -130,22 +160,24 @@ export default function AgreementDetail() {
   const navPath = user?.role === 'builder' ? '/dashboard/builder/agreements' : '/dashboard/buyer';
 
   return (
-    <DashboardLayout navItems={user?.role === 'builder' ? navItems : buyerNavItems}>
+    <DashboardLayout navItems={user?.role === 'builder' ? builderNavItems : buyerNavItems}>
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <Link to={navPath} className="btn btn-ghost btn-sm mb-2">
+          <Link to={navPath} className="btn btn-ghost btn-sm mb-2 flex flex-row w-10 text-white border-whte">
             <ArrowLeftIcon className="w-4 h-4 mr-2" />
             Back
           </Link>
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-3xl font-bold text-white">Agreement Details</h1>
-              <p className="text-gray-400 mt-1">{agreement.property?.title}</p>
+              <p className="text-gray-400 mt-1">
+                {agreement.property?.title || (agreement.terms?.propertyDetails as any)?.title || 'Property Agreement'}
+              </p>
             </div>
             <div className="flex gap-2">
               <div className="badge badge-lg badge-primary">
-                {agreement.agreementType}
+                {agreement.agreementType.replace('_', ' ').toUpperCase()}
               </div>
               <div
                 className={`badge badge-lg ${
@@ -170,8 +202,21 @@ export default function AgreementDetail() {
             <div className="card-body">
               <h3 className="card-title text-white">Buyer</h3>
               <div>
-                <p className="font-semibold text-white">{agreement.buyer?.name}</p>
-                <p className="text-sm text-gray-400">{agreement.buyer?.email}</p>
+                <p className="font-semibold text-white">
+                  {agreement.buyer?.name || (agreement.terms?.buyerDetails as any)?.name || 'N/A'}
+                </p>
+                {agreement.buyer?.email && (
+                  <p className="text-sm text-gray-400">{agreement.buyer.email}</p>
+                )}
+                {(agreement.terms?.buyerDetails as any)?.cnic && (
+                  <p className="text-sm text-gray-400">CNIC: {(agreement.terms?.buyerDetails as any).cnic}</p>
+                )}
+                {(agreement.terms?.buyerDetails as any)?.phoneNumber && (
+                  <p className="text-sm text-gray-400">Phone: {(agreement.terms?.buyerDetails as any).phoneNumber}</p>
+                )}
+                {(agreement.terms?.buyerDetails as any)?.fatherName && (
+                  <p className="text-xs text-gray-500 mt-1">Father: {(agreement.terms?.buyerDetails as any).fatherName}</p>
+                )}
                 {agreement.buyer?.walletAddress && (
                   <p className="text-xs text-gray-500 mt-1 font-mono">{agreement.buyer.walletAddress}</p>
                 )}
@@ -194,10 +239,21 @@ export default function AgreementDetail() {
             <div className="card-body">
               <h3 className="card-title text-white">Builder</h3>
               <div>
-                <p className="font-semibold text-white">{agreement.builder?.name}</p>
-                <p className="text-sm text-gray-400">{agreement.builder?.email}</p>
-                {agreement.builder?.companyName && (
-                  <p className="text-sm text-gray-400 mt-1">{agreement.builder.companyName}</p>
+                <p className="font-semibold text-white">
+                  {agreement.builder?.name || (agreement.terms?.builderDetails as any)?.name || 'N/A'}
+                </p>
+                {agreement.builder?.email && (
+                  <p className="text-sm text-gray-400">{agreement.builder.email}</p>
+                )}
+                {(agreement.builder?.companyName || (agreement.terms?.builderDetails as any)?.companyName) && (
+                  <p className="text-sm text-gray-400 mt-1">
+                    {agreement.builder?.companyName || (agreement.terms?.builderDetails as any)?.companyName}
+                  </p>
+                )}
+                {(agreement.terms?.builderDetails as any)?.licenseNumber && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    License: {(agreement.terms?.builderDetails as any).licenseNumber}
+                  </p>
                 )}
               </div>
               <div className="mt-4">
@@ -222,15 +278,25 @@ export default function AgreementDetail() {
             <div className="grid md:grid-cols-3 gap-4">
               <div>
                 <p className="text-sm text-gray-400">Title</p>
-                <p className="text-white font-semibold">{agreement.property?.title}</p>
+                <p className="text-white font-semibold">
+                  {agreement.property?.title || (agreement.terms?.propertyDetails as any)?.title || 'N/A'}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-400">Location</p>
-                <p className="text-white">{agreement.property?.location}</p>
+                <p className="text-white">
+                  {agreement.property?.location || (agreement.terms?.propertyDetails as any)?.location || 'N/A'}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-400">Size</p>
-                <p className="text-white">{agreement.property?.size} sq ft</p>
+                <p className="text-white">
+                  {agreement.property?.size
+                    ? `${agreement.property.size} sq ft`
+                    : (agreement.terms?.propertyDetails as any)?.size
+                    ? `${(agreement.terms?.propertyDetails as any).size} sq ft`
+                    : 'N/A'}
+                </p>
               </div>
             </div>
           </div>
@@ -287,13 +353,63 @@ export default function AgreementDetail() {
                 {agreement.documentIPFSHash && (
                   <div>
                     <p className="text-sm text-gray-400">IPFS Hash</p>
-                    <p className="text-white font-mono text-sm break-all">{agreement.documentIPFSHash}</p>
+                    {(() => {
+                      try {
+                        // Try parsing as JSON (new format: { hash, gateway, timestamp })
+                        const ipfsData = JSON.parse(agreement.documentIPFSHash);
+                        const ipfsHash = ipfsData?.hash || agreement.documentIPFSHash;
+                        const gateway = ipfsData?.gateway;
+                        
+                        return (
+                          <div className="space-y-2">
+                            <p className="text-white font-mono text-sm break-all">{ipfsHash}</p>
+                            {gateway ? (
+                              <a
+                                href={`${gateway}${ipfsHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-400 hover:text-blue-300 underline inline-flex items-center gap-1"
+                              >
+                                View on IPFS →
+                              </a>
+                            ) : (
+                              <a
+                                href={`https://ipfs.io/ipfs/${ipfsHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-400 hover:text-blue-300 underline inline-flex items-center gap-1"
+                              >
+                                View on IPFS (ipfs.io) →
+                              </a>
+                            )}
+                            {ipfsData?.timestamp && (
+                              <p className="text-xs text-gray-500">Pinned: {new Date(ipfsData.timestamp).toLocaleString()}</p>
+                            )}
+                          </div>
+                        );
+                      } catch {
+                        // If not JSON, treat as plain hash string
+                        return (
+                          <div className="space-y-2">
+                            <p className="text-white font-mono text-sm break-all">{agreement.documentIPFSHash}</p>
+                            <a
+                              href={`https://ipfs.io/ipfs/${agreement.documentIPFSHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-400 hover:text-blue-300 underline inline-flex items-center gap-1"
+                            >
+                              View on IPFS (ipfs.io) →
+                            </a>
+                          </div>
+                        );
+                      }
+                    })()}
                   </div>
                 )}
                 <div className="flex gap-2">
                   <button
                     onClick={handleVerify}
-                    className="btn btn-primary btn-sm"
+                    className="btn btn-primary btn-sm flex flex-row w-30 text-white border-whte"
                     disabled={verifying}
                   >
                     {verifying ? (
@@ -326,13 +442,15 @@ export default function AgreementDetail() {
               <h3 className="card-title text-white">Action Required</h3>
               <p className="text-gray-300">
                 {user?.role === 'builder'
-                  ? 'The buyer has signed this agreement. Please review and sign to proceed.'
+                  ? agreement.buyerSignedAt
+                    ? 'The buyer has signed this agreement. Please review and sign to complete the agreement.'
+                    : 'Please review the agreement terms and sign to proceed. The buyer can sign after you.'
                   : 'Please review the agreement terms and sign to proceed.'}
               </p>
               <div className="card-actions justify-end mt-4">
                 <button
                   onClick={handleSign}
-                  className="btn btn-primary"
+                  className="btn btn-primary text-white border-white flex flex-row w-30"
                   disabled={signing}
                 >
                   {signing ? (

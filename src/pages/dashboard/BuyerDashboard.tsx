@@ -1,20 +1,47 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import {
-  HomeIcon,
-  CreditCardIcon,
-  DocumentTextIcon,
-} from '@heroicons/react/24/outline';
 import { landAPI, paymentAPI, propertyRequestAPI, agreementAPI, installmentAPI, resaleRequestAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Land, Payment, PropertyRequest, Agreement, Installment, ResaleRequest } from '../../types';
+import { buyerNavItems } from '../../constants/navigation';
 
-const navItems = [
-  { name: 'Overview', path: '/dashboard/buyer', icon: HomeIcon },
-  { name: 'Property Requests', path: '/dashboard/buyer/property-requests', icon: DocumentTextIcon },
-  { name: 'Payment History', path: '/dashboard/buyer/payments', icon: CreditCardIcon },
-];
+/**
+ * Helper function to get IPFS URL from hash JSON string
+ * Parses the IPFS hash JSON and constructs the IPFS gateway URL
+ */
+const getIPFSUrl = (ipfsHashJson?: string): string | null => {
+  if (!ipfsHashJson) return null;
+  
+  try {
+    const hashData = JSON.parse(ipfsHashJson);
+    if (hashData?.hash) {
+      // Use ipfs.io gateway
+      return `https://ipfs.io/ipfs/${hashData.hash}`;
+    }
+  } catch (error) {
+    console.error('Failed to parse IPFS hash:', error);
+  }
+  
+  return null;
+};
+
+/**
+ * Get image URL for a land - prioritizes imageIPFSHash over imageUrl
+ */
+const getLandImageUrl = (land: Land): string | null => {
+  // Prioritize IPFS hash over direct URL
+  if (land.imageIPFSHash) {
+    return getIPFSUrl(land.imageIPFSHash);
+  }
+  
+  // Fallback to direct imageUrl only if IPFS hash is not available
+  if (land.imageUrl) {
+    return land.imageUrl;
+  }
+  
+  return null;
+};
 
 export default function BuyerDashboard() {
   const { user } = useAppSelector((state) => state.auth);
@@ -23,7 +50,7 @@ export default function BuyerDashboard() {
   const [reservedLands, setReservedLands] = useState<Land[]>([]);
   const [ownedProperties, setOwnedProperties] = useState<Land[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [propertyRequests, setPropertyRequests] = useState<PropertyRequest[]>([]);
+  const [propertyRequests, setPropertyRequests] = useState<any[]>([]);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
   const [installments, setInstallments] = useState<Installment[]>([]);
   const [resaleRequests, setResaleRequests] = useState<ResaleRequest[]>([]);
@@ -41,20 +68,125 @@ export default function BuyerDashboard() {
 
     try {
       setLoading(true);
+      
+      console.log('🔄 Fetching buyer dashboard data...');
+      console.log('🌐 API Endpoint: GET /api/property-requests/my-requests');
+      console.log('📡 API Method: propertyRequestAPI.getMyRequests()');
+      
       const [landsData, paymentsData, requestsResponse, agreementsData, installmentsData, resaleRequestsData] = await Promise.all([
-        landAPI.getAll().catch(() => []),
-        paymentAPI.getByBuyer().catch(() => []),
-        propertyRequestAPI.getMyRequests().catch(() => ({ data: [], total: 0, page: 1, limit: 10 })),
-        agreementAPI.getAll({ buyerId: user?.id }).catch(() => []),
-        installmentAPI.getMyInstallments().catch(() => []),
-        resaleRequestAPI.getMyRequests().catch(() => []),
+        landAPI.getAll().catch((err) => {
+          console.error('❌ Failed to fetch lands:', err);
+          return [];
+        }),
+        paymentAPI.getByBuyer().catch((err) => {
+          console.error('❌ Failed to fetch payments:', err);
+          return [];
+        }),
+        propertyRequestAPI.getMyRequests().catch((err) => {
+          console.error('❌ Failed to fetch property requests:', err);
+          return { data: [], total: 0, page: 1, limit: 10 };
+        }),
+        agreementAPI.getAll({ buyerId: user?.id }).catch((err) => {
+          console.error('❌ Failed to fetch agreements:', err);
+          return [];
+        }),
+        installmentAPI.getMyInstallments().catch((err) => {
+          console.error('❌ Failed to fetch installments:', err);
+          return [];
+        }),
+        resaleRequestAPI.getMyRequests().catch((err) => {
+          console.error('❌ Failed to fetch resale requests:', err);
+          return [];
+        }),
       ]);
+
+      // Debug: Log the raw property requests response
+      console.log('📋 Raw Property Requests API Response:', {
+        isArray: Array.isArray(requestsResponse),
+        hasData: !Array.isArray(requestsResponse) && 'data' in requestsResponse,
+        fullResponse: requestsResponse,
+        responseType: typeof requestsResponse,
+        responseKeys: !Array.isArray(requestsResponse) ? Object.keys(requestsResponse) : 'N/A (is array)',
+      });
 
       // Handle paginated response from getMyRequests
       const requestsData = Array.isArray(requestsResponse) ? requestsResponse : (requestsResponse.data || []);
+      
+      console.log('📋 Processed Property Requests Data:', {
+        count: requestsData.length,
+        isArray: Array.isArray(requestsData),
+        firstRequest: requestsData[0] || null,
+      });
+
+      // Debug: Log the first request structure in detail
+      if (requestsData.length > 0) {
+        const firstRequest = requestsData[0];
+        console.log('📋 First Property Request Full Structure:', {
+          id: firstRequest.id,
+          propertyId: firstRequest.propertyId,
+          buyerId: firstRequest.buyerId,
+          status: firstRequest.status,
+          requestedPrice: firstRequest.requestedPrice,
+          builderResponse: firstRequest.builderResponse,
+          respondedAt: firstRequest.respondedAt,
+          createdAt: firstRequest.createdAt,
+          hasProperty: !!firstRequest.property,
+          propertyKeys: firstRequest.property ? Object.keys(firstRequest.property) : 'No property object',
+          propertyTitle: firstRequest.property?.title,
+          propertyLocation: firstRequest.property?.location,
+          propertyPrice: firstRequest.property?.price,
+          hasBuyer: !!firstRequest.buyer,
+          hasRequester: !!firstRequest.requester,
+          allKeys: Object.keys(firstRequest),
+          fullObject: JSON.stringify(firstRequest, null, 2),
+        });
+      }
+
+      // Fetch land details for each property request using getById
+      const uniquePropertyIds = [...new Set(requestsData.map((r: PropertyRequest) => r.propertyId).filter(Boolean))];
+      console.log('🏠 Fetching land details for property IDs:', uniquePropertyIds);
+      console.log(`📡 Using landAPI.getById() for ${uniquePropertyIds.length} properties`);
+      
+      // Fetch all land details in parallel
+      const landDetailsMap = new Map<string, Land>();
+      if (uniquePropertyIds.length > 0) {
+        const landDetailsResults = await Promise.allSettled(
+          uniquePropertyIds.map((propertyId) =>
+            landAPI.getById(propertyId).catch((err) => {
+              console.error(`❌ Failed to fetch land ${propertyId}:`, err);
+              return null;
+            })
+          )
+        );
+        
+        landDetailsResults.forEach((result, index) => {
+          const propertyId = uniquePropertyIds[index];
+          if (result.status === 'fulfilled' && result.value) {
+            landDetailsMap.set(propertyId, result.value);
+            console.log(`✅ Fetched land details for ${propertyId}:`, {
+              title: result.value.title,
+              location: result.value.location,
+              price: result.value.price,
+            });
+          } else {
+            console.warn(`⚠️ Could not fetch land details for ${propertyId}`);
+          }
+        });
+        
+        console.log(`✅ Fetched ${landDetailsMap.size} land details successfully`);
+      }
+
+      // Enrich property requests with fetched land data
+      const enrichedRequests = requestsData.map((request: PropertyRequest) => {
+        const landDetails = landDetailsMap.get(request.propertyId);
+        return {
+          ...request,
+          property: landDetails || request.property || null,
+        };
+      });
 
       // Set property requests, agreements, installments, and resale requests
-      setPropertyRequests(requestsData);
+      setPropertyRequests(enrichedRequests);
       setAgreements(agreementsData || []);
       setInstallments(installmentsData || []);
       setResaleRequests(resaleRequestsData || []);
@@ -65,7 +197,48 @@ export default function BuyerDashboard() {
         : ((landsData && typeof landsData === 'object' && 'data' in landsData ? (landsData as { data: Land[] }).data : null) || []);
 
       // Filter available lands (status = 'available')
-      const available = landsArray.filter((land: Land) => land.status === 'available');
+      const availableIds = landsArray.filter((land: Land) => land.status === 'available').map((land: Land) => land.id);
+      
+      // Fetch full details for available lands using getById to ensure all data is present
+      console.log('🏠 Fetching full details for available lands:', availableIds);
+      console.log(`📡 Using landAPI.getById() for ${availableIds.length} available lands`);
+      
+      const availableLandsMap = new Map<string, Land>();
+      if (availableIds.length > 0) {
+        const availableLandsResults = await Promise.allSettled(
+          availableIds.map((landId) =>
+            landAPI.getById(landId).catch((err) => {
+              console.error(`❌ Failed to fetch available land ${landId}:`, err);
+              // Fallback to original land data if getById fails
+              return landsArray.find((l: Land) => l.id === landId) || null;
+            })
+          )
+        );
+        
+        availableLandsResults.forEach((result, index) => {
+          const landId = availableIds[index];
+          if (result.status === 'fulfilled' && result.value) {
+            availableLandsMap.set(landId, result.value);
+            console.log(`✅ Fetched available land details for ${landId}:`, {
+              title: result.value.title,
+              location: result.value.location,
+              price: result.value.price,
+            });
+          } else {
+            // Fallback to original data if getById failed
+            const originalLand = landsArray.find((l: Land) => l.id === landId);
+            if (originalLand) {
+              availableLandsMap.set(landId, originalLand);
+              console.warn(`⚠️ Using original data for available land ${landId} (getById failed)`);
+            }
+          }
+        });
+        
+        console.log(`✅ Fetched ${availableLandsMap.size} available land details successfully`);
+      }
+      
+      // Use fetched details or fallback to original data
+      const available = Array.from(availableLandsMap.values());
       setAvailableLands(available);
 
       // Filter buyer's payments
@@ -127,7 +300,7 @@ export default function BuyerDashboard() {
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={buyerNavItems}>
         <div className="flex items-center justify-center min-h-[400px]">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -136,7 +309,7 @@ export default function BuyerDashboard() {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={buyerNavItems}>
       <div className="space-y-6">
         <h1 className="text-3xl font-bold text-white">Buyer Dashboard</h1>
 
@@ -198,27 +371,54 @@ export default function BuyerDashboard() {
             ) : (
               <>
                 <div className="space-y-3">
-                  {propertyRequests.slice(0, 3).map((request) => (
-                    <div
-                      key={request.id}
-                      className="p-4 bg-base-200 rounded-lg border border-base-300"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-white">{request.property?.title}</h3>
-                          <p className="text-sm text-gray-300">{request.property?.location}</p>
-                          {request.requestedPrice && (
-                            <p className="text-sm text-white mt-1">
-                              Offer: PKR {request.requestedPrice.toLocaleString()}
+                  {propertyRequests.slice(0, 3).map((request) => {
+                    // Debug each request being rendered
+                    console.log('📦 Rendering property request:', {
+                      id: request.id,
+                      propertyId: request.propertyId,
+                      hasProperty: !!request.property,
+                      propertyTitle: request.property?.title,
+                      propertyLocation: request.property?.location,
+                      requestedPrice: request.requestedPrice,
+                      propertyPrice: request.property?.price,
+                      builderResponse: request.builderResponse,
+                      status: request.status,
+                      allFields: Object.keys(request),
+                    });
+
+                    return (
+                      <div
+                        key={request.id}
+                        className="p-4 bg-base-200 rounded-lg border border-base-300"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-white">
+                              {request.property?.title || `Property ID: ${request.propertyId.substring(0, 8)}...`}
+                            </h3>
+                            <p className="text-sm text-gray-300">
+                              {request.property?.location || `ID: ${request.propertyId}`}
                             </p>
-                          )}
-                          {request.builderResponse && (
-                            <div className="mt-2 p-2 bg-base-300 rounded">
-                              <p className="text-sm text-gray-400">Builder's Response:</p>
-                              <p className="text-sm text-white">{request.builderResponse}</p>
-                            </div>
-                          )}
-                        </div>
+                            <p className="text-sm text-white mt-1">
+                              {request.requestedPrice 
+                                ? `Requested Price: PKR ${request.requestedPrice.toLocaleString()}`
+                                : request.property?.price
+                                ? `Listed Price: PKR ${request.property.price.toLocaleString()}`
+                                : 'Price: Not specified'}
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              Status: <span className="capitalize font-semibold">{request.status}</span>
+                              {request.respondedAt && (
+                                <> • Responded: {new Date(request.respondedAt).toLocaleDateString()}</>
+                              )}
+                            </p>
+                            {request.builderResponse && (
+                              <div className="mt-2 p-2 bg-base-300 rounded">
+                                <p className="text-sm font-semibold text-gray-300">Builder's Response:</p>
+                                <p className="text-sm text-white mt-1">{request.builderResponse}</p>
+                              </div>
+                            )}
+                          </div>
                         <div className="text-right ml-4">
                           <div
                             className={`badge ${
@@ -236,14 +436,15 @@ export default function BuyerDashboard() {
                           </p>
                           <Link
                             to={`/lands/${request.propertyId}`}
-                            className="btn btn-ghost btn-xs mt-2"
+                            className="btn btn-ghost btn-xs mt-2 text-white"
                           >
                             View Property
                           </Link>
                         </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {propertyRequests.length > 3 && (
                   <div className="text-center mt-4">
@@ -528,9 +729,9 @@ export default function BuyerDashboard() {
               </div>
               {ownedProperties.length > 3 && (
                 <div className="text-center mt-4">
-                  <button className="btn btn-ghost btn-sm text-white">
+                  <Link to="/dashboard/buyer/properties" className="btn btn-ghost btn-sm text-white">
                     View All Properties ({ownedProperties.length})
-                  </button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -552,29 +753,54 @@ export default function BuyerDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {availableLands.slice(0, 2).map((land) => (
-                  <div key={land.id} className="card bg-base-200 shadow border border-base-300">
-                    <div className="card-body">
-                      <h3 className="card-title text-white">{land.title}</h3>
-                      <p className="text-sm text-gray-300">{land.location}</p>
-                      <p className="text-2xl font-bold text-primary">PKR {land.price.toLocaleString()}</p>
-                      <div className="card-actions justify-end mt-4">
-                        <Link
-                          to={`/lands/${land.id}`}
-                          className="btn btn-primary btn-sm"
-                        >
-                          View Details
-                        </Link>
-                        <Link
-                          to={`/lands/${land.id}`}
-                          className="btn btn-secondary btn-sm"
-                        >
-                          Reserve Now
-                        </Link>
+                {availableLands.slice(0, 2).map((land) => {
+                  const imageUrl = getLandImageUrl(land);
+                  
+                  return (
+                    <div key={land.id} className="card bg-base-200 shadow border border-base-300">
+                      {/* Image Section */}
+                      <figure className="h-48 bg-base-300 relative">
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={land.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback if image fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.innerHTML = '<div class="flex items-center justify-center h-full"><span class="text-6xl">🏠</span></div>';
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <span className="text-6xl">🏠</span>
+                          </div>
+                        )}
+                      </figure>
+                      
+                      <div className="card-body">
+                        <h3 className="card-title text-white">{land.title}</h3>
+                        <p className="text-sm text-gray-300">{land.location}</p>
+                        <p className="text-2xl font-bold text-primary">PKR {land.price.toLocaleString()}</p>
+                        {land.size && (
+                          <p className="text-sm text-gray-400">Size: {land.size} sq ft</p>
+                        )}
+                        <div className="card-actions justify-end mt-4">
+                          <Link
+                            to={`/lands/${land.id}`}
+                            className="btn btn-primary btn-sm"
+                          >
+                            View Details
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
