@@ -3,19 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import { installmentAPI, agreementAPI } from '../../services/api';
 import type { Agreement } from '../../types';
-import { CurrencyDollarIcon, DocumentTextIcon, CalendarIcon, ExclamationCircleIcon, HomeIcon, FolderIcon, ArrowLeftIcon, UserGroupIcon, CreditCardIcon, ArrowPathIcon, ClockIcon } from '@heroicons/react/24/outline';
-
-const navItems = [
-  { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
-  { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-  { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
-  { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
-  { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
-  { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
-  { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
-  { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
-  { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
-];
+import { CurrencyDollarIcon, DocumentTextIcon, CalendarIcon, ExclamationCircleIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { builderNavItems } from '../../constants/navigation';
 
 const CreateInstallments: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -132,7 +121,7 @@ const CreateInstallments: React.FC = () => {
   };
 
   return (
-    <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
       <div className="max-w-3xl mx-auto">
         <div className="mb-6">
           <button

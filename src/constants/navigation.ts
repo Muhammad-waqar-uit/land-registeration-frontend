@@ -9,6 +9,7 @@ import {
   ClockIcon,
   BuildingOfficeIcon,
   MapPinIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 
 export interface NavItem {
@@ -22,6 +23,7 @@ export const buyerNavItems: NavItem[] = [
   { name: 'Overview', path: '/dashboard/buyer', icon: HomeIcon },
   { name: 'Property Requests', path: '/dashboard/buyer/property-requests', icon: DocumentTextIcon },
   { name: 'Agreements', path: '/dashboard/buyer/agreements', icon: DocumentTextIcon },
+  { name: 'Installments', path: '/dashboard/buyer/installments', icon: CurrencyDollarIcon },
   { name: 'Payment History', path: '/dashboard/buyer/payments', icon: CreditCardIcon },
   { name: 'My Properties', path: '/dashboard/buyer/properties', icon: BuildingOfficeIcon },
 ];

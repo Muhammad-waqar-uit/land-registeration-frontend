@@ -40,6 +40,8 @@ import BuyerPayments from './pages/dashboard/BuyerPayments';
 import BuyerPropertyRequests from './pages/dashboard/BuyerPropertyRequests';
 import BuyerMyProperties from './pages/dashboard/BuyerMyProperties';
 import BuyerAgreements from './pages/dashboard/BuyerAgreements';
+import BuyerInstallments from './pages/dashboard/BuyerInstallments';
+import BuyerCreatePayment from './pages/dashboard/BuyerCreatePayment';
 import SellerBuyerProgress from './pages/dashboard/SellerBuyerProgress';
 import SellerPayments from './pages/dashboard/SellerPayments';
 import BuilderPendingVerifications from './pages/dashboard/BuilderPendingVerifications';
@@ -350,6 +352,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <BuyerAgreements />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/installments"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <BuyerInstallments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/payments/create"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <BuyerCreatePayment />
             </ProtectedRoute>
           }
         />

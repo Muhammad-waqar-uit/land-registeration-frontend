@@ -341,21 +341,18 @@ export default function AdminProjectDetail() {
                           };
 
                           const ipfsHash = ipfsData?.hash || String(project.approvalDocumentsIPFSHash);
-                          const gateway = ipfsData?.gateway;
 
                           return (
                             <div className="mt-1 space-y-1">
                               <p className="text-xs text-blue-300 font-mono break-all">{ipfsHash}</p>
-                              {gateway && (
-                                <a
-                                  href={`${gateway}${ipfsHash}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-blue-400 hover:text-blue-300 underline inline-block"
-                                >
-                                  View on IPFS →
-                                </a>
-                              )}
+                              <a
+                                href={`https://gateway.pinata.cloud/ipfs/${ipfsHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-400 hover:text-blue-300 underline inline-block"
+                              >
+                                View on IPFS →
+                              </a>
                               {ipfsData?.timestamp && (
                                 <p className="text-xs text-gray-500">Pinned: {new Date(ipfsData.timestamp).toLocaleString()}</p>
                               )}
@@ -363,9 +360,19 @@ export default function AdminProjectDetail() {
                           );
                         } catch {
                           return (
-                            <p className="mt-1 text-xs text-white font-mono break-all">
-                              {project.approvalDocumentsIPFSHash}
-                            </p>
+                            <div className="mt-1 space-y-1">
+                              <p className="text-xs text-white font-mono break-all">
+                                {project.approvalDocumentsIPFSHash}
+                              </p>
+                              <a
+                                href={`https://gateway.pinata.cloud/ipfs/${project.approvalDocumentsIPFSHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-400 hover:text-blue-300 underline inline-block"
+                              >
+                                View on IPFS →
+                              </a>
+                            </div>
                           );
                         }
                       })()}

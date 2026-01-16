@@ -269,7 +269,7 @@ export default function BuilderDashboard() {
                         <td>
                           {payment.proofCID ? (
                             <a
-                              href={`https://ipfs.io/ipfs/${payment.proofCID}`}
+                              href={`http://localhost:3000/uploads/${payment.proofCID}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="link link-primary"

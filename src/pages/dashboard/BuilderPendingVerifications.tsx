@@ -140,23 +140,23 @@ export default function BuilderPendingVerifications() {
                           })}
                         </td>
                         <td>
-                          <div className="text-white font-semibold">
+                          <div className="text-black font-semibold">
                             {payment.buyer?.name || 'Unknown'}
                           </div>
-                          <div className="text-sm text-gray-400">
+                          <div className="text-sm text-black">
                             {payment.buyer?.email || 'N/A'}
                           </div>
                         </td>
                         <td>
-                          <div className="text-white font-semibold">
+                          <div className="text-black font-semibold">
                             {payment.land?.title || 'N/A'}
                           </div>
-                          <div className="text-sm text-gray-400">
+                          <div className="text-sm text-black">
                             {payment.land?.location || ''}
                           </div>
                         </td>
-                        <td className="text-white font-semibold">PKR {payment.amount.toLocaleString()}</td>
-                        <td className="text-gray-300 capitalize">{payment.paymentMode}</td>
+                        <td className="text-black font-semibold">PKR {payment.amount.toLocaleString()}</td>
+                        <td className="text-black capitalize">{payment.paymentMode}</td>
                         <td>
                           {payment.transactionHash ? (
                             <span className="text-xs font-mono text-blue-400" title={payment.transactionHash}>
@@ -170,7 +170,7 @@ export default function BuilderPendingVerifications() {
                         <td>
                           {payment.proofCID ? (
                             <a
-                              href={`https://gateway.pinata.cloud/ipfs/${payment.proofCID}`}
+                              href={`http://localhost:3000/uploads/${payment.proofCID}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="btn btn-xs btn-ghost text-blue-400 hover:text-blue-300"
@@ -186,20 +186,20 @@ export default function BuilderPendingVerifications() {
                             <button
                               onClick={() => handleApprove(payment.id)}
                               disabled={verifyingId === payment.id}
-                              className="btn btn-xs btn-success gap-1"
+                              className="btn btn-xs btn-success gap-1 flex flex-row w-30"
                               title="Approve Payment"
                             >
                               <CheckCircleIcon className="h-3 w-3" />
-                              {verifyingId === payment.id ? 'Processing...' : 'Approve'}
+                              {verifyingId === payment.id ? <span className="loading loading-spinner loading-xs"></span> : 'Approve'}
                             </button>
                             <button
                               onClick={() => handleReject(payment.id)}
                               disabled={verifyingId === payment.id}
-                              className="btn btn-xs btn-error gap-1"
+                              className="btn btn-xs btn-error gap-1 flex flex-row w-30"
                               title="Reject Payment"
                             >
                               <XCircleIcon className="h-3 w-3" />
-                              Reject
+                              {verifyingId === payment.id ? <span className="loading loading-spinner loading-xs"></span> : 'Reject'}
                             </button>
                           </div>
                         </td>

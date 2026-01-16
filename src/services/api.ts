@@ -451,31 +451,60 @@ export const landAPI = {
 
 // Payment API
 export const paymentAPI = {
+  // Create payment (Buyer) - FormData with landId, agreementId (optional), installmentId (optional), amount, paymentMode, proof (file), transactionHash (optional)
   create: async (paymentData: FormData): Promise<Payment> => {
+    console.log('📤 Creating payment with FormData');
     const response = await api.post('/payments', paymentData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     // Backend returns: Payment object directly
-    // FormData should include: landId, amount, dueDate (YYYY-MM-DD), paymentMode, transactionHash (optional), proof (file, optional)
+    // FormData should include: landId, agreementId (optional), installmentId (optional), amount, dueDate (YYYY-MM-DD, optional), paymentMode, transactionHash (optional), proof (file, optional)
     return response.data.data || response.data;
   },
 
+  // Get buyer's payments
   getByBuyer: async (): Promise<Payment[]> => {
     const response = await api.get('/payments/my-payments');
     // Backend returns: Payment[] array directly (includes land object)
     return response.data.data || response.data;
   },
 
+  // Verify payment (Builder/Admin)
   verify: async (paymentId: string, verified: boolean, remarks?: string): Promise<Payment> => {
     const response = await api.post(`/payments/${paymentId}/verify`, { verified, remarks });
     // Backend returns: Payment object directly (status updated to 'verified' or 'rejected')
     return response.data.data || response.data;
   },
 
+  // Get pending payments for builder verification
   getPending: async (): Promise<Payment[]> => {
     const response = await api.get('/payments/pending');
     // Backend returns: Payment[] array directly (includes land and buyer objects)
     // Note: This endpoint is for Builder role - returns pending payments for builder's lands
+    return response.data.data || response.data;
+  },
+
+  // Get payments for a property
+  getByProperty: async (propertyId: string): Promise<Payment[]> => {
+    const response = await api.get(`/payments/property/${propertyId}`);
+    return response.data.data || response.data;
+  },
+
+  // Get payments for an agreement
+  getByAgreement: async (agreementId: string): Promise<Payment[]> => {
+    const response = await api.get(`/payments/agreement/${agreementId}`);
+    return response.data.data || response.data;
+  },
+
+  // Get payment summary with installments (totalPaid, remainingBalance, payments, installments)
+  getInstallmentSummary: async (propertyId: string): Promise<{
+    totalPaid: number;
+    remainingBalance: number;
+    totalAmount: number;
+    payments: Payment[];
+    installments: any[];
+  }> => {
+    const response = await api.get(`/payments/installment-summary/${propertyId}`);
     return response.data.data || response.data;
   },
 };
@@ -825,9 +854,12 @@ export const agreementAPI = {
 // Installment API
 export const installmentAPI = {
   // Create installments from agreement (Builder only)
-  create: async (agreementId: string): Promise<Installment[]> => {
+  create: async (agreementId: string, numberOfInstallments?: number): Promise<Installment[]> => {
     console.log(`💰 Creating installments for agreement ${agreementId}`);
-    const response = await api.post('/installments', { agreementId });
+    const response = await api.post('/installments/create-from-agreement', {
+      agreementId,
+      numberOfInstallments,
+    });
     console.log('✅ Installments created:', response.data);
     return response.data.data || response.data;
   },

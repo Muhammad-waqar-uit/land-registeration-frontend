@@ -5,6 +5,7 @@ import {
   ClockIcon,
   XCircleIcon,
   DocumentTextIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import { paymentAPI } from '../../services/api';
 import type { Payment } from '../../types';
@@ -51,27 +52,27 @@ export default function BuyerPayments() {
     switch (status) {
       case 'verified':
         return (
-          <span className="badge badge-success gap-1">
+          <span className="badge badge-success gap-1 flex flex-row">
             <CheckCircleIcon className="h-3 w-3" />
             Verified
           </span>
         );
       case 'pending':
         return (
-          <span className="badge badge-warning gap-1">
+          <span className="badge badge-warning gap-1 flex flex-row">
             <ClockIcon className="h-3 w-3" />
             Pending
           </span>
         );
       case 'rejected':
         return (
-          <span className="badge badge-error gap-1">
+          <span className="badge badge-error gap-1 flex flex-row">
             <XCircleIcon className="h-3 w-3" />
             Rejected
           </span>
         );
       default:
-        return <span className="badge">{status}</span>;
+        return <span className="badge flex flex-row">{status}</span>;
     }
   };
 
@@ -90,10 +91,14 @@ export default function BuyerPayments() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-white">Payment History</h1>
-          <Link to="/dashboard/buyer" className="btn btn-ghost text-white">
-            Back to Dashboard
-          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-white">Payment History</h1>
+            <p className="text-gray-400 mt-1">View your payment history and create new payments</p>
+          </div>
+          {/* <Link to="/dashboard/buyer/payments/create" className="btn btn-primary text-white flex flex-row w-30">
+            <PlusIcon className="w-5 h-5 mr-2" />
+            Create Payment
+          </Link> */}
         </div>
 
         {/* Stats */}
@@ -192,16 +197,16 @@ export default function BuyerPayments() {
                           })}
                         </td>
                         <td>
-                          <div className="text-white font-semibold">
-                            {payment.land?.title || 'N/A'}
+                          <div className="text-black flex item-center font-semibold">
+                           Title: {payment.land?.title || 'N/A'}
                           </div>
-                          <div className="text-sm text-gray-400">
-                            {payment.land?.location || ''}
+                          <div className="text-sm text-black">
+                           Location: {payment.land?.location || ''}
                           </div>
                         </td>
-                        <td className="text-white font-semibold">PKR {payment.amount.toLocaleString()}</td>
+                        <td className="text-black font-semibold">PKR {payment.amount.toLocaleString()}</td>
                         <td className="text-gray-300 capitalize">{payment.paymentMode}</td>
-                        <td>{getStatusBadge(payment.status)}</td>
+                        <td className=''>{getStatusBadge(payment.status.replace('_',' '))}</td>
                         <td>
                           {payment.transactionHash ? (
                             <span className="text-xs font-mono text-blue-400">

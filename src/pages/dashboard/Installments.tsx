@@ -3,19 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import { installmentAPI } from '../../services/api';
 import type { Installment } from '../../types';
-import { CalendarIcon, CurrencyDollarIcon, CheckCircleIcon, ExclamationCircleIcon, ClockIcon, HomeIcon, FolderIcon, DocumentTextIcon, UserGroupIcon, CreditCardIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-
-const navItems = [
-  { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
-  { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-  { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
-  { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
-  { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
-  { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
-  { name: 'Installments', path: '/dashboard/builder/installments', icon: CurrencyDollarIcon },
-  { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
-  { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
-];
+import { CalendarIcon, CurrencyDollarIcon, CheckCircleIcon, ExclamationCircleIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { builderNavItems } from '../../constants/navigation';
 
 const Installments: React.FC = () => {
   const [installments, setInstallments] = useState<Installment[]>([]);
@@ -125,8 +114,8 @@ const Installments: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-white">Installments</h1>
-            <p className="text-gray-400 mt-1">Manage payment installments</p>
+            <h1 className="text-3xl font-bold text-white">Installments Management</h1>
+            <p className="text-gray-400 mt-1">Create and manage payment installments for buyers</p>
           </div>
           <Link to="/dashboard/builder/installments/create" className="btn btn-primary flex items-center">
             <CurrencyDollarIcon className="h-5 w-5 mr-2" />

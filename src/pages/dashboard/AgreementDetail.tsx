@@ -5,8 +5,10 @@ import {
   ArrowLeftIcon,
   CheckCircleIcon,
   ShieldCheckIcon,
+  CreditCardIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
-import { agreementAPI } from '../../services/api';
+import { agreementAPI, paymentAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Agreement } from '../../types';
 import { builderNavItems, buyerNavItems } from '../../constants/navigation';
@@ -19,11 +21,30 @@ export default function AgreementDetail() {
   const [signing, setSigning] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verificationResult, setVerificationResult] = useState<{ verified: boolean; message: string } | null>(null);
+  const [paymentSummary, setPaymentSummary] = useState<{
+    totalPaid: number;
+    remainingBalance: number;
+    totalAmount: number;
+  } | null>(null);
+  const [loadingPaymentSummary, setLoadingPaymentSummary] = useState(false);
 
   const loadAgreement = useCallback(async () => {
     try {
       setLoading(true);
       const data = await agreementAPI.getById(id!);
+      
+      // Load payment summary if agreement is signed and has propertyId
+      if ((data.status === 'signed' || data.status === 'completed') && data.propertyId && user?.role === 'user') {
+        try {
+          setLoadingPaymentSummary(true);
+          const summary = await paymentAPI.getInstallmentSummary(data.propertyId);
+          setPaymentSummary(summary);
+        } catch (err) {
+          console.error('Failed to load payment summary:', err);
+        } finally {
+          setLoadingPaymentSummary(false);
+        }
+      }
       console.log('📋 Agreement Data from API (GET /api/agreements/:id):', {
         id: data.id,
         propertyId: data.propertyId,
@@ -358,30 +379,18 @@ export default function AgreementDetail() {
                         // Try parsing as JSON (new format: { hash, gateway, timestamp })
                         const ipfsData = JSON.parse(agreement.documentIPFSHash);
                         const ipfsHash = ipfsData?.hash || agreement.documentIPFSHash;
-                        const gateway = ipfsData?.gateway;
                         
                         return (
                           <div className="space-y-2">
                             <p className="text-white font-mono text-sm break-all">{ipfsHash}</p>
-                            {gateway ? (
-                              <a
-                                href={`${gateway}${ipfsHash}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-blue-400 hover:text-blue-300 underline inline-flex items-center gap-1"
-                              >
-                                View on IPFS →
-                              </a>
-                            ) : (
-                              <a
-                                href={`https://ipfs.io/ipfs/${ipfsHash}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-blue-400 hover:text-blue-300 underline inline-flex items-center gap-1"
-                              >
-                                View on IPFS (ipfs.io) →
-                              </a>
-                            )}
+                            <a
+                              href={`https://gateway.pinata.cloud/ipfs/${ipfsHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-400 hover:text-blue-300 underline inline-flex items-center gap-1"
+                            >
+                              View on IPFS →
+                            </a>
                             {ipfsData?.timestamp && (
                               <p className="text-xs text-gray-500">Pinned: {new Date(ipfsData.timestamp).toLocaleString()}</p>
                             )}
@@ -393,12 +402,12 @@ export default function AgreementDetail() {
                           <div className="space-y-2">
                             <p className="text-white font-mono text-sm break-all">{agreement.documentIPFSHash}</p>
                             <a
-                              href={`https://ipfs.io/ipfs/${agreement.documentIPFSHash}`}
+                              href={`https://gateway.pinata.cloud/ipfs/${agreement.documentIPFSHash}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-sm text-blue-400 hover:text-blue-300 underline inline-flex items-center gap-1"
                             >
-                              View on IPFS (ipfs.io) →
+                              View on IPFS →
                             </a>
                           </div>
                         );
@@ -431,6 +440,72 @@ export default function AgreementDetail() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Summary - Show for signed agreements */}
+        {user?.role === 'user' && (agreement.status === 'signed' || agreement.status === 'completed') && agreement.propertyId && (
+          <div className="card bg-blue-950 shadow-2xl border border-blue-800">
+            <div className="card-body">
+              <h3 className="card-title text-blue-100">
+                <CurrencyDollarIcon className="w-6 h-6" />
+                Payment Status
+              </h3>
+              {loadingPaymentSummary ? (
+                <div className="flex justify-center py-4">
+                  <span className="loading loading-spinner loading-md"></span>
+                </div>
+              ) : paymentSummary ? (
+                <div className="space-y-4">
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-blue-300">Total Amount</p>
+                      <p className="text-white text-xl font-bold">
+                        PKR {paymentSummary.totalAmount.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-blue-300">Total Paid</p>
+                      <p className="text-success text-xl font-bold">
+                        PKR {paymentSummary.totalPaid.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-blue-300">Remaining Balance</p>
+                      <p className="text-warning text-xl font-bold">
+                        PKR {paymentSummary.remainingBalance.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  {paymentSummary.remainingBalance > 0 && (
+                    <div className="card-actions justify-end mt-4">
+                      <Link
+                        to={`/dashboard/buyer/payments/create?landId=${agreement.propertyId}&agreementId=${agreement.id}`}
+                        className="btn btn-primary text-white border-white flex flex-row w-30"
+                      >
+                        <CreditCardIcon className="w-5 h-5 mr-2" />
+                        Make Payment
+                      </Link>
+                      <Link
+                        to="/dashboard/buyer/installments"
+                        className="btn btn-ghost text-white border-white flex flex-row w-30"
+                      >
+                        <CurrencyDollarIcon className="w-5 h-5 mr-2" />
+                        View Installments
+                      </Link>
+                    </div>
+                  )}
+                  {paymentSummary.remainingBalance === 0 && (
+                    <div className="alert alert-success">
+                      <CheckCircleIcon className="w-6 h-6" />
+                      <span>All payments completed! Waiting for builder to transfer ownership.</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-blue-200">Loading payment information...</p>
+              )}
             </div>
           </div>
         )}

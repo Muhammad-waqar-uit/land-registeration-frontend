@@ -23,8 +23,8 @@ const getIPFSUrl = (ipfsHashJson?: string): string | null => {
   try {
     const hashData = JSON.parse(ipfsHashJson);
     if (hashData?.hash) {
-      // Use ipfs.io gateway as requested
-      return `https://ipfs.io/ipfs/${hashData.hash}`;
+      // Use gateway.pinata.cloud format
+      return `https://gateway.pinata.cloud/ipfs/${hashData.hash}`;
     }
   } catch (error) {
     console.error('Failed to parse IPFS hash:', error);
