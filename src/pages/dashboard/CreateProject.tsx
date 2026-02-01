@@ -8,7 +8,6 @@ import {
   DocumentTextIcon,
   UserGroupIcon,
   CreditCardIcon,
-  CurrencyDollarIcon,
   ArrowPathIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';

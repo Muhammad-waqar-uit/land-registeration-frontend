@@ -6,7 +6,6 @@ import {
   CheckCircleIcon,
   ClockIcon,
   EyeIcon,
-  XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { agreementAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';

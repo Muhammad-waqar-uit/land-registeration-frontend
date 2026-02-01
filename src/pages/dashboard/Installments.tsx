@@ -101,7 +101,7 @@ const Installments: React.FC = () => {
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
         <div className="flex justify-center items-center h-64">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -110,7 +110,7 @@ const Installments: React.FC = () => {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={builderNavItems}>
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div>

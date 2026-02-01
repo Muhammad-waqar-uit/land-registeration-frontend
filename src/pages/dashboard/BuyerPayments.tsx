@@ -5,11 +5,9 @@ import {
   ClockIcon,
   XCircleIcon,
   DocumentTextIcon,
-  PlusIcon,
 } from '@heroicons/react/24/outline';
 import { paymentAPI } from '../../services/api';
 import type { Payment } from '../../types';
-import { Link } from 'react-router-dom';
 import { buyerNavItems } from '../../constants/navigation';
 
 export default function BuyerPayments() {

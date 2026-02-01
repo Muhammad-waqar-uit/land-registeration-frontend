@@ -91,7 +91,6 @@ export default function BuyerInstallments() {
   const canPay = (installment: Installment) => {
     const now = new Date();
     const windowStart = new Date(installment.paymentWindowStart);
-    const windowEnd = new Date(installment.paymentWindowEnd);
     return (
       (installment.status === 'pending' || installment.status === 'overdue') &&
       now >= windowStart

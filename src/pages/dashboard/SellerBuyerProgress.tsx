@@ -3,13 +3,9 @@ import { useLocation, Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
-  FolderIcon,
   DocumentTextIcon,
   UserGroupIcon,
   CreditCardIcon,
-  CurrencyDollarIcon,
-  ArrowPathIcon,
-  ClockIcon,
 } from '@heroicons/react/24/outline';
 import { buyerProgressAPI, projectAPI } from '../../services/api';
 import type { BuyerProgressItem, BuyerProgressStats, Project } from '../../types';
@@ -21,8 +17,8 @@ export default function SellerBuyerProgress() {
   const [stats, setStats] = useState<BuyerProgressStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'reserved' | 'paying' | 'completed' | undefined>(undefined);
-  const [projectFilter, setProjectFilter] = useState<string | undefined>(undefined);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectFilter, _setProjectFilter] = useState<string | undefined>(undefined);
+  const [_projects, setProjects] = useState<Project[]>([]);
 
   // Determine navigation items based on current route
   const isBuilderRoute = location.pathname.startsWith('/dashboard/builder');
@@ -72,18 +68,7 @@ export default function SellerBuyerProgress() {
     fetchData();
   }, [fetchData]);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'reserved':
-        return <span className="badge badge-info">Reserved</span>;
-      case 'paying':
-        return <span className="badge badge-warning">In Progress</span>;
-      case 'completed':
-        return <span className="badge badge-success">Completed</span>;
-      default:
-        return <span className="badge">{status}</span>;
-    }
-  };
+
 
   const getStatusColor = (status: string) => {
     switch (status) {

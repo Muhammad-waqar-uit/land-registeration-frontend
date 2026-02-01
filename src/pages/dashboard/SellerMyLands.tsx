@@ -10,7 +10,6 @@ import {
   PencilIcon,
   TrashIcon,
   MagnifyingGlassIcon,
-  CurrencyDollarIcon,
   ArrowPathIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';

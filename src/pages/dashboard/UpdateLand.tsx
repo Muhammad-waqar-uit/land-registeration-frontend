@@ -22,7 +22,7 @@ export default function UpdateLand() {
     location: '',
     size: '',
     price: '',
-    status: 'available' as 'available' | 'locked' | 'sold',
+    status: 'available' as 'available' | 'locked' | 'sold' | 'owned' | 'payment_in_progress',
   });
   const [document, setDocument] = useState<File | null>(null);
   const [image, setImage] = useState<File | null>(null);
@@ -270,6 +270,8 @@ export default function UpdateLand() {
                   <option value="available">Available</option>
                   <option value="locked">Locked</option>
                   <option value="sold">Sold</option>
+                  <option value="owned">Owned</option>
+                  <option value="payment_in_progress">Payment In Progress</option>
                 </select>
               </div>
 

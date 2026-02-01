@@ -10,7 +10,6 @@ import {
   CheckCircleIcon,
   ClockIcon,
   XCircleIcon,
-  CurrencyDollarIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import { paymentAPI, landAPI } from '../../services/api';

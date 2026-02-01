@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus, BuyerProgressResponse, BuyerProgressStats } from '../types';
+import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus, BuyerProgressResponse } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 

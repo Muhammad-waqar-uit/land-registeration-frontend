@@ -4,7 +4,6 @@ import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   ArrowLeftIcon,
   CreditCardIcon,
-  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { paymentAPI, landAPI, agreementAPI, installmentAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
