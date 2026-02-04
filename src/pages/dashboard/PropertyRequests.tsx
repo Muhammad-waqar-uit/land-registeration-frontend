@@ -282,7 +282,7 @@ export default function PropertyRequests() {
 
                       <div className="card-actions justify-end mt-4">
                         <Link
-                          to={`/dashboard/seller/lands/${request.propertyId}`}
+                          to={`/dashboard/builder/lands/${request.propertyId}`}
                           className="btn btn-ghost btn-sm text-white border-white"
                         >
                           View Property

@@ -227,7 +227,7 @@ export default function BuyerPropertyRequests() {
 
                     <div className="card-actions justify-end">
                       <Link
-                        to={`/lands/${request.propertyId}`}
+                        to={`/dashboard/buyer/lands/${request.propertyId}`}
                         className="btn btn-ghost btn-sm flex flex-row text-white border-white"
                       >
                         View Property
@@ -246,7 +246,7 @@ export default function BuyerPropertyRequests() {
                           Cancel Request
                         </button>
                       )}
-                      {request.status === 'approved' && (
+                      {request.status === 'approved' && request.agreementId && (
                         <Link
                           to={`/dashboard/buyer/agreements/${request.agreementId}`}
                           className="btn btn-primary btn-sm"

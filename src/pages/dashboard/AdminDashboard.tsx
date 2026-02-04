@@ -198,21 +198,21 @@ export default function AdminDashboard() {
               <div className="overflow-x-auto">
                 <table className="table table-zebra">
                   <thead>
-                    <tr className="text-black">
-                      <th className="text-black">Title</th>
-                      <th className="text-black">Location</th>
-                      <th className="text-black">Size</th>
-                      <th className="text-black">Price</th>
-                      <th className="text-black">Status</th>
+                    <tr className="text-white">
+                      <th className="text-white">Title</th>
+                      <th className="text-white">Location</th>
+                      <th className="text-white">Size</th>
+                      <th className="text-white">Price</th>
+                      <th className="text-white">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {lands.slice(0, 5).map((land) => (
-                      <tr key={land.id} className="text-black">
-                        <td className="font-medium text-black">{land.title}</td>
+                      <tr key={land.id} className="text-white">
+                        <td className="font-medium text-white">{land.title}</td>
                         <td className="text-gray-600">{land.location}</td>
-                        <td className="text-black">{land.size} sq ft</td>
-                        <td className="font-semibold text-black">PKR {land.price.toLocaleString()}</td>
+                        <td className="text-white">{land.size} sq ft</td>
+                        <td className="font-semibold text-white">PKR {land.price.toLocaleString()}</td>
                         <td>
                           <span
                             className={`badge ${
@@ -253,17 +253,17 @@ export default function AdminDashboard() {
               <div className="overflow-x-auto">
                 <table className="table table-zebra">
                   <thead>
-                    <tr className="text-black">
-                      <th className="text-black">Land ID</th>
-                      <th className="text-black">Amount</th>
-                      <th className="text-black">Payment Mode</th>
-                      <th className="text-black">Due Date</th>
-                      <th className="text-black">Status</th>
+                    <tr className="text-white">
+                      <th className="text-white">Land ID</th>
+                      <th className="text-white">Amount</th>
+                      <th className="text-white">Payment Mode</th>
+                      <th className="text-white">Due Date</th>
+                      <th className="text-white">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pendingPayments.slice(0, 5).map((payment) => (
-                      <tr key={payment.id} className="text-black">
+                      <tr key={payment.id} className="text-white">
                         <td className="font-mono text-sm">{payment.landId.slice(0, 8)}...</td>
                         <td className="font-semibold">PKR {payment.amount.toLocaleString()}</td>
                         <td>

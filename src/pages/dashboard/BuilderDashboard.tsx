@@ -135,8 +135,8 @@ export default function BuilderDashboard() {
           <div className="alert alert-warning shadow-lg">
             <ExclamationTriangleIcon className="h-6 w-6" />
             <div>
-              <h3 className="font-bold text-black">Verification Pending</h3>
-              <div className="text-sm text-black">
+              <h3 className="font-bold text-white">Verification Pending</h3>
+              <div className="text-sm text-white">
                 Your builder account is pending verification by an administrator. 
                 You will be able to access all builder features once your account is verified.
               </div>
@@ -188,7 +188,7 @@ export default function BuilderDashboard() {
 
         {error && (
           <div className="alert alert-error">
-            <span className="text-black">{error}</span>
+            <span className="text-white">{error}</span>
             <button className="btn btn-sm" onClick={fetchData}>
               Retry
             </button>
@@ -235,32 +235,32 @@ export default function BuilderDashboard() {
               <div className="overflow-x-auto">
                 <table className="table">
                   <thead>
-                    <tr className="text-black">
-                      <th className="text-black">Land</th>
-                      <th className="text-black">Buyer</th>
-                      <th className="text-black">Amount</th>
-                      <th className="text-black">Payment Mode</th>
-                      <th className="text-black">Proof</th>
-                      <th className="text-black">Due Date</th>
-                      <th className="text-black">Actions</th>
+                    <tr className="text-white">
+                      <th className="text-white">Land</th>
+                      <th className="text-white">Buyer</th>
+                      <th className="text-white">Amount</th>
+                      <th className="text-white">Payment Mode</th>
+                      <th className="text-white">Proof</th>
+                      <th className="text-white">Due Date</th>
+                      <th className="text-white">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pendingPayments.map((payment) => (
-                      <tr key={payment.id} className="text-black">
-                        <td className="text-black">
+                      <tr key={payment.id} className="text-white">
+                        <td className="text-white">
                           <div className="font-medium">{payment.land?.title || payment.landId}</div>
                           {payment.land?.location && (
                             <div className="text-xs text-gray-600">{payment.land.location}</div>
                           )}
                         </td>
-                        <td className="text-black">
+                        <td className="text-white">
                           <div className="font-medium">{payment.buyer?.name || 'Unknown'}</div>
                           {payment.buyer?.email && (
                             <div className="text-xs text-gray-600">{payment.buyer.email}</div>
                           )}
                         </td>
-                        <td className="text-black">PKR {payment.amount.toLocaleString()}</td>
+                        <td className="text-white">PKR {payment.amount.toLocaleString()}</td>
                         <td>
                           <span className={`badge ${payment.paymentMode === 'crypto' ? 'badge-info' : 'badge-primary'}`}>
                             {payment.paymentMode}
@@ -280,7 +280,7 @@ export default function BuilderDashboard() {
                             <span className="text-gray-400">No proof</span>
                           )}
                         </td>
-                        <td className="text-black">{new Date(payment.dueDate).toLocaleDateString()}</td>
+                        <td className="text-white">{new Date(payment.dueDate).toLocaleDateString()}</td>
                         <td>
                           <div className="flex gap-2 items-center">
                             <button
@@ -337,19 +337,19 @@ export default function BuilderDashboard() {
                 <table className="table">
                   <thead className="bg-transparent">
                     <tr>
-                      <th className="text-black">Title</th>
-                      <th className="text-black">Location</th>
-                      <th className="text-black">Price</th>
-                      <th className="text-black">Status</th>
-                      <th className="text-black">Actions</th>
+                      <th className="text-white">Title</th>
+                      <th className="text-white">Location</th>
+                      <th className="text-white">Price</th>
+                      <th className="text-white">Status</th>
+                      <th className="text-white">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {myLands.slice(0, 5).map((land) => (
-                      <tr key={land.id} className="text-black">
-                        <td className="text-black">{land.title}</td>
-                        <td className="text-black">{land.location}</td>
-                        <td className="text-black">PKR {land.price.toLocaleString()}</td>
+                      <tr key={land.id} className="text-white">
+                        <td className="text-white">{land.title}</td>
+                        <td className="text-white">{land.location}</td>
+                        <td className="text-white">PKR {land.price.toLocaleString()}</td>
                         <td>
                           <span
                             className={`badge ${
@@ -445,30 +445,30 @@ export default function BuilderDashboard() {
               <div className="overflow-x-auto">
                 <table className="table">
                   <thead>
-                    <tr className="text-black">
-                      <th className="text-black">Land</th>
-                      <th className="text-black">Buyer</th>
-                      <th className="text-black">Amount</th>
-                      <th className="text-black">Status</th>
-                      <th className="text-black">Due Date</th>
+                    <tr className="text-white">
+                      <th className="text-white">Land</th>
+                      <th className="text-white">Buyer</th>
+                      <th className="text-white">Amount</th>
+                      <th className="text-white">Status</th>
+                      <th className="text-white">Due Date</th>
                     </tr>
                   </thead>
                   <tbody>
                     {payments.slice(0, 5).map((payment) => (
-                      <tr key={payment.id} className="text-black">
-                        <td className="text-black">
+                      <tr key={payment.id} className="text-white">
+                        <td className="text-white">
                           <div className="font-medium">{payment.land?.title || payment.landId.slice(0, 8)}...</div>
                           {payment.land?.location && (
                             <div className="text-xs text-gray-600">{payment.land.location}</div>
                           )}
                         </td>
-                        <td className="text-black">
+                        <td className="text-white">
                           <div className="font-medium">{payment.buyer?.name || 'Unknown'}</div>
                           {payment.buyer?.email && (
                             <div className="text-xs text-gray-600">{payment.buyer.email}</div>
                           )}
                         </td>
-                        <td className="text-black">PKR {payment.amount.toLocaleString()}</td>
+                        <td className="text-white">PKR {payment.amount.toLocaleString()}</td>
                         <td>
                           <span
                             className={`badge ${
@@ -482,7 +482,7 @@ export default function BuilderDashboard() {
                             {payment.status}
                           </span>
                         </td>
-                        <td className="text-black">{new Date(payment.dueDate).toLocaleDateString()}</td>
+                        <td className="text-white">{new Date(payment.dueDate).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>

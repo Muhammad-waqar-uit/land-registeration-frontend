@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { fetchCurrentUser } from './store/slices/authSlice';
@@ -17,7 +17,6 @@ import AdminProjectDetail from './pages/dashboard/AdminProjectDetail';
 import AdminApprovedProjects from './pages/dashboard/AdminApprovedProjects';
 import AdminAllLands from './pages/dashboard/AdminAllLands';
 import BuilderVerification from './pages/dashboard/BuilderVerification';
-import SellerDashboard from './pages/dashboard/SellerDashboard';
 import SellerMyLands from './pages/dashboard/SellerMyLands';
 import BuyerDashboard from './pages/dashboard/BuyerDashboard';
 import BuilderDashboard from './pages/dashboard/BuilderDashboard';
@@ -39,6 +38,7 @@ import MintTokens from './pages/dashboard/MintTokens';
 import BuyerPayments from './pages/dashboard/BuyerPayments';
 import BuyerPropertyRequests from './pages/dashboard/BuyerPropertyRequests';
 import BuyerMyProperties from './pages/dashboard/BuyerMyProperties';
+import BuyerAvailableLands from './pages/dashboard/BuyerAvailableLands';
 import BuyerAgreements from './pages/dashboard/BuyerAgreements';
 import BuyerInstallments from './pages/dashboard/BuyerInstallments';
 import BuyerCreatePayment from './pages/dashboard/BuyerCreatePayment';
@@ -145,6 +145,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminPropertyRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/lands/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <LandDetail />
             </ProtectedRoute>
           }
         />
@@ -272,17 +280,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Legacy seller routes redirect to builder */}
         <Route
-          path="/dashboard/seller"
-          element={
-            <ProtectedRoute allowedRoles={['builder']}>
-              <SellerDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/seller/lands"
+          path="/dashboard/builder/lands"
           element={
             <ProtectedRoute allowedRoles={['builder']}>
               <SellerMyLands />
@@ -290,23 +289,7 @@ function App() {
           }
         />
         <Route
-          path="/dashboard/seller/buyers"
-          element={
-            <ProtectedRoute allowedRoles={['builder']}>
-              <SellerBuyerProgress />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/seller/payments"
-          element={
-            <ProtectedRoute allowedRoles={['builder']}>
-              <SellerPayments />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard/seller/register-land"
+          path="/dashboard/builder/register-land"
           element={
             <ProtectedRoute allowedRoles={['builder']}>
               <RegisterLand />
@@ -314,13 +297,28 @@ function App() {
           }
         />
         <Route
-          path="/dashboard/seller/update-land/:id"
+          path="/dashboard/builder/update-land/:id"
           element={
             <ProtectedRoute allowedRoles={['builder', 'admin']}>
               <UpdateLand />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/builder/lands/:id"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <LandDetail />
+            </ProtectedRoute>
+          }
+        />
+        {/* Seller routes redirect to builder (single dashboard at /dashboard/builder) */}
+        <Route path="/dashboard/seller" element={<Navigate to="/dashboard/builder" replace />} />
+        <Route path="/dashboard/seller/lands" element={<Navigate to="/dashboard/builder/lands" replace />} />
+        <Route path="/dashboard/seller/buyers" element={<Navigate to="/dashboard/builder/buyers" replace />} />
+        <Route path="/dashboard/seller/payments" element={<Navigate to="/dashboard/builder/payments" replace />} />
+        <Route path="/dashboard/seller/register-land" element={<Navigate to="/dashboard/builder/register-land" replace />} />
+        <Route path="/dashboard/seller/update-land/:id" element={<RedirectToBuilderUpdateLand />} />
 
         {/* Protected Routes - User (Buyer) */}
         <Route
@@ -372,6 +370,14 @@ function App() {
           }
         />
         <Route
+          path="/dashboard/buyer/available"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <BuyerAvailableLands />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/dashboard/buyer/properties"
           element={
             <ProtectedRoute allowedRoles={['user']}>
@@ -384,6 +390,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <AgreementDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/lands/:id"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <LandDetail />
             </ProtectedRoute>
           }
         />
@@ -414,14 +428,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/lands/:id"
-          element={
-            <ProtectedRoute>
-              <LandDetail />
-            </ProtectedRoute>
-          }
-        />
+        {/* Legacy /lands/:id redirects to role-based dashboard land detail */}
+        <Route path="/lands/:id" element={<RedirectToDashboardLand />} />
         <Route
           path="/dashboard"
           element={
@@ -436,6 +444,21 @@ function App() {
       </Routes>
     </BrowserRouter>
   );
+}
+
+// Redirect legacy seller update-land URL to builder
+function RedirectToBuilderUpdateLand() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={id ? `/dashboard/builder/update-land/${id}` : '/dashboard/builder/lands'} replace />;
+}
+
+// Redirect /lands/:id to role-based dashboard land detail
+function RedirectToDashboardLand() {
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAppSelector((state: RootState) => state.auth);
+  if (!user) return <Navigate to="/login" replace />;
+  const roleSegment = user.role === 'user' ? 'buyer' : user.role === 'builder' ? 'builder' : 'admin';
+  return <Navigate to={id ? `/dashboard/${roleSegment}/lands/${id}` : '/dashboard'} replace />;
 }
 
 // Component to redirect to role-based dashboard

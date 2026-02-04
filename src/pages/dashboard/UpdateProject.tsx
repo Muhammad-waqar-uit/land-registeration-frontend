@@ -227,7 +227,7 @@ export default function UpdateProject() {
         {/* Error Alert */}
         {error && (
           <div className="alert alert-error mb-6">
-            <span className="text-black">{error}</span>
+            <span className="text-white">{error}</span>
           </div>
         )}
 

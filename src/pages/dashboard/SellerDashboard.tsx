@@ -195,9 +195,9 @@ export default function SellerDashboard() {
             </div>
             {deleteError && (
               <div className="alert alert-error mb-4">
-                <span className="text-black">{deleteError}</span>
+                <span className="text-white">{deleteError}</span>
                 <button
-                  className="btn btn-sm btn-ghost text-black"
+                  className="btn btn-sm btn-ghost text-white"
                   onClick={() => setDeleteError(null)}
                 >
                   ?
@@ -216,19 +216,19 @@ export default function SellerDashboard() {
                 <table className="table">
                   <thead className="bg-transparent">
                     <tr>
-                      <th className="text-black">Title</th>
-                      <th className="text-black">Location</th>
-                      <th className="text-black">Price</th>
-                      <th className="text-black">Status</th>
-                      <th className="text-black">Actions</th>
+                      <th className="text-white">Title</th>
+                      <th className="text-white">Location</th>
+                      <th className="text-white">Price</th>
+                      <th className="text-white">Status</th>
+                      <th className="text-white">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {myLands.map((land) => (
-                      <tr key={land.id} className="text-black">
-                        <td className="text-black">{land.title}</td>
-                        <td className="text-black">{land.location}</td>
-                        <td className="text-black">PKR {land.price.toLocaleString()}</td>
+                      <tr key={land.id} className="text-white">
+                        <td className="text-white">{land.title}</td>
+                        <td className="text-white">{land.location}</td>
+                        <td className="text-white">PKR {land.price.toLocaleString()}</td>
                         <td>
                           <span
                             className={`badge ${
@@ -245,7 +245,7 @@ export default function SellerDashboard() {
                         <td>
                           <div className="flex gap-2 items-center justify-center">
                             <Link
-                              to={`/lands/${land.id}`}
+                              to={`/dashboard/builder/lands/${land.id}`}
                                 className="btn btn-xs btn-primary h-7 w-20"
                             >
                               View

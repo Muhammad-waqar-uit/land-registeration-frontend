@@ -6,47 +6,9 @@ import { useAppSelector } from '../../store/hooks';
 import type { Land, Payment, PropertyRequest, Agreement, Installment, ResaleRequest } from '../../types';
 import { buyerNavItems } from '../../constants/navigation';
 
-/**
- * Helper function to get IPFS URL from hash JSON string
- * Parses the IPFS hash JSON and constructs the IPFS gateway URL
- */
-const getIPFSUrl = (ipfsHashJson?: string): string | null => {
-  if (!ipfsHashJson) return null;
-  
-  try {
-    const hashData = JSON.parse(ipfsHashJson);
-    if (hashData?.hash) {
-      // Use gateway.pinata.cloud format
-      return `https://gateway.pinata.cloud/ipfs/${hashData.hash}`;
-    }
-  } catch (error) {
-    console.error('Failed to parse IPFS hash:', error);
-  }
-  
-  return null;
-};
-
-/**
- * Get image URL for a land - prioritizes imageIPFSHash over imageUrl
- */
-const getLandImageUrl = (land: Land): string | null => {
-  // Prioritize IPFS hash over direct URL
-  if (land.imageIPFSHash) {
-    return getIPFSUrl(land.imageIPFSHash);
-  }
-  
-  // Fallback to direct imageUrl only if IPFS hash is not available
-  if (land.imageUrl) {
-    return land.imageUrl;
-  }
-  
-  return null;
-};
-
 export default function BuyerDashboard() {
   const { user } = useAppSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
-  const [availableLands, setAvailableLands] = useState<Land[]>([]);
   const [reservedLands, setReservedLands] = useState<Land[]>([]);
   const [ownedProperties, setOwnedProperties] = useState<Land[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -196,51 +158,6 @@ export default function BuyerDashboard() {
         ? landsData 
         : ((landsData && typeof landsData === 'object' && 'data' in landsData ? (landsData as { data: Land[] }).data : null) || []);
 
-      // Filter available lands (status = 'available')
-      const availableIds = landsArray.filter((land: Land) => land.status === 'available').map((land: Land) => land.id);
-      
-      // Fetch full details for available lands using getById to ensure all data is present
-      console.log('🏠 Fetching full details for available lands:', availableIds);
-      console.log(`📡 Using landAPI.getById() for ${availableIds.length} available lands`);
-      
-      const availableLandsMap = new Map<string, Land>();
-      if (availableIds.length > 0) {
-        const availableLandsResults = await Promise.allSettled(
-          availableIds.map((landId) =>
-            landAPI.getById(landId).catch((err) => {
-              console.error(`❌ Failed to fetch available land ${landId}:`, err);
-              // Fallback to original land data if getById fails
-              return landsArray.find((l: Land) => l.id === landId) || null;
-            })
-          )
-        );
-        
-        availableLandsResults.forEach((result, index) => {
-          const landId = availableIds[index];
-          if (result.status === 'fulfilled' && result.value) {
-            availableLandsMap.set(landId, result.value);
-            console.log(`✅ Fetched available land details for ${landId}:`, {
-              title: result.value.title,
-              location: result.value.location,
-              price: result.value.price,
-            });
-          } else {
-            // Fallback to original data if getById failed
-            const originalLand = landsArray.find((l: Land) => l.id === landId);
-            if (originalLand) {
-              availableLandsMap.set(landId, originalLand);
-              console.warn(`⚠️ Using original data for available land ${landId} (getById failed)`);
-            }
-          }
-        });
-        
-        console.log(`✅ Fetched ${availableLandsMap.size} available land details successfully`);
-      }
-      
-      // Use fetched details or fallback to original data
-      const available = Array.from(availableLandsMap.values());
-      setAvailableLands(available);
-
       // Filter buyer's payments
       const buyerPayments = (paymentsData || []).filter((p: Payment) => p.buyerId === user.id);
       setPayments(buyerPayments);
@@ -314,41 +231,41 @@ export default function BuyerDashboard() {
         <h1 className="text-3xl font-bold text-white">Buyer Dashboard</h1>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-          <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-white">Property Requests</div>
-            <div className="stat-value text-info">{stats.pendingRequests}</div>
-            <div className="stat-desc text-white">Pending approval</div>
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-4 min-w-0">
+          <div className="stat bg-base-100 rounded-lg shadow border border-base-300 min-w-0 overflow-hidden">
+            <div className="stat-title text-white min-w-0 break-words line-clamp-2">Property Requests</div>
+            <div className="stat-value text-info min-w-0 break-all truncate" title={String(stats.pendingRequests)}>{stats.pendingRequests}</div>
+            <div className="stat-desc text-white min-w-0 break-words line-clamp-2">Pending approval</div>
           </div>
 
-          <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-white">Agreements</div>
-            <div className="stat-value text-warning">{stats.pendingAgreements}</div>
-            <div className="stat-desc text-white">Pending signature</div>
+          <div className="stat bg-base-100 rounded-lg shadow border border-base-300 min-w-0 overflow-hidden">
+            <div className="stat-title text-white min-w-0 break-words line-clamp-2">Agreements</div>
+            <div className="stat-value text-warning min-w-0 break-all truncate" title={String(stats.pendingAgreements)}>{stats.pendingAgreements}</div>
+            <div className="stat-desc text-white min-w-0 break-words line-clamp-2">Pending signature</div>
           </div>
 
-          <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-white">Upcoming Payments</div>
-            <div className="stat-value text-secondary">{stats.upcomingInstallments}</div>
-            <div className="stat-desc text-white">Installments due</div>
+          <div className="stat bg-base-100 rounded-lg shadow border border-base-300 min-w-0 overflow-hidden">
+            <div className="stat-title text-white min-w-0 break-words line-clamp-2">Upcoming Payments</div>
+            <div className="stat-value text-secondary min-w-0 break-all truncate" title={String(stats.upcomingInstallments)}>{stats.upcomingInstallments}</div>
+            <div className="stat-desc text-white min-w-0 break-words line-clamp-2">Installments due</div>
           </div>
 
-          <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-white">Owned Properties</div>
-            <div className="stat-value text-accent">{stats.ownedProperties}</div>
-            <div className="stat-desc text-white">Properties owned</div>
+          <div className="stat bg-base-100 rounded-lg shadow border border-base-300 min-w-0 overflow-hidden">
+            <div className="stat-title text-white min-w-0 break-words line-clamp-2">Owned Properties</div>
+            <div className="stat-value text-accent min-w-0 break-all truncate" title={String(stats.ownedProperties)}>{stats.ownedProperties}</div>
+            <div className="stat-desc text-white min-w-0 break-words line-clamp-2">Properties owned</div>
           </div>
 
-          <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-white">Total Paid</div>
-            <div className="stat-value text-success">PKR {stats.totalPaid.toLocaleString()}</div>
-            <div className="stat-desc text-white">Installments completed</div>
+          <div className="stat bg-base-100 rounded-lg shadow border border-base-300 min-w-0 overflow-hidden">
+            <div className="stat-title text-white min-w-0 break-words line-clamp-2">Total Paid</div>
+            <div className="stat-value text-success min-w-0 break-all truncate" title={`PKR ${stats.totalPaid.toLocaleString()}`}>PKR {stats.totalPaid.toLocaleString()}</div>
+            <div className="stat-desc text-white min-w-0 break-words line-clamp-2">Installments completed</div>
           </div>
 
-          <div className="stat bg-base-100 rounded-lg shadow border border-base-300">
-            <div className="stat-title text-white">Pending Payments</div>
-            <div className="stat-value text-error">{stats.pendingPayments}</div>
-            <div className="stat-desc text-white">Due soon</div>
+          <div className="stat bg-base-100 rounded-lg shadow border border-base-300 min-w-0 overflow-hidden">
+            <div className="stat-title text-white min-w-0 break-words line-clamp-2">Pending Payments</div>
+            <div className="stat-value text-error min-w-0 break-all truncate" title={String(stats.pendingPayments)}>{stats.pendingPayments}</div>
+            <div className="stat-desc text-white min-w-0 break-words line-clamp-2">Due soon</div>
           </div>
         </div>
 
@@ -419,9 +336,9 @@ export default function BuyerDashboard() {
                               </div>
                             )}
                           </div>
-                        <div className="text-right ml-4">
+                        <div className="text-right ml-4 min-w-0 max-w-[140px]">
                           <div
-                            className={`badge ${
+                            className={`badge inline-flex items-center justify-center gap-1 shrink-0 max-w-full overflow-hidden ${
                               request.status === 'pending'
                                 ? 'badge-warning'
                                 : request.status === 'approved'
@@ -429,13 +346,13 @@ export default function BuyerDashboard() {
                                 : 'badge-error'
                             }`}
                           >
-                            {request.status}
+                            <span className="truncate">{request.status}</span>
                           </div>
                           <p className="text-xs text-gray-400 mt-2">
                             {new Date(request.createdAt).toLocaleDateString()}
                           </p>
                           <Link
-                            to={`/lands/${request.propertyId}`}
+                            to={`/dashboard/buyer/lands/${request.propertyId}`}
                             className="btn btn-ghost btn-xs mt-2 text-white"
                           >
                             View Property
@@ -462,7 +379,12 @@ export default function BuyerDashboard() {
         {agreements.length > 0 && (
           <div className="card bg-base-100 shadow-xl border border-base-300">
             <div className="card-body">
-              <h2 className="card-title text-white">My Agreements</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="card-title text-white">My Agreements</h2>
+                <Link to="/dashboard/buyer/agreements" className="btn btn-ghost btn-sm text-white">
+                  View All
+                </Link>
+              </div>
               <div className="space-y-3">
                 {agreements.slice(0, 3).map((agreement) => (
                   <div
@@ -484,9 +406,9 @@ export default function BuyerDashboard() {
                           </p>
                         )}
                       </div>
-                      <div className="text-right ml-4">
+                      <div className="text-right ml-4 min-w-0 max-w-[160px]">
                         <div
-                          className={`badge ${
+                          className={`badge inline-flex items-center justify-center gap-1 shrink-0 max-w-full overflow-hidden ${
                             agreement.status === 'signed' || agreement.status === 'completed'
                               ? 'badge-success'
                               : agreement.status === 'builder_signed'
@@ -494,14 +416,14 @@ export default function BuyerDashboard() {
                               : 'badge-warning'
                           }`}
                         >
-                          {agreement.status.replace('_', ' ')}
+                          <span className="truncate">{agreement.status.replace('_', ' ')}</span>
                         </div>
                         <p className="text-xs text-gray-400 mt-2">
                           {new Date(agreement.createdAt).toLocaleDateString()}
                         </p>
                         <Link
                           to={`/dashboard/buyer/agreements/${agreement.id}`}
-                          className="btn btn-ghost btn-xs mt-2 text-white border-white"
+                          className="btn btn-ghost btn-xs text-white pb-3 pt-3 pr-3 pl-3"
                         >
                           {agreement.status === 'pending' ? 'Sign Agreement' : 'View Details'}
                         </Link>
@@ -512,9 +434,12 @@ export default function BuyerDashboard() {
               </div>
               {agreements.length > 3 && (
                 <div className="text-center mt-4">
-                  <button className="btn btn-ghost btn-sm text-white">
+                  <Link
+                    to="/dashboard/buyer/agreements"
+                    className="btn btn-ghost btn-sm text-white"
+                  >
                     View All Agreements ({agreements.length})
-                  </button>
+                  </Link>
                 </div>
               )}
             </div>
@@ -554,13 +479,13 @@ export default function BuyerDashboard() {
                             </div>
                           </div>
                           <div className="text-right ml-4">
-                            <div
-                              className={`badge ${
-                                isOverdue ? 'badge-error' : 'badge-warning'
-                              }`}
-                            >
-                              {isOverdue ? 'Overdue' : installment.status}
-                            </div>
+                          <div
+                            className={`badge inline-flex items-center justify-center gap-1 shrink-0 max-w-full overflow-hidden ${
+                              isOverdue ? 'badge-error' : 'badge-warning'
+                            }`}
+                          >
+                            <span className="truncate">{isOverdue ? 'Overdue' : installment.status}</span>
+                          </div>
                             <Link
                               to={`/dashboard/installments/${installment.id}`}
                               className="btn btn-primary btn-xs mt-2 block"
@@ -688,14 +613,14 @@ export default function BuyerDashboard() {
                           </p>
                           {resaleRequest && (
                             <div className="mt-2">
-                              <span className={`badge ${
+                              <span className={`badge inline-flex items-center justify-center gap-1 shrink-0 max-w-full overflow-hidden ${
                                 resaleRequest.status === 'pending' ? 'badge-warning' :
                                 resaleRequest.status === 'approved' ? 'badge-success' :
                                 resaleRequest.status === 'listed' ? 'badge-info' :
                                 resaleRequest.status === 'sold' ? 'badge-neutral' :
                                 'badge-error'
                               }`}>
-                                Resale: {resaleRequest.status}
+                                <span className="truncate">Resale: {resaleRequest.status}</span>
                               </span>
                               {resaleRequest.requestedPrice && (
                                 <span className="text-sm text-gray-400 ml-2">
@@ -706,9 +631,11 @@ export default function BuyerDashboard() {
                           )}
                         </div>
                         <div className="text-right ml-4">
-                          <div className="badge badge-success mb-2">Owned</div>
+                          <div className="badge badge-success mb-2 inline-flex items-center shrink-0 max-w-full overflow-hidden">
+                            <span className="truncate">Owned</span>
+                          </div>
                           <Link
-                            to={`/lands/${property.id}`}
+                            to={`/dashboard/buyer/lands/${property.id}`}
                             className="btn btn-ghost btn-sm block"
                           >
                             View Details
@@ -738,73 +665,6 @@ export default function BuyerDashboard() {
           </div>
         )}
 
-        {/* Available Lands */}
-        <div className="card bg-base-100 shadow-xl border border-base-300">
-          <div className="card-body">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="card-title text-white">Available Lands</h2>
-              <Link to="/dashboard/buyer/lands" className="btn btn-ghost btn-sm text-white">
-                Browse All
-              </Link>
-            </div>
-            {availableLands.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-300">No available lands at the moment.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {availableLands.slice(0, 2).map((land) => {
-                  const imageUrl = getLandImageUrl(land);
-                  
-                  return (
-                    <div key={land.id} className="card bg-base-200 shadow border border-base-300">
-                      {/* Image Section */}
-                      <figure className="h-48 bg-base-300 relative">
-                        {imageUrl ? (
-                          <img
-                            src={imageUrl}
-                            alt={land.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Fallback if image fails to load
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent) {
-                                parent.innerHTML = '<div class="flex items-center justify-center h-full"><span class="text-6xl">🏠</span></div>';
-                              }
-                            }}
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center h-full">
-                            <span className="text-6xl">🏠</span>
-                          </div>
-                        )}
-                      </figure>
-                      
-                      <div className="card-body">
-                        <h3 className="card-title text-white">{land.title}</h3>
-                        <p className="text-sm text-gray-300">{land.location}</p>
-                        <p className="text-2xl font-bold text-primary">PKR {land.price.toLocaleString()}</p>
-                        {land.size && (
-                          <p className="text-sm text-gray-400">Size: {land.size} sq ft</p>
-                        )}
-                        <div className="card-actions justify-end mt-4">
-                          <Link
-                            to={`/lands/${land.id}`}
-                            className="btn btn-primary btn-sm"
-                          >
-                            View Details
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </DashboardLayout>
   );

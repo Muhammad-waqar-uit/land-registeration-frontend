@@ -99,7 +99,7 @@ export default function AdminApprovedProjects() {
 
         {error && (
           <div className="alert alert-error">
-            <span className="text-black">{error}</span>
+            <span className="text-white">{error}</span>
           </div>
         )}
 
@@ -126,19 +126,19 @@ export default function AdminApprovedProjects() {
                 <div className="overflow-x-auto">
                   <table className="table table-zebra">
                     <thead>
-                      <tr className="text-black">
-                        <th className="text-black">Name</th>
-                        <th className="text-black">Location</th>
-                        <th className="text-black">Status</th>
-                        <th className="text-black">Total Units</th>
-                        <th className="text-black">Sold Units</th>
-                        <th className="text-black">Created At</th>
+                      <tr className="text-white">
+                        <th className="text-white">Name</th>
+                        <th className="text-white">Location</th>
+                        <th className="text-white">Status</th>
+                        <th className="text-white">Total Units</th>
+                        <th className="text-white">Sold Units</th>
+                        <th className="text-white">Created At</th>
                       </tr>
                     </thead>
                     <tbody>
                       {projects.map((p) => (
-                        <tr key={p.id} className="text-black">
-                          <td className="font-medium text-black">{p.name}</td>
+                        <tr key={p.id} className="text-white">
+                          <td className="font-medium text-white">{p.name}</td>
                           <td className="text-gray-700">{p.location}</td>
                           <td>
                             <span className={`badge ${statusBadgeClass(p.status)}`}>

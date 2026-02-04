@@ -10,39 +10,34 @@ export default function TokenBalance({ walletAddress }: TokenBalanceProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBalance = async () => {
-      if (!walletAddress) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const response = await tokenAPI.getBalance(walletAddress);
-
-        if (response.success && response.data) {
-          // Convert from wei to tokens (divide by 10^18)
-          const balanceInWei = response.data.balance || '0';
-          const decimals = response.data.decimals || 18;
-          const balanceInTokens = parseFloat(balanceInWei) / Math.pow(10, decimals);
-          setBalance(balanceInTokens.toString());
-        } else {
-          setBalance('0');
-        }
-      } catch (err: unknown) {
-        console.error('Failed to fetch token balance:', err);
-        setBalance('0');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBalance();
-    
-    // Refresh balance every 30 seconds
-    const interval = setInterval(fetchBalance, 30000);
-    
-    return () => clearInterval(interval);
+    if (!walletAddress) {
+      setLoading(false);
+      return;
+    }
+    setLoading(false);
+    // Balance API disabled for now – uncomment below to re-enable
+    // const fetchBalance = async () => {
+    //   try {
+    //     setLoading(true);
+    //     const response = await tokenAPI.getBalance(walletAddress);
+    //     if (response.success && response.data) {
+    //       const balanceInWei = response.data.balance || '0';
+    //       const decimals = response.data.decimals || 18;
+    //       const balanceInTokens = parseFloat(balanceInWei) / Math.pow(10, decimals);
+    //       setBalance(balanceInTokens.toString());
+    //     } else {
+    //       setBalance('0');
+    //     }
+    //   } catch (err: unknown) {
+    //     console.error('Failed to fetch token balance:', err);
+    //     setBalance('0');
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+    // fetchBalance();
+    // const interval = setInterval(fetchBalance, 30000);
+    // return () => clearInterval(interval);
   }, [walletAddress]);
 
   if (!walletAddress) {
@@ -60,17 +55,16 @@ export default function TokenBalance({ walletAddress }: TokenBalanceProps) {
     );
   }
 
-  // Format balance to show up to 4 decimal places, removing trailing zeros
-  const formattedBalance = balance 
-    ? parseFloat(balance).toLocaleString('en-US', { 
+  // Format balance (shows — when API is disabled / not fetched)
+  const formattedBalance = balance
+    ? parseFloat(balance).toLocaleString('en-US', {
         minimumFractionDigits: 0,
-        maximumFractionDigits: 4 
+        maximumFractionDigits: 4,
       })
-    : '0';
+    : '—';
 
   return (
-    <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg" title={`${balance} tokens`}>
-      
+    <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg" title={balance != null ? `${balance} tokens` : 'Balance not loaded'}>
       <span className="text-white text-sm font-semibold">
         PKR {formattedBalance}
       </span>

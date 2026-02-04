@@ -9,6 +9,7 @@ import {
 import { paymentAPI } from '../../services/api';
 import type { Payment } from '../../types';
 import { buyerNavItems } from '../../constants/navigation';
+import { getBlockExplorerTxUrl } from '../../utils/blockchain';
 
 export default function BuyerPayments() {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -47,30 +48,36 @@ export default function BuyerPayments() {
   };
 
   const getStatusBadge = (status: string) => {
+    const baseClass = 'badge inline-flex items-center gap-1 shrink-0 max-w-full overflow-hidden';
+    const textClass = 'truncate';
     switch (status) {
       case 'verified':
         return (
-          <span className="badge badge-success gap-1 flex flex-row">
-            <CheckCircleIcon className="h-3 w-3" />
-            Verified
+          <span className={`${baseClass} badge-success`}>
+            <CheckCircleIcon className="h-3 w-3 shrink-0" />
+            <span className={textClass}>Verified</span>
           </span>
         );
       case 'pending':
         return (
-          <span className="badge badge-warning gap-1 flex flex-row">
-            <ClockIcon className="h-3 w-3" />
-            Pending
+          <span className={`${baseClass} badge-warning`}>
+            <ClockIcon className="h-3 w-3 shrink-0" />
+            <span className={textClass}>Pending</span>
           </span>
         );
       case 'rejected':
         return (
-          <span className="badge badge-error gap-1 flex flex-row">
-            <XCircleIcon className="h-3 w-3" />
-            Rejected
+          <span className={`${baseClass} badge-error`}>
+            <XCircleIcon className="h-3 w-3 shrink-0" />
+            <span className={textClass}>Rejected</span>
           </span>
         );
       default:
-        return <span className="badge flex flex-row">{status}</span>;
+        return (
+          <span className={baseClass}>
+            <span className={textClass}>{status}</span>
+          </span>
+        );
     }
   };
 
@@ -195,29 +202,35 @@ export default function BuyerPayments() {
                           })}
                         </td>
                         <td>
-                          <div className="text-black flex item-center font-semibold">
+                          <div className="text-white flex item-center font-semibold">
                            Title: {payment.land?.title || 'N/A'}
                           </div>
-                          <div className="text-sm text-black">
+                          <div className="text-sm text-white">
                            Location: {payment.land?.location || ''}
                           </div>
                         </td>
-                        <td className="text-black font-semibold">PKR {payment.amount.toLocaleString()}</td>
+                        <td className="text-white font-semibold">PKR {payment.amount.toLocaleString()}</td>
                         <td className="text-gray-300 capitalize">{payment.paymentMode}</td>
                         <td className=''>{getStatusBadge(payment.status.replace('_',' '))}</td>
                         <td>
                           {payment.transactionHash ? (
-                            <span className="text-xs font-mono text-blue-400">
+                            <a
+                              href={getBlockExplorerTxUrl(payment.transactionHash)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-mono text-blue-400 hover:text-blue-300 link truncate max-w-[120px] inline-block"
+                              title={payment.transactionHash}
+                            >
                               {payment.transactionHash.slice(0, 8)}...
                               {payment.transactionHash.slice(-6)}
-                            </span>
+                            </a>
                           ) : (
                             <span className="text-gray-500">-</span>
                           )}
                         </td>
                         <td>
                           {payment.remarks ? (
-                            <span className="text-sm text-black">{payment.remarks}</span>
+                            <span className="text-sm text-white">{payment.remarks}</span>
                           ) : (
                             <span className="text-gray-500">-</span>
                           )}

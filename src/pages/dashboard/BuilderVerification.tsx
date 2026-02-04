@@ -173,23 +173,23 @@ export default function BuilderVerification() {
               <div className="overflow-x-auto">
                 <table className="table table-zebra w-full">
                   <thead>
-                    <tr className="text-black">
-                      <th className="text-black">Name</th>
-                      <th className="text-black">Email</th>
-                      <th className="text-black">Company</th>
-                      <th className="text-black">Status</th>
-                      <th className="text-black">Registered</th>
-                      <th className="text-black">Actions</th>
+                    <tr className="text-white">
+                      <th className="text-white">Name</th>
+                      <th className="text-white">Email</th>
+                      <th className="text-white">Company</th>
+                      <th className="text-white">Status</th>
+                      <th className="text-white">Registered</th>
+                      <th className="text-white">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredBuilders.map((builder) => (
-                      <tr key={builder.id} className="text-black">
-                        <td className="text-black">
+                      <tr key={builder.id} className="text-white">
+                        <td className="text-white">
                           <div className="font-bold">{builder.name}</div>
                         </td>
-                        <td className="text-black">{builder.email}</td>
-                        <td className="text-black">{builder.companyName || 'N/A'}</td>
+                        <td className="text-white">{builder.email}</td>
+                        <td className="text-white">{builder.companyName || 'N/A'}</td>
                         <td>
                           {builder.isBuilderVerified ? (
                             <div className="flex items-center gap-2">
@@ -203,7 +203,7 @@ export default function BuilderVerification() {
                             </div>
                           )}
                         </td>
-                        <td className="text-black">
+                        <td className="text-white">
                           {builder.createdAt
                             ? new Date(builder.createdAt).toLocaleDateString()
                             : 'N/A'}

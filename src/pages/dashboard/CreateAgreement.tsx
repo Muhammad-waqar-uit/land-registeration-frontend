@@ -220,7 +220,7 @@ export default function CreateAgreement() {
 
         {error && (
           <div className="alert alert-error mb-6">
-            <span className="text-black">{error}</span>
+            <span className="text-white">{error}</span>
           </div>
         )}
 
@@ -254,7 +254,7 @@ export default function CreateAgreement() {
         {/* Request Info */}
         {request && (
           <div className="alert alert-info mb-6">
-            <span className="text-black">
+            <span className="text-white">
               Agreement accepted by <strong>{user?.name || 'me'}</strong> for buyer <strong>{request.buyer?.name || request.requester?.name || 'Buyer'}</strong>
               {request.buyer?.email && ` (${request.buyer.email})`}
               {request.requestedPrice && ` with offer price PKR ${request.requestedPrice.toLocaleString()}`}
@@ -466,7 +466,7 @@ export default function CreateAgreement() {
               )}
               {signedDocument && (
                 <div className="alert alert-success mt-2">
-                  <span className="text-black">✅ Selected: {signedDocument.name}</span>
+                  <span className="text-white">✅ Selected: {signedDocument.name}</span>
                 </div>
               )}
             </div>

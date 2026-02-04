@@ -126,7 +126,7 @@ const Installments: React.FC = () => {
       {error && (
         <div className="alert alert-error mb-6">
           <ExclamationCircleIcon className="h-6 w-6" />
-          <span className="text-black">{error}</span>
+          <span className="text-white">{error}</span>
         </div>
       )}
 

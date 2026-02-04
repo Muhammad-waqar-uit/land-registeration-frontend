@@ -138,7 +138,7 @@ const CreateInstallments: React.FC = () => {
         {error && (
           <div className="alert alert-error mb-6">
             <ExclamationCircleIcon className="h-6 w-6" />
-            <span className="text-black">{error}</span>
+            <span className="text-white">{error}</span>
           </div>
         )}
 
@@ -147,7 +147,7 @@ const CreateInstallments: React.FC = () => {
             <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="text-black">{success}</span>
+            <span className="text-white">{success}</span>
           </div>
         )}
 
@@ -156,7 +156,7 @@ const CreateInstallments: React.FC = () => {
             {/* Agreement Selection */}
             <div className="form-control mb-4">
               <label className="label">
-                <span className="label-text text-black font-semibold text-base">Select Agreement *</span>
+                <span className="label-text text-white font-semibold text-base">Select Agreement *</span>
               </label>
               <select
                 className="select w-full bg-blue-900/60 text-white border border-blue-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-400/30 focus:outline-none"
@@ -334,8 +334,8 @@ const CreateInstallments: React.FC = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
           <div>
-            <h3 className="font-bold text-black">How it works</h3>
-            <div className="text-sm text-black">
+            <h3 className="font-bold text-white">How it works</h3>
+            <div className="text-sm text-white">
               <p>• Installments will be created automatically based on the agreement terms</p>
               <p>• Each installment will have a payment window (start and end date)</p>
               <p>• Buyers will receive notifications when payments are due</p>

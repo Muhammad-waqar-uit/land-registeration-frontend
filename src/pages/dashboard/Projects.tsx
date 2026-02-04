@@ -157,7 +157,7 @@ export default function Projects() {
         {/* Error Alert */}
         {error && (
           <div className="alert alert-error">
-            <span className="text-black">{error}</span>
+            <span className="text-white">{error}</span>
           </div>
         )}
 

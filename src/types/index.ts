@@ -70,6 +70,42 @@ export interface Land {
   blockchainTxHash?: string;
   createdAt?: string;
   updatedAt?: string;
+  // My-properties / detailed response fields
+  unitId?: string;
+  projectId?: string;
+  isResale?: boolean;
+  agreementId?: string | null;
+  agreementStatus?: string;
+  originalOwnerId?: string | null;
+  currentOwnerId?: string;
+  installmentPlanYears?: number;
+  installmentStartDate?: string;
+  installmentEndDate?: string;
+  totalPaid?: number;
+  remainingBalance?: number;
+  ownerDetails?: User;
+  currentOwner?: User;
+  originalOwner?: User | null;
+  project?: {
+    id: string;
+    name: string;
+    description?: string;
+    location?: string;
+    locationDetails?: string;
+    status?: string;
+    totalUnits?: number;
+    soldUnits?: number;
+    builderId?: string;
+    builder?: {
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+      walletAddress: string | null;
+      createdAt?: string;
+      updatedAt?: string;
+    };
+  };
 }
 
 export interface Payment {
@@ -126,7 +162,7 @@ export interface PropertyRequest {
   id: string;
   propertyId: string;
   buyerId: string;  // Backend uses buyerId, not requesterId
-  agreementId: string;
+  agreementId?: string | null;  // May be null until agreement is created
   status: 'pending' | 'approved' | 'rejected' | 'cancelled';
   requestedPrice?: number | null;  // Backend uses requestedPrice, not offerPrice
   builderResponse?: string | null;  // Backend uses builderResponse, not response

@@ -148,7 +148,7 @@ export default function CreateProject() {
         {/* Error Alert */}
         {error && (
           <div className="alert alert-error mb-6">
-            <span className="text-black">{error}</span>
+            <span className="text-white">{error}</span>
           </div>
         )}
 
@@ -156,7 +156,7 @@ export default function CreateProject() {
         <div className="card bg-blue-950 shadow-2xl border border-blue-800">
           <div className="card-body">
             <div className="alert alert-info mb-6">
-              <span className="text-black">
+              <span className="text-white">
                 New projects are created as <strong>pending approval</strong>. An admin must approve the project before you can create lands/properties under it.
               </span>
             </div>

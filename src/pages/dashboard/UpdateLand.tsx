@@ -1,17 +1,9 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import {
-  HomeIcon,
-  DocumentTextIcon,
-} from '@heroicons/react/24/outline';
 import { landAPI } from '../../services/api';
 import type { Land } from '../../types';
-
-const navItems = [
-  { name: 'Dashboard', path: '/dashboard/seller', icon: HomeIcon },
-  { name: 'My Lands', path: '/dashboard/seller/lands', icon: DocumentTextIcon },
-];
+import { builderNavItems } from '../../constants/navigation';
 
 export default function UpdateLand() {
   const { id } = useParams<{ id: string }>();
@@ -33,7 +25,7 @@ export default function UpdateLand() {
   useEffect(() => {
     const fetchLand = async () => {
       if (!id) {
-        navigate('/dashboard/seller');
+        navigate('/dashboard/builder/lands');
         return;
       }
 
@@ -129,7 +121,7 @@ export default function UpdateLand() {
       await landAPI.update(id!, landFormData);
 
       // Success - redirect to seller dashboard (will refresh automatically)
-      navigate('/dashboard/seller', { state: { refresh: true } });
+      navigate('/dashboard/builder/lands', { state: { refresh: true } });
     } catch (err: unknown) {
       const errorMessage: string = (err && typeof err === 'object' && 'response' in err && err.response && typeof err.response === 'object' && 'data' in err.response && err.response.data && typeof err.response.data === 'object' && 'message' in err.response.data ? String(err.response.data.message) : '') || (err instanceof Error ? err.message : '') || 'Failed to update land. Please try again.';
       setError(errorMessage);
@@ -140,7 +132,7 @@ export default function UpdateLand() {
 
   if (loadingLand) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
         <div className="flex justify-center items-center h-64">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -150,21 +142,21 @@ export default function UpdateLand() {
 
   if (!land) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
         <div className="alert alert-error">
-          <span className="text-black">Land not found</span>
+          <span className="text-white">Land not found</span>
         </div>
       </DashboardLayout>
     );
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={builderNavItems}>
       <div className="max-w-4xl mx-auto w-full space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-white">Update Land</h1>
           <button
-            onClick={() => navigate('/dashboard/seller')}
+            onClick={() => navigate('/dashboard/builder/lands')}
             className="btn btn-primary btn-sm text-white"
           >
             ← Back to Dashboard
@@ -177,7 +169,7 @@ export default function UpdateLand() {
 
             {error && (
               <div className="alert alert-error">
-                <span className="text-black">{error}</span>
+                <span className="text-white">{error}</span>
               </div>
             )}
 
@@ -369,7 +361,7 @@ export default function UpdateLand() {
                 <div className="flex gap-2 justify-end">
                   <button
                     type="button"
-                    onClick={() => navigate('/dashboard/seller')}
+                    onClick={() => navigate('/dashboard/builder/lands')}
                     className="btn btn-primary text-white"
                     disabled={isLoading}
                   >

@@ -8,6 +8,7 @@ import { paymentAPI } from '../../services/api';
 import type { Payment } from '../../types';
 import { Link } from 'react-router-dom';
 import { builderNavItems } from '../../constants/navigation';
+import { getBlockExplorerTxUrl } from '../../utils/blockchain';
 
 export default function BuilderPendingVerifications() {
   const [pendingPayments, setPendingPayments] = useState<Payment[]>([]);
@@ -140,29 +141,35 @@ export default function BuilderPendingVerifications() {
                           })}
                         </td>
                         <td>
-                          <div className="text-black font-semibold">
+                          <div className="text-white font-semibold">
                             {payment.buyer?.name || 'Unknown'}
                           </div>
-                          <div className="text-sm text-black">
+                          <div className="text-sm text-white">
                             {payment.buyer?.email || 'N/A'}
                           </div>
                         </td>
                         <td>
-                          <div className="text-black font-semibold">
+                          <div className="text-white font-semibold">
                             {payment.land?.title || 'N/A'}
                           </div>
-                          <div className="text-sm text-black">
+                          <div className="text-sm text-white">
                             {payment.land?.location || ''}
                           </div>
                         </td>
-                        <td className="text-black font-semibold">PKR {payment.amount.toLocaleString()}</td>
-                        <td className="text-black capitalize">{payment.paymentMode}</td>
+                        <td className="text-white font-semibold">PKR {payment.amount.toLocaleString()}</td>
+                        <td className="text-white capitalize">{payment.paymentMode}</td>
                         <td>
                           {payment.transactionHash ? (
-                            <span className="text-xs font-mono text-blue-400" title={payment.transactionHash}>
+                            <a
+                              href={getBlockExplorerTxUrl(payment.transactionHash)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-mono text-blue-400 hover:text-blue-300 link truncate max-w-[120px] inline-block"
+                              title={payment.transactionHash}
+                            >
                               {payment.transactionHash.slice(0, 8)}...
                               {payment.transactionHash.slice(-6)}
-                            </span>
+                            </a>
                           ) : (
                             <span className="text-gray-500">-</span>
                           )}

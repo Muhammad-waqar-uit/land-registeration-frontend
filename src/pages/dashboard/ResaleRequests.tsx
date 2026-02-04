@@ -203,7 +203,7 @@ const ResaleRequests: React.FC = () => {
       {error && (
         <div className="alert alert-error mb-6">
           <ExclamationCircleIcon className="h-6 w-6" />
-          <span className="text-black">{error}</span>
+          <span className="text-white">{error}</span>
         </div>
       )}
 
@@ -364,7 +364,7 @@ const ResaleRequests: React.FC = () => {
 
                   {request.property && (
                     <Link
-                      to={`/lands/${request.propertyId}`}
+                      to={`/dashboard/builder/lands/${request.propertyId}`}
                       className="btn btn-ghost btn-sm w-full"
                     >
                       View Property

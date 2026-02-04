@@ -179,14 +179,14 @@ export default function AdminPropertyRequests() {
                 <div className="overflow-x-auto">
                   <table className="table table-zebra">
                     <thead>
-                      <tr className="text-black">
-                        <th className="text-black">Property Name</th>
-                        <th className="text-black">Buyer Name</th>
-                        <th className="text-black">Price</th>
-                        <th className="text-black">Status</th>
-                        <th className="text-black">Requested</th>
-                        <th className="text-black">Response</th>
-                        <th className="text-black">Actions</th>
+                      <tr className="text-white">
+                        <th className="text-white">Property Name</th>
+                        <th className="text-white">Buyer Name</th>
+                        <th className="text-white">Price</th>
+                        <th className="text-white">Status</th>
+                        <th className="text-white">Requested</th>
+                        <th className="text-white">Response</th>
+                        <th className="text-white">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -206,7 +206,7 @@ export default function AdminPropertyRequests() {
                         });
 
                         return (
-                          <tr key={request.id} className="text-black">
+                          <tr key={request.id} className="text-white">
                             <td className="font-medium">
                               {request.property?.title || 'N/A'}
                             </td>
@@ -250,7 +250,7 @@ export default function AdminPropertyRequests() {
                             </td>
                             <td>
                               <Link
-                                to={`/lands/${request.propertyId}`}
+                                to={`/dashboard/admin/lands/${request.propertyId}`}
                                 className="btn btn-ghost btn-xs"
                               >
                                 View Property

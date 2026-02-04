@@ -20,6 +20,7 @@ export interface NavItem {
 // Buyer Navigation Items - Always show all items
 export const buyerNavItems: NavItem[] = [
   { name: 'Overview', path: '/dashboard/buyer', icon: HomeIcon },
+  { name: 'Available Properties', path: '/dashboard/buyer/available', icon: MapPinIcon },
   { name: 'Property Requests', path: '/dashboard/buyer/property-requests', icon: DocumentTextIcon },
   { name: 'Agreements', path: '/dashboard/buyer/agreements', icon: DocumentTextIcon },
   { name: 'Installments', path: '/dashboard/buyer/installments', icon: CurrencyDollarIcon },
@@ -27,9 +28,10 @@ export const buyerNavItems: NavItem[] = [
   { name: 'My Properties', path: '/dashboard/buyer/properties', icon: BuildingOfficeIcon },
 ];
 
-// Builder Navigation Items - Always show all items
+// Builder Navigation Items - Always show all items (single dashboard at /dashboard/builder)
 export const builderNavItems: NavItem[] = [
   { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
+  { name: 'My Lands', path: '/dashboard/builder/lands', icon: MapPinIcon },
   { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
   { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
   { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },

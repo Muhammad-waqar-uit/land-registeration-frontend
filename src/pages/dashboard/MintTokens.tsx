@@ -9,6 +9,7 @@ import {
   CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import { adminNavItems } from '../../constants/navigation';
+import { getBlockExplorerTxUrl } from '../../utils/blockchain';
 
 export default function MintTokens() {
   const [toAddress, setToAddress] = useState('');
@@ -325,7 +326,18 @@ export default function MintTokens() {
                       <div className="text-sm mt-2">
                         <p className="font-semibold text-green-200">Transaction Hash:</p>
                         <p className="font-mono break-all text-xs mt-1 text-green-100">
-                          {result.transactionHash}
+                          {result.transactionHash && getBlockExplorerTxUrl(result.transactionHash) ? (
+                            <a
+                              href={getBlockExplorerTxUrl(result.transactionHash)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-300 hover:text-green-200 link underline"
+                            >
+                              {result.transactionHash}
+                            </a>
+                          ) : (
+                            result.transactionHash
+                          )}
                         </p>
                       </div>
                     </div>

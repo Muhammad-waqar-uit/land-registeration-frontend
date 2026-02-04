@@ -116,7 +116,7 @@ export default function AdminProjects() {
 
         {error && (
           <div className="alert alert-error">
-            <span className="text-black">{error}</span>
+            <span className="text-white">{error}</span>
           </div>
         )}
 
@@ -137,19 +137,19 @@ export default function AdminProjects() {
               <div className="overflow-x-auto">
                 <table className="table table-zebra">
                   <thead>
-                    <tr className="text-black">
-                      <th className="text-black">Project</th>
-                      <th className="text-black">Location</th>
-                      <th className="text-black">Builder</th>
-                      <th className="text-black">Status</th>
-                      <th className="text-black">Created</th>
-                      <th className="text-black">Actions</th>
+                    <tr className="text-white">
+                      <th className="text-white">Project</th>
+                      <th className="text-white">Location</th>
+                      <th className="text-white">Builder</th>
+                      <th className="text-white">Status</th>
+                      <th className="text-white">Created</th>
+                      <th className="text-white">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {projects.map((p) => (
-                      <tr key={p.id} className="text-black">
-                        <td className="font-medium text-black">{p.name}</td>
+                      <tr key={p.id} className="text-white">
+                        <td className="font-medium text-white">{p.name}</td>
                         <td className="text-gray-700">{p.location}</td>
                         <td className="font-mono text-xs text-gray-700">{p.builderId?.slice(0, 8)}...</td>
                         <td>

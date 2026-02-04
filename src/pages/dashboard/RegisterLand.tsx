@@ -2,18 +2,8 @@ import { useState, type FormEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import type { Project } from '../../types';
-import {
-  HomeIcon,
-  DocumentTextIcon,
-  FolderIcon,
-} from '@heroicons/react/24/outline';
 import { landAPI, projectAPI } from '../../services/api';
-
-const navItems = [
-  { name: 'Dashboard', path: '/dashboard/seller', icon: HomeIcon },
-  { name: 'My Lands', path: '/dashboard/seller/lands', icon: DocumentTextIcon },
-  { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-];
+import { builderNavItems } from '../../constants/navigation';
 
 export default function RegisterLand() {
   const navigate = useNavigate();
@@ -163,7 +153,7 @@ export default function RegisterLand() {
       await landAPI.create(landFormData);
 
       // Success - redirect to seller dashboard (will refresh automatically)
-      navigate('/dashboard/seller', { state: { refresh: true } });
+      navigate('/dashboard/builder/lands', { state: { refresh: true } });
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } }; message?: string };
       setError(
@@ -177,12 +167,12 @@ export default function RegisterLand() {
   };
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={builderNavItems}>
       <div className="max-w-4xl mx-auto w-full space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-white">Register New Land</h1>
           <button
-            onClick={() => navigate('/dashboard/seller')}
+            onClick={() => navigate('/dashboard/builder/lands')}
             className="btn btn-primary btn-sm text-white"
           >
             ← Back to Dashboard
@@ -195,7 +185,7 @@ export default function RegisterLand() {
 
             {error && (
               <div className="alert alert-error">
-                <span className="text-black">{error}</span>
+                <span className="text-gray-800">{error}</span>
               </div>
             )}
 
@@ -241,7 +231,7 @@ export default function RegisterLand() {
 
                 {approvalStatus && formData.projectId && (
                   <div className={`mt-3 alert ${approvalStatus.canCreateLands ? 'alert-success' : 'alert-warning'}`}>
-                    <span className="text-black">
+                    <span className="text-gray-800">
                       {approvalStatus.canCreateLands ? (
                         <>
                           Project approved. Remaining units: <strong>{approvalStatus.remainingUnits}</strong>
@@ -398,7 +388,7 @@ export default function RegisterLand() {
                 <div className="flex gap-2 justify-end">
                   <button
                     type="button"
-                    onClick={() => navigate('/dashboard/seller')}
+                    onClick={() => navigate('/dashboard/builder/lands')}
                     className="btn btn-primary text-white"
                     disabled={isLoading}
                   >

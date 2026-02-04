@@ -212,13 +212,13 @@ export default function BuyerCreatePayment() {
 
         {error && (
           <div className="alert alert-error mb-6">
-            <span className="text-black">{error}</span>
+            <span className="text-white">{error}</span>
           </div>
         )}
 
         {success && (
           <div className="alert alert-success mb-6">
-            <span className="text-black">{success}</span>
+            <span className="text-white">{success}</span>
           </div>
         )}
 
@@ -292,7 +292,7 @@ export default function BuyerCreatePayment() {
             {/* Property ID */}
             <div className="form-control mb-4 bg-transparent">
               <label className="label">
-                <span className="label-text text-black font-medium">Property ID <span className="text-red-400">*</span></span>
+                <span className="label-text text-white font-medium">Property ID <span className="text-red-400">*</span></span>
               </label>
               <input
                 type="text"
@@ -309,7 +309,7 @@ export default function BuyerCreatePayment() {
             {formData.agreementId && (
               <div className="form-control mb-4 bg-transparent">
                 <label className="label">
-                  <span className="label-text text-black font-medium">Agreement ID</span>
+                  <span className="label-text text-white font-medium">Agreement ID</span>
                 </label>
                 <input
                   type="text"
@@ -325,7 +325,7 @@ export default function BuyerCreatePayment() {
             {formData.installmentId && (
               <div className="form-control mb-4 bg-transparent">
                 <label className="label">
-                  <span className="label-text text-black font-medium">Installment ID</span>
+                  <span className="label-text text-white font-medium">Installment ID</span>
                 </label>
                 <input
                   type="text"
@@ -340,7 +340,7 @@ export default function BuyerCreatePayment() {
             {/* Amount */}
             <div className="form-control mb-4 bg-transparent">
               <label className="label">
-                <span className="label-text text-black font-medium">Payment Amount (PKR) <span className="text-red-400">*</span></span>
+                <span className="label-text text-white font-medium">Payment Amount (PKR) <span className="text-red-400">*</span></span>
               </label>
               <input
                 type="number"
@@ -364,7 +364,7 @@ export default function BuyerCreatePayment() {
             {/* Payment Mode */}
             <div className="form-control mb-4 bg-transparent">
               <label className="label">
-                <span className="label-text text-black font-medium">Payment Mode <span className="text-red-400">*</span></span>
+                <span className="label-text text-white font-medium">Payment Mode <span className="text-red-400">*</span></span>
               </label>
               <select
                 value={formData.paymentMode}
@@ -381,7 +381,7 @@ export default function BuyerCreatePayment() {
             {formData.paymentMode === 'bank' && (
               <div className="form-control mb-4 bg-transparent">
                 <label className="label">
-                  <span className="label-text text-black font-medium">
+                  <span className="label-text text-white font-medium">
                     Payment Proof (PDF/Image) <span className="text-red-400">*</span>
                   </span>
                 </label>
@@ -404,7 +404,7 @@ export default function BuyerCreatePayment() {
             {formData.paymentMode === 'crypto' && (
               <div className="form-control mb-4 bg-transparent">
                 <label className="label">
-                  <span className="label-text text-black font-medium">
+                  <span className="label-text text-white font-medium">
                     Transaction Hash <span className="text-red-400">*</span>
                   </span>
                 </label>
@@ -427,7 +427,7 @@ export default function BuyerCreatePayment() {
             {/* Due Date (Optional) */}
             <div className="form-control mb-4 bg-transparent">
               <label className="label">
-                <span className="label-text text-black font-medium">Due Date <span className='text-red-500 pr-2'>*</span></span>
+                <span className="label-text text-white font-medium">Due Date <span className='text-red-500 pr-2'>*</span></span>
               </label>
               <input
                 type="date"

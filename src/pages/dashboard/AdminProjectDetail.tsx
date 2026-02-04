@@ -139,7 +139,7 @@ export default function AdminProjectDetail() {
     return (
       <DashboardLayout navItems={navItems}>
         <div className="alert alert-error">
-          <span className="text-black">{error || 'Project not found'}</span>
+          <span className="text-white">{error || 'Project not found'}</span>
         </div>
         <Link to="/dashboard/admin/projects" className="btn btn-ghost mt-4">
           <ArrowLeftIcon className="w-5 h-5 mr-2" />
@@ -192,7 +192,7 @@ export default function AdminProjectDetail() {
 
         {project.status === 'pending_approval' && (
           <div className="alert alert-warning">
-            <span className="text-black">
+            <span className="text-white">
               This project is pending approval. Use “Approve Project” once you’ve reviewed documents and details.
             </span>
           </div>
@@ -200,7 +200,7 @@ export default function AdminProjectDetail() {
 
         {approvalStatus && (
           <div className={`alert ${approvalStatus.canCreateLands ? 'alert-success' : 'alert-warning'}`}>
-            <span className="text-black">
+            <span className="text-white">
               Land creation eligibility: <strong>{approvalStatus.canCreateLands ? 'Allowed' : 'Blocked'}</strong> — totalUnits: {approvalStatus.totalUnits}, lands: {approvalStatus.landsCount}, remaining: {approvalStatus.remainingUnits}
             </span>
           </div>
@@ -314,7 +314,7 @@ export default function AdminProjectDetail() {
                     <div
                       className={`mt-3 alert ${verificationResult.verified ? 'alert-success' : 'alert-error'}`}
                     >
-                      <span className="text-black">{verificationResult.message}</span>
+                      <span className="text-white">{verificationResult.message}</span>
                     </div>
                   )}
                 </div>

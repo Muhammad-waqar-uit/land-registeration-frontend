@@ -353,6 +353,36 @@ export const landAPI = {
   },
 
   // Get my owned properties (Buyer only)
+  // Get available lands for buyers (paginated, same rich shape as my-properties for cards)
+  getAvailableLands: async (params?: {
+    page?: number;
+    limit?: number;
+    projectId?: string;
+    minPrice?: number;
+    maxPrice?: number;
+  }): Promise<LandListResponse> => {
+    const response = await api.get('/lands/available', { params });
+    let result = response.data;
+    if (result && typeof result === 'object' && 'data' in result && !Array.isArray(result.data) && typeof result.data === 'object' && result.data && 'data' in result.data) {
+      result = result.data;
+    }
+    if (!result || typeof result !== 'object') {
+      return { data: [], total: 0, page: params?.page || 1, limit: params?.limit || 20 };
+    }
+    if (Array.isArray(result.data) && typeof result.total === 'number') {
+      return {
+        data: result.data,
+        total: result.total ?? 0,
+        page: result.page ?? params?.page ?? 1,
+        limit: result.limit ?? params?.limit ?? 20,
+      };
+    }
+    if (Array.isArray(result)) {
+      return { data: result, total: result.length, page: params?.page || 1, limit: params?.limit || 20 };
+    }
+    return { data: [], total: 0, page: params?.page || 1, limit: params?.limit || 20 };
+  },
+
   getMyProperties: async (params?: {
     page?: number;
     limit?: number;

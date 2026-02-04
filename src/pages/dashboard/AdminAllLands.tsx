@@ -123,7 +123,7 @@ export default function AdminAllLands() {
 
         {error && (
           <div className="alert alert-error">
-            <span className="text-black">{error}</span>
+            <span className="text-white">{error}</span>
           </div>
         )}
 
@@ -150,23 +150,23 @@ export default function AdminAllLands() {
                 <div className="overflow-x-auto">
                   <table className="table table-zebra">
                     <thead>
-                      <tr className="text-black">
-                        <th className="text-black">Title</th>
-                        <th className="text-black">Location</th>
-                        <th className="text-black">Size</th>
-                        <th className="text-black">Price</th>
-                        <th className="text-black">Status</th>
-                        <th className="text-black">Owner</th>
-                        <th className="text-black">Created At</th>
+                      <tr className="text-white">
+                        <th className="text-white">Title</th>
+                        <th className="text-white">Location</th>
+                        <th className="text-white">Size</th>
+                        <th className="text-white">Price</th>
+                        <th className="text-white">Status</th>
+                        <th className="text-white">Owner</th>
+                        <th className="text-white">Created At</th>
                       </tr>
                     </thead>
                     <tbody>
                       {lands.map((land) => (
-                        <tr key={land.id} className="text-black">
-                          <td className="font-medium text-black">{land.title}</td>
+                        <tr key={land.id} className="text-white">
+                          <td className="font-medium text-white">{land.title}</td>
                           <td className="text-gray-700">{land.location}</td>
                           <td className="text-gray-700">{land.size} sq ft</td>
-                          <td className="font-semibold text-black">
+                          <td className="font-semibold text-white">
                             PKR {land.price.toLocaleString()}
                           </td>
                           <td>

@@ -512,7 +512,7 @@ export default function AgreementDetail() {
                         PKR {paymentSummary.totalAmount.toLocaleString()}
                       </p>
                     </div>
-                    <div>
+                    <div >
                       <p className="text-sm text-blue-300">Total Paid</p>
                       <p className="text-success text-xl font-bold">
                         PKR {paymentSummary.totalPaid.toLocaleString()}

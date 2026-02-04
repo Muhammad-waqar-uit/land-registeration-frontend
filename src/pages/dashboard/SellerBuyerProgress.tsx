@@ -1,33 +1,17 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import {
-  HomeIcon,
-  DocumentTextIcon,
-  UserGroupIcon,
-  CreditCardIcon,
-} from '@heroicons/react/24/outline';
 import { buyerProgressAPI, projectAPI } from '../../services/api';
 import type { BuyerProgressItem, BuyerProgressStats, Project } from '../../types';
 import { builderNavItems } from '../../constants/navigation';
 
 export default function SellerBuyerProgress() {
-  const location = useLocation();
   const [buyerProgress, setBuyerProgress] = useState<BuyerProgressItem[]>([]);
   const [stats, setStats] = useState<BuyerProgressStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'reserved' | 'paying' | 'completed' | undefined>(undefined);
   const [projectFilter, _setProjectFilter] = useState<string | undefined>(undefined);
   const [_projects, setProjects] = useState<Project[]>([]);
-
-  // Determine navigation items based on current route
-  const isBuilderRoute = location.pathname.startsWith('/dashboard/builder');
-  const navItems = isBuilderRoute ? builderNavItems : [
-    { name: 'Overview', path: '/dashboard/seller', icon: HomeIcon },
-    { name: 'My Lands', path: '/dashboard/seller/lands', icon: DocumentTextIcon },
-    { name: 'Buyer Progress', path: '/dashboard/seller/buyers', icon: UserGroupIcon },
-    { name: 'Payments', path: '/dashboard/seller/payments', icon: CreditCardIcon },
-  ];
 
   // Load projects for filter dropdown
   useEffect(() => {
@@ -85,7 +69,7 @@ export default function SellerBuyerProgress() {
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
         <div className="flex items-center justify-center min-h-[400px]">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -94,7 +78,7 @@ export default function SellerBuyerProgress() {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={builderNavItems}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -102,7 +86,7 @@ export default function SellerBuyerProgress() {
             <h1 className="text-3xl font-bold text-white">Buyer Progress Tracking</h1>
             <p className="text-gray-400 mt-1">Track payment progress for all your property buyers</p>
           </div>
-          <Link to={isBuilderRoute ? "/dashboard/builder" : "/dashboard/seller"} className="btn btn-ghost text-white border-white">
+          <Link to="/dashboard/builder" className="btn btn-ghost text-white border-white">
             Back to Dashboard
           </Link>
         </div>
@@ -396,7 +380,7 @@ export default function SellerBuyerProgress() {
                         </Link>
                       )}
                       <Link
-                        to={`/lands/${progress.landId}`}
+                        to={`/dashboard/builder/lands/${progress.landId}`}
                         className="btn btn-sm btn-primary"
                       >
                         View Property

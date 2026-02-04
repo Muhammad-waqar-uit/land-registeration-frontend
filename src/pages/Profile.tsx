@@ -159,7 +159,7 @@ export default function Profile() {
 
                 {error && (
                   <div className="alert alert-error">
-                    <span className="text-black">{error}</span>
+                    <span className="text-white">{error}</span>
                   </div>
                 )}
                 <div className="flex gap-2 pt-2">
@@ -266,8 +266,8 @@ export default function Profile() {
                 </label>
               </div>
               {passwordError && (
-                <div className="alert alert-error text-black">
-                  <span className="text-black">{passwordError}</span>
+                <div className="alert alert-error text-white">
+                  <span className="text-white">{passwordError}</span>
                 </div>
               )}
               <div className="flex justify-end">

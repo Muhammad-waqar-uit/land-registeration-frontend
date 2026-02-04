@@ -122,7 +122,7 @@ export default function ProjectDetail() {
     return (
       <DashboardLayout navItems={builderNavItems}>
         <div className="alert alert-error">
-          <span className="text-black">{error || 'Project not found'}</span>
+          <span className="text-white">{error || 'Project not found'}</span>
         </div>
       </DashboardLayout>
     );
@@ -131,35 +131,39 @@ export default function ProjectDetail() {
   return (
     <DashboardLayout navItems={builderNavItems}>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
+        {/* Header - left content can shrink so Delete/Edit stay visible */}
+        <div className="flex flex-wrap gap-4 items-start justify-between">
+          <div className="min-w-0 flex-1">
             <button
               onClick={() => navigate('/dashboard/builder/projects')}
               className="btn btn-outline btn-primary btn-sm gap-2 mb-2 inline-flex items-center justify-center"
             >
               ← Back to Projects
             </button>
-            <h1 className="text-3xl font-bold text-white">{project.name}</h1>
-            <p className="text-gray-400 mt-1">{project.location}</p>
+            <h1 className="text-3xl font-bold text-white truncate break-words">{project.name}</h1>
+            <p className="text-gray-400 mt-1 truncate break-words">{project.location}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0 flex-wrap">
             {project.status !== 'approved' && (
               <Link
                 to={`/dashboard/builder/projects/${project.id}/edit`}
-                className="btn btn-primary btn-sm"
+                className="btn btn-primary btn-sm inline-flex items-center gap-2 text-white"
               >
-                <PencilIcon className="w-4 h-4 mr-2" />
-                Edit
+                <PencilIcon className="w-4 h-4 shrink-0" />
+                <span className="truncate">Edit</span>
               </Link>
             )}
-            <button onClick={handleDelete} className="btn btn-error btn-sm" disabled={deleting}>
+            <button
+              onClick={handleDelete}
+              className="btn btn-error btn-sm inline-flex items-center gap-2 text-white"
+              disabled={deleting}
+            >
               {deleting ? (
                 <span className="loading loading-spinner loading-xs"></span>
               ) : (
-                <TrashIcon className="w-4 h-4 mr-2" />
+                <TrashIcon className="w-4 h-4 shrink-0" />
               )}
-              Delete
+              <span className="truncate">Delete</span>
             </button>
           </div>
         </div>
@@ -169,17 +173,17 @@ export default function ProjectDetail() {
           {/* Basic Information */}
           <div className="card bg-base-100 shadow-xl border border-base-300">
             <div className="card-body">
-              <h2 className="card-title text-white">Project Information</h2>
+              <h2 className="card-title text-white min-w-0 truncate">Project Information</h2>
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-gray-400">Status</p>
-                  <span className={`badge badge-lg ${
+                  <span className={`badge badge-lg inline-flex items-center gap-1 max-w-full overflow-hidden ${
                     project.status === 'approved' ? 'badge-success' :
                     project.status === 'pending_approval' ? 'badge-warning' :
                     project.status === 'active' ? 'badge-info' :
                     'badge-error'
                   }`}>
-                    {formatProjectStatus(project.status)}
+                    <span className="truncate">{formatProjectStatus(project.status)}</span>
                   </span>
                 </div>
                 {project.locationDetails && (
@@ -214,9 +218,9 @@ export default function ProjectDetail() {
           {project.approvalDocumentsHash && (
             <div className="card bg-base-100 shadow-xl border border-base-300">
               <div className="card-body">
-                <h2 className="card-title text-white">
-                  <ShieldCheckIcon className="w-6 h-6 text-primary" />
-                  Document Verification
+                <h2 className="card-title text-white flex items-center gap-2 min-w-0">
+                  <ShieldCheckIcon className="w-6 h-6 text-primary shrink-0" />
+                  <span className="truncate">Document Verification</span>
                 </h2>
 
                 <div className="space-y-4 mt-4">
@@ -285,46 +289,46 @@ export default function ProjectDetail() {
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => handleVerify(false)}
-                    className="btn btn-primary btn-sm flex items-center"
+                    className="btn btn-primary btn-sm inline-flex items-center gap-2"
                     disabled={verifying}
                   >
                     {verifying ? (
                       <span className="loading loading-spinner loading-xs"></span>
                     ) : (
-                      <ShieldCheckIcon className="w-4 h-4 mr-2" />
+                      <ShieldCheckIcon className="w-4 h-4 shrink-0" />
                     )}
-                    Verify Hash
+                    <span className="truncate">Verify Hash</span>
                   </button>
                   <button
                     onClick={() => handleVerify(true)}
-                    className="btn btn-secondary btn-sm flex flex-row items-center"
+                    className="btn btn-secondary btn-sm inline-flex items-center gap-2"
                     disabled={verifying}
                   >
                     {verifying ? (
                       <span className="loading loading-spinner loading-xs"></span>
                     ) : (
-                      <ShieldCheckIcon className="w-4 h-4 mr-2" />
+                      <ShieldCheckIcon className="w-4 h-4 shrink-0" />
                     )}
-                    Verify on Blockchain
+                    <span className="truncate">Verify on Blockchain</span>
                   </button>
                 </div>
 
                 {verificationResult && (
                   <div className="space-y-2">
                     <div
-                      className={`alert ${
+                      className={`alert inline-flex items-center gap-2 min-w-0 max-w-full overflow-hidden ${
                         verificationResult.verified ? 'alert-success' : 'alert-error'
                       }`}
                     >
                       {verificationResult.verified ? (
-                        <CheckCircleIcon className="h-6 w-6" />
+                        <CheckCircleIcon className="h-6 w-6 shrink-0" />
                       ) : (
-                        <XCircleIcon className="h-6 w-6" />
+                        <XCircleIcon className="h-6 w-6 shrink-0" />
                       )}
-                      <span>{verificationResult.message}</span>
+                      <span className="truncate">{verificationResult.message}</span>
                     </div>
                     {(verificationResult.blockchainTxHash || verificationResult.transactionHash) && (() => {
                       const txHash = verificationResult.blockchainTxHash || verificationResult.transactionHash;
@@ -356,11 +360,11 @@ export default function ProjectDetail() {
         {/* Associated Properties */}
         <div className="card bg-base-100 shadow-xl border border-base-300">
           <div className="card-body">
-            <div className="flex justify-between items-center">
-              <h2 className="card-title text-white">Associated Properties</h2>
+            <div className="flex flex-wrap gap-2 justify-between items-center min-w-0">
+              <h2 className="card-title text-white min-w-0 truncate">Associated Properties</h2>
               <Link
-                to={`/dashboard/seller/register-land?projectId=${project.id}`}
-                className="btn btn-primary btn-sm"
+                to={`/dashboard/builder/register-land?projectId=${project.id}`}
+                className="btn btn-primary btn-sm shrink-0"
               >
                 Add Property
               </Link>
@@ -372,7 +376,7 @@ export default function ProjectDetail() {
               <div className="text-center py-8">
                 <p className="text-gray-500">No properties added yet</p>
                 <Link
-                  to={`/dashboard/seller/register-land?projectId=${project.id}`}
+                  to={`/dashboard/builder/register-land?projectId=${project.id}`}
                   className="btn btn-primary btn-sm mt-4"
                 >
                   Add First Property

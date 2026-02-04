@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   HomeIcon,
@@ -15,29 +15,11 @@ import {
 import { paymentAPI, landAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Payment } from '../../types';
-import { Link } from 'react-router-dom';
+import { getBlockExplorerTxUrl } from '../../utils/blockchain';
+import { builderNavItems } from '../../constants/navigation';
 
 export default function SellerPayments() {
   const { user } = useAppSelector((state) => state.auth);
-  const location = useLocation();
-  
-  // Determine navigation items based on current route
-  const isBuilderRoute = location.pathname.startsWith('/dashboard/builder');
-  const navItems = isBuilderRoute ? [
-    { name: 'Overview', path: '/dashboard/builder', icon: HomeIcon },
-    { name: 'Projects', path: '/dashboard/builder/projects', icon: FolderIcon },
-    { name: 'Buyer Progress', path: '/dashboard/builder/buyers', icon: UserGroupIcon },
-    { name: 'Payments', path: '/dashboard/builder/payments', icon: CreditCardIcon },
-    { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
-    { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
-    { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
-    { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
-  ] : [
-    { name: 'Overview', path: '/dashboard/seller', icon: HomeIcon },
-    { name: 'My Lands', path: '/dashboard/seller/lands', icon: DocumentTextIcon },
-    { name: 'Buyer Progress', path: '/dashboard/seller/buyers', icon: UserGroupIcon },
-    { name: 'Payments', path: '/dashboard/seller/payments', icon: CreditCardIcon },
-  ];
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'verified' | 'pending' | 'rejected'>('all');
@@ -88,36 +70,42 @@ export default function SellerPayments() {
   };
 
   const getStatusBadge = (status: string) => {
+    const baseClass = 'badge inline-flex items-center gap-1 shrink-0 max-w-full overflow-hidden';
+    const textClass = 'truncate';
     switch (status) {
       case 'verified':
         return (
-          <span className="badge badge-success gap-1">
-            <CheckCircleIcon className="h-3 w-3" />
-            Verified
+          <span className={`${baseClass} badge-success`}>
+            <CheckCircleIcon className="h-3 w-3 shrink-0" />
+            <span className={textClass}>Verified</span>
           </span>
         );
       case 'pending':
         return (
-          <span className="badge badge-warning gap-1">
-            <ClockIcon className="h-3 w-3" />
-            Pending
+          <span className={`${baseClass} badge-warning`}>
+            <ClockIcon className="h-3 w-3 shrink-0" />
+            <span className={textClass}>Pending</span>
           </span>
         );
       case 'rejected':
         return (
-          <span className="badge badge-error gap-1">
-            <XCircleIcon className="h-3 w-3" />
-            Rejected
+          <span className={`${baseClass} badge-error`}>
+            <XCircleIcon className="h-3 w-3 shrink-0" />
+            <span className={textClass}>Rejected</span>
           </span>
         );
       default:
-        return <span className="badge">{status}</span>;
+        return (
+          <span className={baseClass}>
+            <span className={textClass}>{status}</span>
+          </span>
+        );
     }
   };
 
   if (loading) {
     return (
-      <DashboardLayout navItems={navItems}>
+      <DashboardLayout navItems={builderNavItems}>
         <div className="flex items-center justify-center min-h-[400px]">
           <span className="loading loading-spinner loading-lg"></span>
         </div>
@@ -126,12 +114,12 @@ export default function SellerPayments() {
   }
 
   return (
-    <DashboardLayout navItems={navItems}>
+    <DashboardLayout navItems={builderNavItems}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-white">Payment Tracking</h1>
-          <Link to={isBuilderRoute ? "/dashboard/builder" : "/dashboard/seller"} className="btn btn-ghost text-white">
+          <Link to="/dashboard/builder" className="btn btn-ghost text-white">
             Back to Dashboard
           </Link>
         </div>
@@ -254,10 +242,16 @@ export default function SellerPayments() {
                         <td>{getStatusBadge(payment.status)}</td>
                         <td>
                           {payment.transactionHash ? (
-                            <span className="text-xs font-mono text-blue-400">
+                            <a
+                              href={getBlockExplorerTxUrl(payment.transactionHash)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-mono text-blue-400 hover:text-blue-300 link truncate max-w-[120px] inline-block"
+                              title={payment.transactionHash}
+                            >
                               {payment.transactionHash.slice(0, 8)}...
                               {payment.transactionHash.slice(-6)}
-                            </span>
+                            </a>
                           ) : (
                             <span className="text-gray-500">-</span>
                           )}
