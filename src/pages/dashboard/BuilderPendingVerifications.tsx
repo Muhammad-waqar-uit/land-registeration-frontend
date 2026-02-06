@@ -141,23 +141,23 @@ export default function BuilderPendingVerifications() {
                           })}
                         </td>
                         <td>
-                          <div className="text-white font-semibold">
+                          <div className="text-black font-semibold">
                             {payment.buyer?.name || 'Unknown'}
                           </div>
-                          <div className="text-sm text-white">
+                          <div className="text-sm text-black">
                             {payment.buyer?.email || 'N/A'}
                           </div>
                         </td>
                         <td>
-                          <div className="text-white font-semibold">
+                          <div className="text-black font-semibold">
                             {payment.land?.title || 'N/A'}
                           </div>
-                          <div className="text-sm text-white">
+                          <div className="text-sm text-black">
                             {payment.land?.location || ''}
                           </div>
                         </td>
-                        <td className="text-white font-semibold">PKR {payment.amount.toLocaleString()}</td>
-                        <td className="text-white">{payment.paymentMode === 'points' ? 'Points' : 'Bank'}</td>
+                                <td className="text-black font-semibold">PKR {payment.amount.toLocaleString()}</td>
+                        <td className="text-black">{payment.paymentMode === 'points' ? 'Points' : 'Bank'}</td>
                         <td>
                           {payment.transactionHash ? (
                             <a

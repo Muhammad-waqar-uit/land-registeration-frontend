@@ -582,9 +582,14 @@ export default function BuyerDashboard() {
             <div className="card-body">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="card-title text-white">My Owned Properties</h2>
-                <Link to="/dashboard/buyer/resale-request/create" className="btn btn-primary btn-sm text-white">
-                  Request Resale
-                </Link>
+                <div className="flex gap-2">
+                  <Link to="/dashboard/buyer/resale-requests" className="btn btn-ghost btn-sm text-white">
+                    My Resale Requests
+                  </Link>
+                  <Link to="/dashboard/buyer/resale-request/create" className="btn btn-primary btn-sm text-white">
+                    Request Resale
+                  </Link>
+                </div>
               </div>
               <div className="space-y-4">
                 {ownedProperties.slice(0, 3).map((property) => {

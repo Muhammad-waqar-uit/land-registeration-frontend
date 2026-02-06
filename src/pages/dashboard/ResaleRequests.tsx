@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { resaleRequestAPI } from '../../services/api';
+import { resaleRequestAPI, landAPI } from '../../services/api';
 import type { ResaleRequest } from '../../types';
 import { 
   BuildingOfficeIcon, 
@@ -42,7 +42,35 @@ const ResaleRequests: React.FC = () => {
       setLoading(true);
       const data = await resaleRequestAPI.getBuilder();
       const requestsArray = Array.isArray(data) ? data : [];
-      setResaleRequests(requestsArray);
+
+      // Enrich with property (land) and currentOwner if backend didn't include them
+      const uniquePropertyIds = [...new Set(requestsArray.map((r) => r.propertyId).filter(Boolean))];
+      const landMap = new Map<string, Awaited<ReturnType<typeof landAPI.getById>>>();
+      await Promise.all(
+        uniquePropertyIds.map(async (id) => {
+          try {
+            const land = await landAPI.getById(id);
+            landMap.set(id, land);
+          } catch {
+            // ignore
+          }
+        })
+      );
+
+      const enriched = requestsArray.map((req) => {
+        const land = landMap.get(req.propertyId);
+        return {
+          ...req,
+          property: req.property || land || undefined,
+          currentOwner:
+            req.currentOwner ||
+            (land?.owner
+              ? { id: land.owner.id, name: land.owner.name, email: land.owner.email, walletAddress: land.owner.walletAddress ?? null }
+              : undefined),
+        };
+      });
+
+      setResaleRequests(enriched);
       setError('');
     } catch (err: unknown) {
       console.error('Error fetching resale requests:', err);
@@ -149,7 +177,7 @@ const ResaleRequests: React.FC = () => {
     const Icon = config.icon;
 
     return (
-      <span className={`badge ${config.color} gap-1`}>
+      <span className={`badge ${config.color} gap-1 text-white flex flex-row items-center border-black`}>
         <Icon className="h-4 w-4" />
         {config.text}
       </span>
@@ -165,9 +193,10 @@ const ResaleRequests: React.FC = () => {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-PK', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'PKR',
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
@@ -198,12 +227,55 @@ const ResaleRequests: React.FC = () => {
             <h1 className="text-3xl font-bold text-white">Resale Requests</h1>
             <p className="text-gray-400 mt-1">Manage property resale requests from owners</p>
           </div>
+          <Link to="/dashboard/builder/transfers" className="btn btn-ghost flex flex-row items-center border-black text-white gap-2">
+            Transfer Requests
+          </Link>
         </div>
 
       {error && (
         <div className="alert alert-error mb-6">
           <ExclamationCircleIcon className="h-6 w-6" />
           <span className="text-white">{error}</span>
+        </div>
+      )}
+
+      {/* Overall Summary Stats - always visible when there are requests */}
+      {resaleRequests.length > 0 && (
+        <div className="stats stats-vertical lg:stats-horizontal shadow mb-6 w-full bg-gray-800/90 border border-gray-700">
+          <div className="stat">
+            <div className="stat-title text-gray-400">Total Requests</div>
+            <div className="stat-value text-primary">{resaleRequests.length}</div>
+          </div>
+          <div className="stat">
+            <div className="stat-title text-gray-400">Total Value</div>
+            <div className="stat-value text-secondary">
+              {formatCurrency(resaleRequests.reduce((sum, req) => sum + req.requestedPrice, 0))}
+            </div>
+          </div>
+          <div className="stat">
+            <div className="stat-title text-gray-400">Pending</div>
+            <div className="stat-value text-warning">
+              {resaleRequests.filter((r) => r.status === 'pending').length}
+            </div>
+          </div>
+          <div className="stat">
+            <div className="stat-title text-gray-400">Approved</div>
+            <div className="stat-value text-success">
+              {resaleRequests.filter((r) => r.status === 'approved').length}
+            </div>
+          </div>
+          <div className="stat">
+            <div className="stat-title text-gray-400">Listed</div>
+            <div className="stat-value text-info">
+              {resaleRequests.filter((r) => r.status === 'listed').length}
+            </div>
+          </div>
+          <div className="stat">
+            <div className="stat-title text-gray-400">Sold</div>
+            <div className="stat-value text-gray-400">
+              {resaleRequests.filter((r) => r.status === 'sold').length}
+            </div>
+          </div>
         </div>
       )}
 
@@ -258,31 +330,42 @@ const ResaleRequests: React.FC = () => {
                 </h2>
 
                 {/* Property Info */}
-                {request.property && (
-                  <div className="text-sm text-gray-300 mb-2">
-                    <p className="font-semibold text-white">{request.property.title}</p>
-                    <p>{request.property.location}</p>
-                    {request.property.price && (
-                      <p className="text-xs mt-1">
-                        Original Price: {formatCurrency(request.property.price)}
-                      </p>
-                    )}
-                  </div>
-                )}
+                <div className="text-sm text-gray-300 mb-2">
+                  {request.property ? (
+                    <>
+                      <p className="font-semibold text-white">{request.property.title}</p>
+                      <p>{request.property.location}</p>
+                      {request.property.price != null && (
+                        <p className="text-xs mt-1">
+                          Original Price: {formatCurrency(request.property.price)}
+                        </p>
+                      )}
+                      {request.property.size != null && (
+                        <p className="text-xs text-gray-400">{request.property.size} sq ft</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-gray-400">Property ID: {request.propertyId}</p>
+                  )}
+                </div>
 
                 {/* Owner Info */}
-                {request.currentOwner && (
-                  <div className="text-sm mb-3">
-                    <p className="text-gray-400">Current Owner:</p>
-                    <p className="font-medium text-white">{request.currentOwner.name}</p>
-                    <p className="text-xs text-gray-400">{request.currentOwner.email}</p>
-                  </div>
-                )}
+                <div className="text-sm mb-3">
+                  {request.currentOwner ? (
+                    <>
+                      <p className="text-gray-400">Current Owner:</p>
+                      <p className="font-medium text-white">{request.currentOwner.name}</p>
+                      <p className="text-xs text-gray-400">{request.currentOwner.email}</p>
+                    </>
+                  ) : (
+                    <p className="text-gray-400">Owner ID: {request.currentOwnerId}</p>
+                  )}
+                </div>
 
                 {/* Dates */}
                 <div className="space-y-1 mb-4 text-xs">
                   {request.approvedAt && (
-                    <p className="text-success">
+                    <p className="text-success text-white">
                       ✓ Approved: {formatDate(request.approvedAt)}
                     </p>
                   )}
@@ -299,7 +382,7 @@ const ResaleRequests: React.FC = () => {
                     <div className="flex gap-2 w-full">
                       <button
                         onClick={() => handleApprove(request.id)}
-                        className="btn btn-success btn-sm flex-1"
+                        className="btn btn-success btn-sm flex-1 flex flex-row items-center border-black text-white gap-2"
                         disabled={processingId === request.id}
                       >
                         {processingId === request.id ? (
@@ -313,7 +396,7 @@ const ResaleRequests: React.FC = () => {
                       </button>
                       <button
                         onClick={() => handleReject(request.id)}
-                        className="btn btn-error btn-sm flex-1"
+                        className="btn btn-error btn-sm flex-1 flex flex-row items-center border-black text-white gap-2"
                         disabled={processingId === request.id}
                       >
                         {processingId === request.id ? (
@@ -331,7 +414,7 @@ const ResaleRequests: React.FC = () => {
                   {request.status === 'approved' && (
                     <button
                       onClick={() => handleList(request.id)}
-                      className="btn btn-primary btn-sm w-full"
+                      className="btn btn-primary btn-sm w-full flex "
                       disabled={processingId === request.id}
                     >
                       {processingId === request.id ? (
@@ -348,7 +431,7 @@ const ResaleRequests: React.FC = () => {
                   {request.status === 'listed' && (
                     <button
                       onClick={() => handleMarkSold(request.id)}
-                      className="btn btn-success btn-sm w-full"
+                      className="btn btn-success btn-sm w-full flex"
                       disabled={processingId === request.id}
                     >
                       {processingId === request.id ? (
@@ -362,10 +445,10 @@ const ResaleRequests: React.FC = () => {
                     </button>
                   )}
 
-                  {request.property && (
+                  {request.propertyId && (
                     <Link
                       to={`/dashboard/builder/lands/${request.propertyId}`}
-                      className="btn btn-ghost btn-sm w-full"
+                      className="btn btn-ghost btn-sm w-full text-white   border-black"
                     >
                       View Property
                     </Link>
@@ -377,35 +460,6 @@ const ResaleRequests: React.FC = () => {
         </div>
       )}
 
-      {/* Summary Stats */}
-      {filteredRequests.length > 0 && (
-        <div className="stats stats-vertical lg:stats-horizontal shadow mt-8 w-full bg-gray-800/90 border border-gray-700">
-          <div className="stat">
-            <div className="stat-title text-gray-400">Total Requests</div>
-            <div className="stat-value text-primary">{filteredRequests.length}</div>
-          </div>
-          <div className="stat">
-            <div className="stat-title text-gray-400">Total Value</div>
-            <div className="stat-value text-secondary">
-              {formatCurrency(
-                filteredRequests.reduce((sum, req) => sum + req.requestedPrice, 0)
-              )}
-            </div>
-          </div>
-          <div className="stat">
-            <div className="stat-title text-gray-400">Pending</div>
-            <div className="stat-value text-warning">
-              {filteredRequests.filter(r => r.status === 'pending').length}
-            </div>
-          </div>
-          <div className="stat">
-            <div className="stat-title text-gray-400">Listed</div>
-            <div className="stat-value text-info">
-              {filteredRequests.filter(r => r.status === 'listed').length}
-            </div>
-          </div>
-        </div>
-      )}
       </div>
     </DashboardLayout>
   );

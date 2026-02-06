@@ -8,6 +8,8 @@ import {
   ExclamationCircleIcon,
   CheckCircleIcon 
 } from '@heroicons/react/24/outline';
+import DashboardLayout from '../../components/layouts/DashboardLayout';
+import { buyerNavItems } from '../../constants/navigation';
 
 const CreateResaleRequest: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -39,8 +41,8 @@ const CreateResaleRequest: React.FC = () => {
       // Fetch properties owned by the user (status = 'owned')
       const data = await landAPI.getAll();
       const properties = Array.isArray(data) ? data : [];
-      // Filter for owned properties only
-      const owned = properties.filter((p) => p.status === 'sold');
+      // Filter for owned properties (status owned or sold)
+      const owned = properties.filter((p) => p.status === 'sold' || p.status === 'owned');
       setOwnedProperties(owned);
     } catch (err: unknown) {
       console.error('Error fetching owned properties:', err);
@@ -119,18 +121,20 @@ const CreateResaleRequest: React.FC = () => {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-PK', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'PKR',
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   return (
+    <DashboardLayout navItems={buyerNavItems}>
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-3xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">Request Property Resale</h1>
-          <p className="text-gray-600 mt-1">Submit a request to resell your owned property</p>
+            <div className="mb-6">
+          <h1 className="text-3xl font-bold text-white">Request Property Resale</h1>
+          <p className="text-gray-400 mt-1">Submit a request to resell your owned property</p>
         </div>
 
         {error && (
@@ -147,15 +151,15 @@ const CreateResaleRequest: React.FC = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="card bg-base-100 shadow-xl">
+        <form onSubmit={handleSubmit} className="card bg-base-200 shadow-xl border border-base-300">
           <div className="card-body">
             {/* Property Selection */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-semibold">Select Property *</span>
+                <span className="label-text font-semibold text-white">Select Property *</span>
               </label>
               <select
-                className="select select-bordered w-full"
+                className="select select-bordered w-full bg-base-300 text-white border-base-300"
                 value={propertyId}
                 onChange={handlePropertyChange}
                 required
@@ -188,36 +192,36 @@ const CreateResaleRequest: React.FC = () => {
 
             {property && !loadingProperty && (
               <div className="mt-6 space-y-4">
-                <div className="divider">Property Details</div>
+                <div className="divider text-white">Property Details</div>
 
                 {/* Property Information */}
                 <div className="bg-base-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-lg mb-3 flex items-center">
-                    <BuildingOfficeIcon className="h-5 w-5 mr-2" />
-                    Property Information
+                  <h3 className="font-semibold text-lg mb-3 flex items-center text-white">
+                    <BuildingOfficeIcon className="h-5 w-5 mr-2" />   
+                    Property Information  
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-500">Title</p>
-                      <p className="font-medium">{property.title}</p>
+                      <p className="text-sm text-white">Title</p>
+                      <p className="font-medium text-white">{property.title}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Location</p>
-                      <p className="font-medium">{property.location}</p>
+                      <p className="text-sm text-white">Location</p>
+                      <p className="font-medium text-white">{property.location}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Size</p>
-                      <p className="font-medium">{property.size} sq ft</p>
+                      <p className="text-sm text-white">Size</p>
+                      <p className="font-medium text-white">{property.size} sq ft</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Original Price</p>
+                      <p className="text-sm text-white">Original Price</p>
                       <p className="font-medium text-primary">
                         {formatCurrency(property.price)}
                       </p>
                     </div>
                     <div className="col-span-2">
-                      <p className="text-sm text-gray-500">Status</p>
-                      <p className="font-medium capitalize">{property.status}</p>
+                      <p className="text-sm text-white">Status</p>
+                      <p className="font-medium capitalize text-white">{property.status}</p>
                     </div>
                   </div>
                 </div>
@@ -225,14 +229,14 @@ const CreateResaleRequest: React.FC = () => {
                 {/* Requested Price */}
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Requested Resale Price *</span>
+                    <span className="label-text font-semibold text-back">Requested Resale Price *</span>
                   </label>
                   <label className="input-group">
-                    <span>$</span>
+                    <span>PKR</span>
                     <input
                       type="number"
                       placeholder="Enter your desired price"
-                      className="input input-bordered w-full"
+                      className="input input-bordered w-full bg-base-300 text-white border-base-300 p-2 text-black"
                       value={requestedPrice}
                       onChange={(e) => setRequestedPrice(e.target.value)}
                       required
@@ -245,7 +249,7 @@ const CreateResaleRequest: React.FC = () => {
                       Original price: {formatCurrency(property.price)}
                     </span>
                     {requestedPrice && parseFloat(requestedPrice) > 0 && (
-                      <span className={`label-text-alt font-semibold ${
+                      <span className={`label-text-alt font-semibold p-2 text-white${
                         parseFloat(requestedPrice) > property.price ? 'text-success' : 'text-warning'
                       }`}>
                         {parseFloat(requestedPrice) > property.price ? '+' : ''}
@@ -258,14 +262,14 @@ const CreateResaleRequest: React.FC = () => {
                 {/* Price Comparison */}
                 {requestedPrice && parseFloat(requestedPrice) > 0 && (
                   <div className="bg-base-200 rounded-lg p-4">
-                    <h3 className="font-semibold text-lg mb-3 flex items-center">
-                      <CurrencyDollarIcon className="h-5 w-5 mr-2" />
+                    <h3 className="font-semibold text-lg mb-3 flex items-center text-white">
+                      <CurrencyDollarIcon className="h-5 w-5 mr-2`" />
                       Price Comparison
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-gray-500">Original Purchase Price</p>
-                        <p className="font-medium text-xl">
+                        <p className="text-sm text-white">Original Purchase Price</p>
+                        <p className="font-medium text-xl text-white">
                           {formatCurrency(property.price)}
                         </p>
                       </div>
@@ -308,14 +312,14 @@ const CreateResaleRequest: React.FC = () => {
               <button
                 type="button"
                 onClick={() => navigate('/dashboard/buyer')}
-                className="btn btn-ghost"
+                className="btn btn-ghost flex flex-row items-center border-black text-white"
                 disabled={loading}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="btn btn-primary"
+                className="btn btn-primary flex flex-row items-center border-black text-white"
                 disabled={loading || !property || ownedProperties.length === 0}
               >
                 {loading ? (
@@ -335,7 +339,7 @@ const CreateResaleRequest: React.FC = () => {
         </form>
 
         {/* Info Box */}
-        <div className="alert alert-info mt-6">
+        <div className="alert alert-info mt-6 bg-base-200 border-base-300 text-white">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className="stroke-current shrink-0 w-6 h-6">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
@@ -352,6 +356,7 @@ const CreateResaleRequest: React.FC = () => {
         </div>
       </div>
     </div>
+    </DashboardLayout>
   );
 };
 

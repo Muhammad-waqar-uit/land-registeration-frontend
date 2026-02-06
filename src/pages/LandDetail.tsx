@@ -248,7 +248,13 @@ export default function LandDetail() {
       return;
     }
 
-    if (land.status !== 'available' && land.status !== 'locked') {
+    const canRequestStatus =
+      land.status === 'available' ||
+      land.status === 'locked' ||
+      land.isResale === true ||
+      (land as { status?: string }).status === 'listed' ||
+      (land as { status?: string }).status === 'resale_listing';
+    if (!canRequestStatus) {
       setRequestError(`This property is not available for request. Current status: ${land.status}`);
       return;
     }
@@ -379,7 +385,12 @@ export default function LandDetail() {
               )}
               {/* Actions row */}
               <div className="card-actions mt-4 flex flex-wrap gap-2">
-                {user?.role === 'user' && (land.status === 'available' || land.status === 'locked') && (
+                {user?.role === 'user' &&
+                  (land.status === 'available' ||
+                    land.status === 'locked' ||
+                    land.isResale === true ||
+                    (land as { status?: string }).status === 'listed' ||
+                    (land as { status?: string }).status === 'resale_listing') && (
                   <button
                     onClick={handleRequestProperty}
                     className="btn btn-success text-white"

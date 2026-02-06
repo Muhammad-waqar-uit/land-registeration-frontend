@@ -339,14 +339,14 @@ export default function BuyerCreatePayment() {
 
             {/* Property ID */}
             <div className="form-control mb-4 bg-transparent">
-              <label className="label">
+              <label className="label pr-2">
                 <span className="label-text text-white font-medium">Property ID <span className="text-red-400">*</span></span>
               </label>
               <input
                 type="text"
                 value={formData.landId}
                 onChange={(e) => setFormData({ ...formData, landId: e.target.value })}
-                className="input input-bordered bg-gray-700 text-white border-gray-600"
+                className="input input-bordered bg-gray-700 pl-2 text-white border-gray-600"
                 required
                 disabled={!!landIdParam}
               />
@@ -356,7 +356,7 @@ export default function BuyerCreatePayment() {
             {/* Agreement ID (Optional) */}
             {formData.agreementId && (
               <div className="form-control mb-4 bg-transparent">
-                <label className="label">
+                <label className="label  pr-2">
                   <span className="label-text text-white font-medium">Agreement ID</span>
                 </label>
                 <input
@@ -372,7 +372,7 @@ export default function BuyerCreatePayment() {
             {/* Installment ID (Optional) */}
             {formData.installmentId && (
               <div className="form-control mb-4 bg-transparent">
-                <label className="label">
+                <label className="label pr-2">
                   <span className="label-text text-white font-medium">Installment ID</span>
                 </label>
                 <input

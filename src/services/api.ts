@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus, BuyerProgressResponse, TokenRequest, OwnershipDocument, UserBankInfo } from '../types';
+import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Project, PropertyRequest, Agreement, Installment, ResaleRequest, TransferRequest, ProjectStatus, BuyerProgressResponse, TokenRequest, OwnershipDocument, UserBankInfo } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -1192,11 +1192,17 @@ export const resaleRequestAPI = {
     return response.data.data || response.data;
   },
 
-  // List property as resale
+  // List property as resale (Builder)
   list: async (id: string): Promise<ResaleRequest> => {
     console.log(`📋 Listing resale request ${id}`);
     const response = await api.post(`/resale-requests/${id}/list`);
     console.log('✅ Resale request listed:', response.data);
+    return response.data.data || response.data;
+  },
+
+  // List property as resale (Seller/Owner)
+  listAsSeller: async (id: string): Promise<ResaleRequest> => {
+    const response = await api.post(`/resale-requests/${id}/list-as-seller`);
     return response.data.data || response.data;
   },
 
@@ -1206,6 +1212,101 @@ export const resaleRequestAPI = {
     const response = await api.post(`/resale-requests/${id}/mark-sold`);
     console.log('✅ Resale request marked as sold:', response.data);
     return response.data.data || response.data;
+  },
+};
+
+// Transfer Request API (resale flow Phase 3 & 4)
+export const transferRequestAPI = {
+  confirmPayment: async (
+    resaleRequestId: string,
+    data: { newOwnerId: string; paymentConfirmed: boolean; allowDocumentChange: boolean; confirmationNotes?: string }
+  ): Promise<TransferRequest> => {
+    const response = await api.post(`/transfer-requests/resale/${resaleRequestId}/confirm-payment`, data);
+    return response.data.data || response.data;
+  },
+
+  create: async (resaleRequestId: string, data: { newOwnerId: string; notes?: string }): Promise<TransferRequest> => {
+    const response = await api.post(`/transfer-requests/resale/${resaleRequestId}`, data);
+    return response.data.data || response.data;
+  },
+
+  getMyTransfers: async (params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    propertyId?: string;
+    resaleRequestId?: string;
+  }): Promise<{ data: TransferRequest[]; total: number; page: number; limit: number }> => {
+    const response = await api.get('/transfer-requests/my-transfers', { params });
+    const d = response.data;
+    return {
+      data: Array.isArray(d?.data) ? d.data : d?.data?.data ?? [],
+      total: d?.total ?? 0,
+      page: d?.page ?? 1,
+      limit: d?.limit ?? 10,
+    };
+  },
+
+  getBuilderRequests: async (params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  }): Promise<{ data: TransferRequest[]; total: number; page: number; limit: number }> => {
+    const response = await api.get('/transfer-requests/builder-requests', { params });
+    const d = response.data;
+    return {
+      data: Array.isArray(d?.data) ? d.data : d?.data?.data ?? [],
+      total: d?.total ?? 0,
+      page: d?.page ?? 1,
+      limit: d?.limit ?? 10,
+    };
+  },
+
+  getById: async (id: string): Promise<TransferRequest> => {
+    const response = await api.get(`/transfer-requests/${id}`);
+    return response.data.data || response.data;
+  },
+
+  uploadDocuments: async (id: string, formData: FormData): Promise<TransferRequest> => {
+    const response = await api.post(`/transfer-requests/${id}/upload-documents`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data.data || response.data;
+  },
+
+  adminReview: async (
+    id: string,
+    data: { action: 'approve' | 'reject'; adminNotes?: string; rejectionReason?: string }
+  ): Promise<TransferRequest> => {
+    const response = await api.post(`/transfer-requests/${id}/admin-review`, data);
+    return response.data.data || response.data;
+  },
+
+  getPendingAdmin: async (): Promise<TransferRequest[]> => {
+    const response = await api.get('/transfer-requests/pending-admin');
+    const data = response.data.data ?? response.data;
+    return Array.isArray(data) ? data : [];
+  },
+
+  completeTransfer: async (id: string): Promise<TransferRequest> => {
+    const response = await api.post(`/transfer-requests/${id}/complete-transfer`);
+    return response.data.data || response.data;
+  },
+
+  getAll: async (params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    propertyId?: string;
+  }): Promise<{ data: TransferRequest[]; total: number; page: number; limit: number }> => {
+    const response = await api.get('/transfer-requests', { params });
+    const d = response.data;
+    return {
+      data: Array.isArray(d?.data) ? d.data : d?.data?.data ?? [],
+      total: d?.total ?? 0,
+      page: d?.page ?? 1,
+      limit: d?.limit ?? 10,
+    };
   },
 };
 

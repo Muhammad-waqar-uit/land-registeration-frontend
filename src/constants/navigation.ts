@@ -27,6 +27,8 @@ export const buyerNavItems: NavItem[] = [
   { name: 'Installments', path: '/dashboard/buyer/installments', icon: CurrencyDollarIcon },
   { name: 'Payment History', path: '/dashboard/buyer/payments', icon: CreditCardIcon },
   { name: 'My Properties', path: '/dashboard/buyer/properties', icon: BuildingOfficeIcon },
+  { name: 'My Resale Requests', path: '/dashboard/buyer/resale-requests', icon: ArrowPathIcon },
+  { name: 'My Transfers', path: '/dashboard/buyer/transfers', icon: DocumentTextIcon },
   { name: 'Request Points', path: '/dashboard/buyer/request-points', icon: BanknotesIcon },
   { name: 'My Points Requests', path: '/dashboard/buyer/points-requests', icon: BanknotesIcon },
 ];
@@ -41,6 +43,7 @@ export const builderNavItems: NavItem[] = [
   { name: 'Property Requests', path: '/dashboard/builder/property-requests', icon: DocumentTextIcon },
   { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
   { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
+  { name: 'Transfer Requests', path: '/dashboard/builder/transfers', icon: DocumentTextIcon },
   { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
   { name: 'Request Points', path: '/dashboard/builder/request-points', icon: BanknotesIcon },
   { name: 'My Points Requests', path: '/dashboard/builder/points-requests', icon: BanknotesIcon },
@@ -57,4 +60,5 @@ export const adminNavItems: NavItem[] = [
   { name: 'Points Requests', path: '/dashboard/admin/points-requests', icon: BanknotesIcon },
   { name: 'Property Requests', path: '/dashboard/admin/property-requests', icon: DocumentTextIcon },
   { name: 'Ownership Documents', path: '/dashboard/admin/ownership-documents', icon: DocumentTextIcon },
+  { name: 'Transfer Review', path: '/dashboard/admin/transfer-review', icon: DocumentTextIcon },
 ];

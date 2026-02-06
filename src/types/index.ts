@@ -282,6 +282,26 @@ export interface ResaleRequest {
   };
 }
 
+export interface TransferRequest {
+  id: string;
+  resaleRequestId: string;
+  propertyId: string;
+  currentOwnerId: string;
+  newOwnerId: string;
+  status: string;
+  notes?: string | null;
+  builderNotes?: string | null;
+  signedAt?: string | null;
+  uploadedAt?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+  property?: { id: string; title: string; unitId?: string | null };
+  currentOwner?: { id: string; name: string; email: string };
+  newOwner?: { id: string; name: string; email: string };
+  documents?: { id: string; documentType?: string; documentUrl?: string }[];
+}
+
 // Buyer Progress Tracking Types
 export interface BuyerProgressItem {
   buyerId: string;

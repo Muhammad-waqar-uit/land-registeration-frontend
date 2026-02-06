@@ -254,16 +254,16 @@ export default function AdminDashboard() {
                 <table className="table table-zebra">
                   <thead>
                     <tr className="text-white">
-                      <th className="text-white">Land ID</th>
-                      <th className="text-white">Amount</th>
-                      <th className="text-white">Payment Mode</th>
-                      <th className="text-white">Due Date</th>
-                      <th className="text-white">Status</th>
+                      <th className="text-black  ">Land ID</th>
+                      <th className="text-black">Amount</th>
+                      <th className="text-black">Payment Mode</th>
+                      <th className="text-black">Due Date</th>
+                      <th className="text-black">Status</th>
                     </tr>
-                  </thead>
+                  </thead>    
                   <tbody>
                     {pendingPayments.slice(0, 5).map((payment) => (
-                      <tr key={payment.id} className="text-white">
+                      <tr key={payment.id} className="text-black">
                         <td className="font-mono text-sm">{payment.landId.slice(0, 8)}...</td>
                         <td className="font-semibold">PKR {payment.amount.toLocaleString()}</td>
                         <td>

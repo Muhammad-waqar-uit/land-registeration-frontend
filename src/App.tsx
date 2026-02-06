@@ -34,6 +34,10 @@ import Installments from './pages/dashboard/Installments';
 import CreateInstallments from './pages/dashboard/CreateInstallments';
 import ResaleRequests from './pages/dashboard/ResaleRequests';
 import CreateResaleRequest from './pages/dashboard/CreateResaleRequest';
+import MyResaleRequests from './pages/dashboard/MyResaleRequests';
+import MyTransfers from './pages/dashboard/MyTransfers';
+import BuilderTransferRequests from './pages/dashboard/BuilderTransferRequests';
+import AdminTransferReview from './pages/dashboard/AdminTransferReview';
 import RequestPoints from './pages/dashboard/RequestPoints';
 import MyPointsRequests from './pages/dashboard/MyPointsRequests';
 import AdminPointsRequests from './pages/dashboard/AdminPointsRequests';
@@ -162,6 +166,14 @@ function App() {
           }
         />
         <Route
+          path="/dashboard/admin/transfer-review"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminTransferReview />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/dashboard/admin/lands/:id"
           element={
             <ProtectedRoute allowedRoles={['admin']}>
@@ -266,6 +278,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['builder']}>
               <ResaleRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/builder/transfers"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <BuilderTransferRequests />
             </ProtectedRoute>
           }
         />
@@ -419,6 +439,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <CreateResaleRequest />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/resale-requests"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <MyResaleRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/transfers"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <MyTransfers />
             </ProtectedRoute>
           }
         />
