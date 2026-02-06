@@ -6,9 +6,9 @@ import {
   CreditCardIcon,
   BanknotesIcon,
 } from '@heroicons/react/24/outline';
-import { paymentAPI, landAPI, agreementAPI, installmentAPI, tokenAPI } from '../../services/api';
+import { paymentAPI, landAPI, agreementAPI, installmentAPI, tokenAPI, userBankInfoAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
-import type { Land, Agreement, Installment } from '../../types';
+import type { Land, Agreement, Installment, UserBankInfo } from '../../types';
 import { buyerNavItems } from '../../constants/navigation';
 
 export default function BuyerCreatePayment() {
@@ -35,6 +35,7 @@ export default function BuyerCreatePayment() {
     remainingBalance: number;
     totalAmount: number;
   } | null>(null);
+  const [builderBankInfo, setBuilderBankInfo] = useState<UserBankInfo[]>([]);
 
   const [formData, setFormData] = useState({
     landId: landIdParam || '',
@@ -51,6 +52,19 @@ export default function BuyerCreatePayment() {
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // Fetch builder's bank info for bank transfer reference
+  useEffect(() => {
+    const builderId = agreement?.builderId ?? agreement?.builder?.id ?? land?.ownerId;
+    if (!builderId) {
+      setBuilderBankInfo([]);
+      return;
+    }
+    userBankInfoAPI
+      .getByUserId(builderId)
+      .then((data) => setBuilderBankInfo(Array.isArray(data) ? data : []))
+      .catch(() => setBuilderBankInfo([]));
+  }, [agreement?.builderId, agreement?.builder?.id, land?.ownerId]);
 
   // Fetch points balance when user selects Pay with Points
   useEffect(() => {
@@ -411,14 +425,31 @@ export default function BuyerCreatePayment() {
               </select>
             </div>
 
-            {/* Bank Payment - Proof File */}
+            {/* Bank Payment - Builder bank details & Proof File */}
             {formData.paymentMode === 'bank' && (
-              <div className="form-control mb-4 bg-transparent">
-                <label className="label">
-                  <span className="label-text text-white font-medium">
-                    Payment Proof (PDF/Image) <span className="text-red-400">*</span>
-                  </span>
-                </label>
+              <>
+                {builderBankInfo.length > 0 && (
+                  <div className="mb-4 p-4 rounded-lg bg-blue-900/50 border border-blue-700">
+                    <h4 className="font-semibold text-blue-100 mb-2 flex items-center gap-2">
+                      <BanknotesIcon className="w-5 h-5" />
+                      Transfer to Builder's Account
+                    </h4>
+                    <div className="space-y-2">
+                      {builderBankInfo.map((b) => (
+                        <div key={b.id} className="text-sm">
+                          <span className="text-blue-200 font-medium">{b.bankName}</span>
+                          <span className="text-white ml-2">Account: {b.accountNumber}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="form-control mb-4 bg-transparent">
+                  <label className="label">
+                    <span className="label-text text-white font-medium">
+                      Payment Proof (PDF/Image) <span className="text-red-400">*</span>
+                    </span>
+                  </label>
                 <input
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
@@ -432,6 +463,7 @@ export default function BuyerCreatePayment() {
                   </span>
                 </label>
               </div>
+              </>
             )}
 
             {/* Points Payment - balance and info */}

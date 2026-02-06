@@ -9,8 +9,10 @@ import {
   CurrencyDollarIcon,
   HomeIcon,
   DocumentTextIcon,
+  BanknotesIcon,
 } from '@heroicons/react/24/outline';
-import { agreementAPI, paymentAPI } from '../../services/api';
+import { agreementAPI, paymentAPI, userBankInfoAPI } from '../../services/api';
+import type { UserBankInfo } from '../../types';
 import { useAppSelector } from '../../store/hooks';
 import type { Agreement } from '../../types';
 import { builderNavItems, buyerNavItems } from '../../constants/navigation';
@@ -29,6 +31,7 @@ export default function AgreementDetail() {
     totalAmount: number;
   } | null>(null);
   const [loadingPaymentSummary, setLoadingPaymentSummary] = useState(false);
+  const [builderBankInfo, setBuilderBankInfo] = useState<UserBankInfo[]>([]);
 
   const loadAgreement = useCallback(async () => {
     try {
@@ -92,6 +95,20 @@ export default function AgreementDetail() {
       loadAgreement();
     }
   }, [id, loadAgreement]);
+
+  // Fetch builder's bank info when buyer views agreement with payment option
+  useEffect(() => {
+    if (user?.role !== 'user' || !agreement?.builderId) {
+      setBuilderBankInfo([]);
+      return;
+    }
+    const builderId = agreement.builderId || agreement.builder?.id;
+    if (!builderId) return;
+    userBankInfoAPI
+      .getByUserId(builderId)
+      .then((data) => setBuilderBankInfo(Array.isArray(data) ? data : []))
+      .catch(() => setBuilderBankInfo([]));
+  }, [agreement?.builderId, agreement?.builder?.id, user?.role]);
 
   const handleSign = async () => {
     if (!window.confirm('Are you sure you want to sign this agreement? This action cannot be undone.')) {
@@ -481,6 +498,25 @@ export default function AgreementDetail() {
                       </p>
                     </div>
                   </div>
+                  {builderBankInfo.length > 0 && paymentSummary.remainingBalance > 0 && (
+                    <div className="mt-4 p-4 rounded-lg bg-blue-900/50 border border-blue-700">
+                      <h4 className="font-semibold text-blue-100 mb-2 flex items-center gap-2">
+                        <BanknotesIcon className="w-5 h-5" />
+                        Builder Bank Details (for bank transfer)
+                      </h4>
+                      <div className="space-y-2">
+                        {builderBankInfo.map((b) => (
+                          <div key={b.id} className="text-sm">
+                            <span className="text-blue-200 font-medium">{b.bankName}</span>
+                            <span className="text-white ml-2">Account: {b.accountNumber}</span>
+                          </div>
+                        ))}
+                        <p className="text-blue-300 text-xs mt-2">
+                          Use these details when making a bank transfer, then upload proof in the payment form.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   {paymentSummary.remainingBalance > 0 && (
                     <div className="card-actions justify-end mt-4">
                       <Link

@@ -1,3 +1,19 @@
+# API Specification Notes
+
+## User Bank Info – Backend Endpoint for Payment Reference
+
+To show the builder's bank details on the **Agreement Detail** and **Create Payment** pages (so buyers know where to send bank transfers), the backend needs an endpoint to fetch another user's bank info:
+
+**Suggested:** `GET /api/user-bank-info/user/:userId`
+
+- **Auth:** JWT required
+- **Response:** Same as `GET /user-bank-info` but for the specified user (for payment reference)
+- **Use case:** Buyer views builder's bank account(s) when paying via bank transfer
+
+If this endpoint is not implemented, the bank details section will simply not appear on those pages.
+
+---
+
 # Builder Payments Page – API Specification
 
 **Frontend Route:** `/dashboard/builder/payments`  

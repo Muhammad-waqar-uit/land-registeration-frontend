@@ -108,6 +108,15 @@ export interface Land {
   };
 }
 
+export interface UserBankInfo {
+  id: string;
+  userId: string;
+  bankName: string;
+  accountNumber: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Payment {
   id: string;
   landId: string;

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus, BuyerProgressResponse, TokenRequest, OwnershipDocument } from '../types';
+import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus, BuyerProgressResponse, TokenRequest, OwnershipDocument, UserBankInfo } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -302,6 +302,41 @@ export const authAPI = {
   },
 };
 
+// User Bank Info API
+export const userBankInfoAPI = {
+  create: async (data: { bankName: string; accountNumber: string }): Promise<UserBankInfo> => {
+    const response = await api.post('/user-bank-info', data);
+    return response.data.data || response.data;
+  },
+
+  getAll: async (): Promise<UserBankInfo[]> => {
+    const response = await api.get('/user-bank-info');
+    const data = response.data.data ?? response.data;
+    return Array.isArray(data) ? data : [];
+  },
+
+  getById: async (id: string): Promise<UserBankInfo> => {
+    const response = await api.get(`/user-bank-info/${id}`);
+    return response.data.data || response.data;
+  },
+
+  update: async (id: string, data: Partial<{ bankName: string; accountNumber: string }>): Promise<UserBankInfo> => {
+    const response = await api.patch(`/user-bank-info/${id}`, data);
+    return response.data.data || response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/user-bank-info/${id}`);
+  },
+
+  /** Get bank info for a user (e.g. builder) - for payment reference. Backend may need GET /user-bank-info/user/:userId */
+  getByUserId: async (userId: string): Promise<UserBankInfo[]> => {
+    const response = await api.get(`/user-bank-info/user/${userId}`);
+    const data = response.data.data ?? response.data;
+    return Array.isArray(data) ? data : [];
+  },
+};
+
 // Builder API
 export const builderAPI = {
   getAll: async (verifiedOnly?: boolean): Promise<User[]> => {
@@ -335,6 +370,29 @@ export const builderAPI = {
     const response = await api.post(`/auth/builders/${id}/verify`, remarks ? { remarks } : {});
     // Backend returns object directly according to API docs
     return response.data;
+  },
+};
+
+// Buyer API (stats for buyer dashboard)
+export const buyerAPI = {
+  getStats: async (): Promise<{
+    totalPaid: number;
+    pendingPayments: number;
+    pendingRequests: number;
+    pendingAgreements: number;
+    upcomingInstallments: number;
+    ownedProperties: number;
+  }> => {
+    const response = await api.get('/buyers/me/stats');
+    const data = response.data.data ?? response.data;
+    return {
+      totalPaid: data.totalPaid ?? 0,
+      pendingPayments: data.pendingPayments ?? 0,
+      pendingRequests: data.pendingRequests ?? 0,
+      pendingAgreements: data.pendingAgreements ?? 0,
+      upcomingInstallments: data.upcomingInstallments ?? 0,
+      ownedProperties: data.ownedProperties ?? 0,
+    };
   },
 };
 

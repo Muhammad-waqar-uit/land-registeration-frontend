@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layouts/DashboardLayout';
-import { landAPI, paymentAPI, propertyRequestAPI, agreementAPI, installmentAPI, resaleRequestAPI } from '../../services/api';
+import { landAPI, paymentAPI, propertyRequestAPI, agreementAPI, installmentAPI, resaleRequestAPI, buyerAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Land, Payment, PropertyRequest, Agreement, Installment, ResaleRequest } from '../../types';
 import { buyerNavItems } from '../../constants/navigation';
@@ -35,7 +35,7 @@ export default function BuyerDashboard() {
       console.log('🌐 API Endpoint: GET /api/property-requests/my-requests');
       console.log('📡 API Method: propertyRequestAPI.getMyRequests()');
       
-      const [landsData, paymentsData, requestsResponse, agreementsData, installmentsData, resaleRequestsData] = await Promise.all([
+      const [landsData, paymentsData, requestsResponse, agreementsData, installmentsData, resaleRequestsData, statsData] = await Promise.all([
         landAPI.getAll().catch((err) => {
           console.error('❌ Failed to fetch lands:', err);
           return [];
@@ -60,6 +60,14 @@ export default function BuyerDashboard() {
           console.error('❌ Failed to fetch resale requests:', err);
           return [];
         }),
+        buyerAPI.getStats().catch(() => ({
+          totalPaid: 0,
+          pendingPayments: 0,
+          pendingRequests: 0,
+          pendingAgreements: 0,
+          upcomingInstallments: 0,
+          ownedProperties: 0,
+        })),
       ]);
 
       // Debug: Log the raw property requests response
@@ -173,28 +181,13 @@ export default function BuyerDashboard() {
       );
       setReservedLands(reserved);
 
-      // Filter owned properties (status = 'sold' and owned by user)
+      // Filter owned properties (status = 'sold' or 'owned' and owned by user)
       const owned = landsArray.filter(
-        (land: Land) => land.status === 'sold' && land.ownerId === user.id
+        (land: Land) => (land.status === 'sold' || land.status === 'owned') && land.ownerId === user.id
       );
       setOwnedProperties(owned);
 
-      // Calculate stats
-      const verifiedPayments = buyerPayments.filter((p: Payment) => p.status === 'verified');
-      const pendingPayments = buyerPayments.filter((p: Payment) => p.status === 'pending');
-      const totalPaid = verifiedPayments.reduce((sum: number, p: Payment) => sum + p.amount, 0);
-      const pendingRequestsCount = requestsData.filter((r: PropertyRequest) => r.status === 'pending').length;
-      const pendingAgreementsCount = (agreementsData || []).filter((a: Agreement) => a.status === 'pending' || a.status === 'buyer_signed').length;
-      const upcomingInstallmentsCount = (installmentsData || []).filter((i: Installment) => i.status === 'pending').length;
-
-      setStats({
-        totalPaid,
-        pendingPayments: pendingPayments.length,
-        pendingRequests: pendingRequestsCount,
-        pendingAgreements: pendingAgreementsCount,
-        upcomingInstallments: upcomingInstallmentsCount,
-        ownedProperties: owned.length,
-      });
+      setStats(statsData);
     } catch (error) {
       console.error('Failed to fetch buyer dashboard data:', error);
     } finally {

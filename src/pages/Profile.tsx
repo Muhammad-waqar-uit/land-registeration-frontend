@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { FormEvent } from 'react';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { updateProfile, updatePassword } from '../store/slices/authSlice';
 import DashboardLayout from '../components/layouts/DashboardLayout';
-import { HomeIcon, UserIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, UserIcon, BanknotesIcon, PencilIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { userBankInfoAPI } from '../services/api';
+import type { UserBankInfo } from '../types';
 
 const navItems = [
   { name: 'Dashboard', path: '/dashboard', icon: HomeIcon },
@@ -26,6 +28,79 @@ export default function Profile() {
   });
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
+  // Bank details
+  const [bankInfoList, setBankInfoList] = useState<UserBankInfo[]>([]);
+  const [loadingBankInfo, setLoadingBankInfo] = useState(true);
+  const [bankForm, setBankForm] = useState({ bankName: '', accountNumber: '' });
+  const [editingBankId, setEditingBankId] = useState<string | null>(null);
+  const [savingBank, setSavingBank] = useState(false);
+  const [deletingBankId, setDeletingBankId] = useState<string | null>(null);
+
+  const fetchBankInfo = useCallback(async () => {
+    try {
+      setLoadingBankInfo(true);
+      const data = await userBankInfoAPI.getAll();
+      setBankInfoList(data);
+    } catch (err) {
+      console.error('Failed to fetch bank info:', err);
+    } finally {
+      setLoadingBankInfo(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBankInfo();
+  }, [fetchBankInfo]);
+
+  const handleBankSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!bankForm.bankName.trim() || !bankForm.accountNumber.trim()) return;
+    setSavingBank(true);
+    try {
+      if (editingBankId) {
+        await userBankInfoAPI.update(editingBankId, bankForm);
+        setEditingBankId(null);
+      } else {
+        await userBankInfoAPI.create(bankForm);
+      }
+      setBankForm({ bankName: '', accountNumber: '' });
+      await fetchBankInfo();
+    } catch (err) {
+      console.error('Failed to save bank info:', err);
+      alert((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to save bank info');
+    } finally {
+      setSavingBank(false);
+    }
+  };
+
+  const handleBankEdit = (item: UserBankInfo) => {
+    setBankForm({ bankName: item.bankName, accountNumber: item.accountNumber });
+    setEditingBankId(item.id);
+  };
+
+  const handleBankDelete = async (id: string) => {
+    if (!window.confirm('Delete this bank account?')) return;
+    setDeletingBankId(id);
+    try {
+      await userBankInfoAPI.delete(id);
+      if (editingBankId === id) {
+        setEditingBankId(null);
+        setBankForm({ bankName: '', accountNumber: '' });
+      }
+      await fetchBankInfo();
+    } catch (err) {
+      console.error('Failed to delete bank info:', err);
+      alert((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to delete');
+    } finally {
+      setDeletingBankId(null);
+    }
+  };
+
+  const maskAccountNumber = (acc: string) => {
+    if (acc.length <= 4) return '****';
+    return '*'.repeat(acc.length - 4) + acc.slice(-4);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -224,6 +299,122 @@ export default function Profile() {
                   </div>
                 </div>
               </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bank Details */}
+        <div className="card bg-base-100 shadow-xl border border-base-300">
+          <div className="card-body">
+            <h2 className="card-title text-white mb-4">
+              <BanknotesIcon className="w-6 h-6" />
+              Bank Details
+            </h2>
+            <p className="text-gray-400 text-sm mb-4">
+              Add your bank account details for payment references (e.g. when receiving or making bank transfers).
+            </p>
+            {loadingBankInfo ? (
+              <div className="flex justify-center py-6">
+                <span className="loading loading-spinner loading-md"></span>
+              </div>
+            ) : (
+              <>
+                {bankInfoList.length > 0 && (
+                  <div className="space-y-3 mb-6">
+                    {bankInfoList.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-4 rounded-lg bg-base-200 border border-base-300"
+                      >
+                        <div>
+                          <p className="font-semibold text-white">{item.bankName}</p>
+                          <p className="text-sm font-mono text-gray-400">{maskAccountNumber(item.accountNumber)}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => handleBankEdit(item)}
+                            disabled={!!editingBankId}
+                          >
+                            <PencilIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm text-error"
+                            onClick={() => handleBankDelete(item.id)}
+                            disabled={deletingBankId === item.id}
+                          >
+                            {deletingBankId === item.id ? (
+                              <span className="loading loading-spinner loading-xs"></span>
+                            ) : (
+                              <TrashIcon className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <form onSubmit={handleBankSubmit} className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="form-control bg-transparent">
+                      <label className="label">
+                        <span className="label-text text-white">Bank Name</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={bankForm.bankName}
+                        onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
+                        className="input input-bordered w-full bg-base-200 text-white border-base-300"
+                        placeholder="e.g. HBL, UBL"
+                        required
+                      />
+                    </div>
+                    <div className="form-control bg-transparent">
+                      <label className="label">
+                        <span className="label-text text-white">Account Number</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={bankForm.accountNumber}
+                        onChange={(e) => setBankForm({ ...bankForm, accountNumber: e.target.value })}
+                        className="input input-bordered w-full bg-base-200 text-white border-base-300"
+                        placeholder="e.g. 12345678901234"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="btn btn-primary btn-sm flex flex-row items-center border-black"
+                      disabled={savingBank}
+                    >
+                      {savingBank ? (
+                        <span className="loading loading-spinner loading-sm"></span>
+                      ) : (
+                        <>
+                          <PlusIcon className="w-4 h-4 mr-1" />
+                          {editingBankId ? 'Update' : 'Add'} Bank Account
+                        </>
+                      )}
+                    </button>
+                    {editingBankId && (
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => {
+                          setEditingBankId(null);
+                          setBankForm({ bankName: '', accountNumber: '' });
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </>
             )}
           </div>
         </div>
