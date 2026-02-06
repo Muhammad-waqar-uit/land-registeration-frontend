@@ -4,8 +4,9 @@ import DashboardLayout from '../../components/layouts/DashboardLayout';
 import {
   ArrowLeftIcon,
   CreditCardIcon,
+  BanknotesIcon,
 } from '@heroicons/react/24/outline';
-import { paymentAPI, landAPI, agreementAPI, installmentAPI } from '../../services/api';
+import { paymentAPI, landAPI, agreementAPI, installmentAPI, tokenAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Land, Agreement, Installment } from '../../types';
 import { buyerNavItems } from '../../constants/navigation';
@@ -40,15 +41,40 @@ export default function BuyerCreatePayment() {
     agreementId: agreementIdParam || '',
     installmentId: installmentId || '',
     amount: amountParam || '',
-    paymentMode: 'bank' as 'bank' | 'crypto',
+    paymentMode: 'bank' as 'bank' | 'points',
     transactionHash: '',
     dueDate: '',
   });
   const [proofFile, setProofFile] = useState<File | null>(null);
+  const [pointsBalance, setPointsBalance] = useState<string | null>(null);
 
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // Fetch points balance when user selects Pay with Points
+  useEffect(() => {
+    if (formData.paymentMode !== 'points' || !user?.walletAddress) {
+      setPointsBalance(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await tokenAPI.getBalance(user.walletAddress);
+        if (cancelled || !res.success || res.balance == null) {
+          if (!cancelled) setPointsBalance('0');
+          return;
+        }
+        const rawStr = String(res.balance).trim();
+        const human = rawStr === '' ? '0' : (Number(BigInt(rawStr) / (10n ** 18n))).toString();
+        if (!cancelled) setPointsBalance(human);
+      } catch {
+        if (!cancelled) setPointsBalance('0');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [formData.paymentMode, user?.walletAddress]);
 
   const loadInitialData = async () => {
     try {
@@ -133,9 +159,17 @@ export default function BuyerCreatePayment() {
       return;
     }
 
-    if (formData.paymentMode === 'crypto' && !formData.transactionHash) {
-      setError('Transaction hash is required for crypto payments');
-      return;
+    if (formData.paymentMode === 'points') {
+      const amountNum = parseFloat(formData.amount);
+      const balanceNum = pointsBalance != null ? parseFloat(pointsBalance) : null;
+      if (balanceNum != null && balanceNum < amountNum) {
+        setError('Insufficient points balance');
+        return;
+      }
+      if (!user?.walletAddress) {
+        setError('Wallet address is required for points payment');
+        return;
+      }
     }
 
     try {
@@ -162,14 +196,14 @@ export default function BuyerCreatePayment() {
       if (formData.paymentMode === 'bank' && proofFile) {
         paymentFormData.append('proof', proofFile);
       }
-      
-      if (formData.paymentMode === 'crypto' && formData.transactionHash) {
-        paymentFormData.append('transactionHash', formData.transactionHash);
-      }
 
       await paymentAPI.create(paymentFormData);
       
-      setSuccess('Payment created successfully! Waiting for builder verification.');
+      setSuccess(
+        formData.paymentMode === 'points'
+          ? 'Payment confirmed! Points have been transferred.'
+          : 'Payment submitted. Waiting for builder verification.'
+      );
       setTimeout(() => {
         navigate('/dashboard/buyer/payments');
       }, 2000);
@@ -368,12 +402,12 @@ export default function BuyerCreatePayment() {
               </label>
               <select
                 value={formData.paymentMode}
-                onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value as 'bank' | 'crypto' })}
+                onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value as 'bank' | 'points' })}
                 className="select select-bordered bg-gray-700 text-white border-gray-600 p-2"
                 required
               >
                 <option value="bank">Bank Transfer</option>
-                <option value="crypto">Crypto Payment</option>
+                <option value="points">Pay with Points</option>
               </select>
             </div>
 
@@ -400,27 +434,24 @@ export default function BuyerCreatePayment() {
               </div>
             )}
 
-            {/* Crypto Payment - Transaction Hash */}
-            {formData.paymentMode === 'crypto' && (
+            {/* Points Payment - balance and info */}
+            {formData.paymentMode === 'points' && (
               <div className="form-control mb-4 bg-transparent">
-                <label className="label">
-                  <span className="label-text text-white font-medium">
-                    Transaction Hash <span className="text-red-400">*</span>
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.transactionHash}
-                  onChange={(e) => setFormData({ ...formData, transactionHash: e.target.value })}
-                  className="input input-bordered bg-gray-700 text-white border-gray-600 font-mono"
-                  placeholder="0x..."
-                  required
-                />
-                <label className="label">
-                  <span className="label-text-alt text-gray-400">
-                    Enter the blockchain transaction hash
-                  </span>
-                </label>
+                <div className="p-4 rounded-lg bg-gray-800 border border-gray-600">
+                  <div className="flex items-center gap-2 text-white font-medium mb-1">
+                    <BanknotesIcon className="h-5 w-5 text-primary" />
+                    Your points balance
+                  </div>
+                  <p className="text-2xl font-bold text-primary">
+                    PKR {pointsBalance != null ? parseFloat(pointsBalance).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 4 }) : '…'}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-2">
+                    Points will be deducted from your balance and transferred to the property owner. No proof upload needed.
+                  </p>
+                  {pointsBalance != null && formData.amount && parseFloat(pointsBalance) < parseFloat(formData.amount) && (
+                    <p className="text-sm text-error mt-2">Insufficient balance for this amount.</p>
+                  )}
+                </div>
               </div>
             )}
 

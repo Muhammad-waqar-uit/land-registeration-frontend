@@ -14,30 +14,30 @@ export default function TokenBalance({ walletAddress }: TokenBalanceProps) {
       setLoading(false);
       return;
     }
-    setLoading(false);
-    // Balance API disabled for now – uncomment below to re-enable
-    // const fetchBalance = async () => {
-    //   try {
-    //     setLoading(true);
-    //     const response = await tokenAPI.getBalance(walletAddress);
-    //     if (response.success && response.data) {
-    //       const balanceInWei = response.data.balance || '0';
-    //       const decimals = response.data.decimals || 18;
-    //       const balanceInTokens = parseFloat(balanceInWei) / Math.pow(10, decimals);
-    //       setBalance(balanceInTokens.toString());
-    //     } else {
-    //       setBalance('0');
-    //     }
-    //   } catch (err: unknown) {
-    //     console.error('Failed to fetch token balance:', err);
-    //     setBalance('0');
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-    // fetchBalance();
-    // const interval = setInterval(fetchBalance, 30000);
-    // return () => clearInterval(interval);
+    const fetchBalance = async () => {
+      try {
+        setLoading(true);
+        const response = await tokenAPI.getBalance(walletAddress);
+        if (response.success && response.balance != null) {
+          // Token uses 18 decimals on-chain; convert raw to human (divide by 10^18)
+          const rawStr = String(response.balance).trim();
+          const divisor = 10n ** 18n;
+          const human =
+            rawStr === '' ? '0' : (Number(BigInt(rawStr) / divisor)).toString();
+          setBalance(human);
+        } else {
+          setBalance('0');
+        }
+      } catch (err: unknown) {
+        console.error('Failed to fetch token balance:', err);
+        setBalance('0');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBalance();
+    const interval = setInterval(fetchBalance, 30000);
+    return () => clearInterval(interval);
   }, [walletAddress]);
 
   if (!walletAddress) {

@@ -4,6 +4,7 @@ import DashboardLayout from '../../components/layouts/DashboardLayout';
 import { buyerProgressAPI, projectAPI } from '../../services/api';
 import type { BuyerProgressItem, BuyerProgressStats, Project } from '../../types';
 import { builderNavItems } from '../../constants/navigation';
+import { UserGroupIcon } from '@heroicons/react/24/outline';
 
 export default function SellerBuyerProgress() {
   const [buyerProgress, setBuyerProgress] = useState<BuyerProgressItem[]>([]);
@@ -95,39 +96,39 @@ export default function SellerBuyerProgress() {
         {stats && (
           <>
             {/* Overall Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
-                <div className="stat-title text-gray-300">Total Buyers</div>
-                <div className="stat-value text-blue-400">{stats.totalBuyers}</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 min-w-0">
+              <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700 min-w-0 overflow-hidden">
+                <div className="stat-title text-gray-300 truncate">Total Buyers</div>
+                <div className="stat-value text-blue-400 text-lg truncate" title={String(stats.totalBuyers)}>{stats.totalBuyers}</div>
               </div>
-              <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
-                <div className="stat-title text-gray-300">Reserved</div>
-                <div className="stat-value text-yellow-400">{stats.reserved}</div>
+              <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700 min-w-0 overflow-hidden">
+                <div className="stat-title text-gray-300 truncate">Reserved</div>
+                <div className="stat-value text-yellow-400 text-lg truncate" title={String(stats.reserved)}>{stats.reserved}</div>
                 {stats.byStatus?.reserved && (
-                  <div className="stat-desc text-yellow-300">PKR {stats.byStatus.reserved.revenue.toLocaleString()}</div>
+                  <div className="stat-desc text-yellow-300 truncate" title={`PKR ${stats.byStatus.reserved.revenue.toLocaleString()}`}>PKR {stats.byStatus.reserved.revenue.toLocaleString()}</div>
                 )}
               </div>
-              <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
-                <div className="stat-title text-gray-300">In Progress</div>
-                <div className="stat-value text-blue-400">{stats.inProgress}</div>
+              <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700 min-w-0 overflow-hidden">
+                <div className="stat-title text-gray-300 truncate">In Progress</div>
+                <div className="stat-value text-blue-400 text-lg truncate" title={String(stats.inProgress)}>{stats.inProgress}</div>
                 {stats.byStatus?.paying && (
-                  <div className="stat-desc text-blue-300">PKR {stats.byStatus.paying.revenue.toLocaleString()}</div>
+                  <div className="stat-desc text-blue-300 truncate" title={`PKR ${stats.byStatus.paying.revenue.toLocaleString()}`}>PKR {stats.byStatus.paying.revenue.toLocaleString()}</div>
                 )}
               </div>
-              <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
-                <div className="stat-title text-gray-300">Completed</div>
-                <div className="stat-value text-green-400">{stats.completed}</div>
+              <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700 min-w-0 overflow-hidden">
+                <div className="stat-title text-gray-300 truncate">Completed</div>
+                <div className="stat-value text-green-400 text-lg truncate" title={String(stats.completed)}>{stats.completed}</div>
                 {stats.byStatus?.completed && (
-                  <div className="stat-desc text-green-300">PKR {stats.byStatus.completed.revenue.toLocaleString()}</div>
+                  <div className="stat-desc text-green-300 truncate" title={`PKR ${stats.byStatus.completed.revenue.toLocaleString()}`}>PKR {stats.byStatus.completed.revenue.toLocaleString()}</div>
                 )}
               </div>
-              <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
-                <div className="stat-title text-gray-300">Total Revenue</div>
-                <div className="stat-value text-green-400">PKR {stats.totalRevenue.toLocaleString()}</div>
+              <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700 min-w-0 overflow-hidden">
+                <div className="stat-title text-gray-300 truncate">Total Revenue</div>
+                <div className="stat-value text-green-400 text-lg truncate" title={`PKR ${stats.totalRevenue.toLocaleString()}`}>PKR {stats.totalRevenue.toLocaleString()}</div>
               </div>
-              <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
-                <div className="stat-title text-gray-300">Pending Revenue</div>
-                <div className="stat-value text-orange-400">PKR {stats.pendingRevenue.toLocaleString()}</div>
+              <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700 min-w-0 overflow-hidden">
+                <div className="stat-title text-gray-300 truncate">Pending Revenue</div>
+                <div className="stat-value text-orange-400 text-lg truncate" title={`PKR ${stats.pendingRevenue.toLocaleString()}`}>PKR {stats.pendingRevenue.toLocaleString()}</div>
               </div>
             </div>
 
@@ -373,7 +374,7 @@ export default function SellerBuyerProgress() {
                     <div className="card-actions justify-end mt-4">
                       {progress.agreementId && (
                         <Link
-                          to={`/dashboard/${isBuilderRoute ? 'builder' : 'seller'}/agreements/${progress.agreementId}`}
+                          to={`/dashboard/builder/agreements/${progress.agreementId}`}
                           className="btn btn-sm btn-ghost text-white border-white"
                         >
                           View Agreement

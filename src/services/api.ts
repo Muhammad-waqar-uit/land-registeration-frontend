@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus, BuyerProgressResponse } from '../types';
+import type { LoginCredentials, RegisterData, User, UserRole, Land, Payment, Project, PropertyRequest, Agreement, Installment, ResaleRequest, ProjectStatus, BuyerProgressResponse, TokenRequest, OwnershipDocument } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -321,6 +321,16 @@ export const builderAPI = {
     return response.data.data || response.data;
   },
 
+  getStats: async (): Promise<{ totalLands: number; totalRevenue: number; totalProjects: number }> => {
+    const response = await api.get('/builders/me/stats');
+    const data = response.data.data ?? response.data;
+    return {
+      totalLands: data.totalLands ?? 0,
+      totalRevenue: data.totalRevenue ?? 0,
+      totalProjects: data.totalProjects ?? 0,
+    };
+  },
+
   verify: async (id: string, remarks?: string): Promise<User> => {
     const response = await api.post(`/auth/builders/${id}/verify`, remarks ? { remarks } : {});
     // Backend returns object directly according to API docs
@@ -571,6 +581,12 @@ export const paymentAPI = {
     const response = await api.get('/payments/pending');
     // Backend returns: Payment[] array directly (includes land and buyer objects)
     // Note: This endpoint is for Builder role - returns pending payments for builder's lands
+    return response.data.data || response.data;
+  },
+
+  // Get all payments for builder's lands (payments received by builder)
+  getByBuilder: async (): Promise<Payment[]> => {
+    const response = await api.get('/payments/builder');
     return response.data.data || response.data;
   },
 
@@ -962,14 +978,6 @@ export const agreementAPI = {
     return response.data.data || response.data;
   },
 
-  // Transfer ownership (Builder only) - After all payments are completed
-  transferOwnership: async (id: string): Promise<Agreement> => {
-    console.log(`🏠 Transferring ownership for agreement ${id}`);
-    const response = await api.post(`/agreements/${id}/transfer-ownership`);
-    console.log('✅ Ownership transferred:', response.data);
-    return response.data.data || response.data;
-  },
-
   // Upload signed document
   uploadSigned: async (id: string, document: File): Promise<Agreement> => {
     console.log(`📤 Uploading signed document for agreement ${id}`);
@@ -982,14 +990,6 @@ export const agreementAPI = {
       },
     });
     console.log('✅ Signed document uploaded:', response.data);
-    return response.data.data || response.data;
-  },
-
-  // Generate ownership document (Builder only)
-  generateOwnership: async (id: string): Promise<Agreement> => {
-    console.log(`📄 Generating ownership document for agreement ${id}`);
-    const response = await api.post(`/agreements/${id}/generate-ownership-doc`);
-    console.log('✅ Ownership document generated:', response.data);
     return response.data.data || response.data;
   },
 
@@ -1151,41 +1151,182 @@ export const resaleRequestAPI = {
   },
 };
 
-// Token API
+// Token API – balance (GET /api/tokens/balance?address=0x...)
 export const tokenAPI = {
-  // Get token balance for a wallet address
   getBalance: async (address: string): Promise<{
     success: boolean;
-    data?: {
-      success: boolean;
-      balance: string;
-      balanceRaw: string;
-      decimals: number;
-    };
     balance?: string;
-    balanceRaw?: string;
-    decimals?: number;
     error?: string;
   }> => {
-    console.log(`🪙 Getting token balance for address: ${address}`);
-    const response = await api.get(`/tokens/balance?address=${address}`);
-    console.log('✅ Token balance retrieved:', response.data);
-    return response.data;
+    const response = await api.get(`/tokens/balance`, { params: { address } });
+    const data = response.data?.data ?? response.data;
+    return {
+      success: data?.success ?? response.data?.success ?? false,
+      balance: data?.balance ?? response.data?.balance,
+      error: data?.error ?? response.data?.error,
+    };
   },
 
-  // Mint tokens to an address (Admin only)
+  // Mint (Admin only) – used by backend on approve; keep for any admin fallback
   mintTokens: async (toAddress: string, amount: number): Promise<{
     success: boolean;
     transactionHash?: string;
     error?: string;
   }> => {
-    console.log(`🪙 Minting ${amount} tokens to ${toAddress}`);
-    const response = await api.post('/tokens/mint', {
-      toAddress,
-      amount
+    const response = await api.post('/tokens/mint', { toAddress, amount });
+    return response.data?.data ?? response.data;
+  },
+};
+
+// Token Requests API – request points, my requests, admin list/approve/reject
+export interface TokenRequestListResponse {
+  data: TokenRequest[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export const tokenRequestsAPI = {
+  create: async (body: {
+    amount: number;
+    notes?: string;
+    screenshotUrl?: string;
+  }) => {
+    const response = await api.post('/token-requests', body);
+    return response.data?.data ?? response.data;
+  },
+
+  uploadScreenshot: async (file: File): Promise<{ url: string; filename: string }> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/token-requests/upload-screenshot', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
-    console.log('✅ Tokens minted successfully:', response.data);
-    return response.data;
+    return response.data?.data ?? response.data;
+  },
+
+  myRequests: async (params?: {
+    page?: number;
+    limit?: number;
+    status?: 'pending' | 'approved' | 'rejected';
+  }): Promise<TokenRequestListResponse> => {
+    const response = await api.get('/token-requests/my-requests', { params });
+    const raw = response.data?.data ?? response.data;
+    return {
+      data: raw?.data ?? raw ?? [],
+      total: raw?.total ?? 0,
+      page: raw?.page ?? params?.page ?? 1,
+      limit: raw?.limit ?? params?.limit ?? 10,
+    };
+  },
+
+  getById: async (id: string) => {
+    const response = await api.get(`/token-requests/${id}`);
+    return response.data?.data ?? response.data;
+  },
+
+  cancel: async (id: string) => {
+    const response = await api.delete(`/token-requests/${id}`);
+    return response.data?.data ?? response.data;
+  },
+
+  // Admin
+  getAll: async (params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    userId?: string;
+  }): Promise<TokenRequestListResponse> => {
+    const response = await api.get('/token-requests', { params });
+    const raw = response.data?.data ?? response.data;
+    return {
+      data: raw?.data ?? raw ?? [],
+      total: raw?.total ?? 0,
+      page: raw?.page ?? params?.page ?? 1,
+      limit: raw?.limit ?? params?.limit ?? 10,
+    };
+  },
+
+  getPending: async (params?: { page?: number; limit?: number }): Promise<TokenRequestListResponse> => {
+    const response = await api.get('/token-requests/pending', { params });
+    const raw = response.data?.data ?? response.data;
+    return {
+      data: raw?.data ?? raw ?? [],
+      total: raw?.total ?? 0,
+      page: raw?.page ?? params?.page ?? 1,
+      limit: raw?.limit ?? params?.limit ?? 10,
+    };
+  },
+
+  getStatistics: async (): Promise<{
+    total: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+    totalAmountRequested: number;
+    totalAmountApproved: number;
+  }> => {
+    const response = await api.get('/token-requests/statistics');
+    return response.data?.data ?? response.data;
+  },
+
+  respond: async (
+    id: string,
+    body: { status: 'approved' | 'rejected'; adminResponse?: string },
+  ) => {
+    const response = await api.post(`/token-requests/${id}/respond`, body);
+    return response.data?.data ?? response.data;
+  },
+
+  approve: async (id: string) => {
+    const response = await api.post(`/token-requests/${id}/approve`);
+    return response.data?.data ?? response.data;
+  },
+
+  reject: async (id: string) => {
+    const response = await api.post(`/token-requests/${id}/reject`);
+    return response.data?.data ?? response.data;
+  },
+};
+
+// Ownership Documents API – upload (builder), admin pending & review (approve → transfer)
+export const ownershipDocumentsAPI = {
+  upload: async (landId: string, formData: FormData): Promise<OwnershipDocument> => {
+    const response = await api.post(`/ownership-documents/lands/${landId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data?.data ?? response.data;
+  },
+
+  getByLand: async (landId: string): Promise<OwnershipDocument[]> => {
+    const response = await api.get(`/ownership-documents/lands/${landId}`);
+    const raw = response.data?.data ?? response.data;
+    return Array.isArray(raw) ? raw : [];
+  },
+
+  getBuilderMe: async (): Promise<OwnershipDocument[]> => {
+    const response = await api.get('/ownership-documents/builder/me');
+    const raw = response.data?.data ?? response.data;
+    return Array.isArray(raw) ? raw : [];
+  },
+
+  getById: async (id: string): Promise<OwnershipDocument> => {
+    const response = await api.get(`/ownership-documents/${id}`);
+    return response.data?.data ?? response.data;
+  },
+
+  getAdminPending: async (): Promise<OwnershipDocument[]> => {
+    const response = await api.get('/ownership-documents/admin-pending');
+    const raw = response.data?.data ?? response.data;
+    return Array.isArray(raw) ? raw : [];
+  },
+
+  adminReview: async (
+    id: string,
+    body: { action: 'approve' | 'reject'; adminNotes?: string; rejectionReason?: string },
+  ): Promise<OwnershipDocument> => {
+    const response = await api.post(`/ownership-documents/${id}/admin-review`, body);
+    return response.data?.data ?? response.data;
   },
 };
 

@@ -5,7 +5,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { paymentAPI, builderAPI, landAPI, projectAPI } from '../../services/api';
+import { paymentAPI, builderAPI, landAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Payment, User, Land } from '../../types';
 import { builderNavItems } from '../../constants/navigation';
@@ -36,45 +36,33 @@ export default function BuilderDashboard() {
       setLoading(true);
       setError(null);
       
-      const [profile, pendingPaymentsData, landsData, projectsData] = await Promise.all([
+      const [profile, pendingPaymentsData, landsData, statsData] = await Promise.all([
         builderAPI.getMe().catch(() => null),
         paymentAPI.getPending().catch(() => []),
-        landAPI.getAll().catch(() => []),
-        projectAPI.getAll({ builderId: user.id }).catch(() => []),
+        landAPI.getAll({ ownerId: user.id, limit: 500 }).catch(() => []),
+        builderAPI.getStats().catch(() => ({ totalLands: 0, totalRevenue: 0, totalProjects: 0 })),
       ]);
 
       setBuilderProfile(profile);
       setPendingPayments(pendingPaymentsData);
+      setStats(statsData);
 
       // Handle paginated or array response for lands
-      const landsArray: Land[] = Array.isArray(landsData) 
-        ? landsData 
+      const landsArray: Land[] = Array.isArray(landsData)
+        ? landsData
         : ((landsData && typeof landsData === 'object' && 'data' in landsData ? (landsData as { data: Land[] }).data : null) || []);
 
       // Filter lands owned by current builder
       const builderLands = landsArray.filter((land) => land.ownerId === user.id);
       setMyLands(builderLands);
 
-      // Filter payments for builder's lands
+      // Fetch payments for builder's lands (for Recent Payments and locked lands sections)
       const builderLandIds = builderLands.map((land) => land.id);
-      
-      // Get all payments (not just pending) for payments list and revenue
-      const allPaymentsResponse = await paymentAPI.getByBuyer().catch(() => []);
-      const allPayments = Array.isArray(allPaymentsResponse) ? allPaymentsResponse : [];
-      const builderPayments = allPayments.filter((payment: Payment) =>
-        builderLandIds.includes(payment.landId)
+      const allPaymentsForLands = await Promise.all(
+        builderLandIds.map((lid) => paymentAPI.getByProperty(lid).catch(() => []))
       );
+      const builderPayments = allPaymentsForLands.flat().filter(Boolean) as Payment[];
       setPayments(builderPayments);
-
-      // Calculate stats
-      const verifiedPayments = builderPayments.filter((p: Payment) => p.status === 'verified');
-      const totalRevenue = verifiedPayments.reduce((sum: number, p: Payment) => sum + p.amount, 0);
-
-      setStats({
-        totalLands: builderLands.length,
-        totalRevenue,
-        totalProjects: Array.isArray(projectsData) ? projectsData.length : 0,
-      });
     } catch (err: unknown) {
       console.error('Failed to load data:', err);
       const errorMessage = err && typeof err === 'object' && 'response' in err
@@ -232,55 +220,55 @@ export default function BuilderDashboard() {
             {pendingPayments.length === 0 ? (
               <p className="text-gray-400">No pending payments to verify.</p>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto text-black">
                 <table className="table">
                   <thead>
-                    <tr className="text-white">
-                      <th className="text-white">Land</th>
-                      <th className="text-white">Buyer</th>
-                      <th className="text-white">Amount</th>
-                      <th className="text-white">Payment Mode</th>
-                      <th className="text-white">Proof</th>
-                      <th className="text-white">Due Date</th>
-                      <th className="text-white">Actions</th>
+                    <tr>
+                      <th className="text-black">Land</th>
+                      <th className="text-black">Buyer</th>
+                      <th className="text-black">Amount</th>
+                      <th className="text-black">Payment Mode</th>
+                      <th className="text-black">Proof</th>
+                      <th className="text-black">Due Date</th>
+                      <th className="text-black">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pendingPayments.map((payment) => (
-                      <tr key={payment.id} className="text-white">
-                        <td className="text-white">
+                      <tr key={payment.id}>
+                        <td className="text-black">
                           <div className="font-medium">{payment.land?.title || payment.landId}</div>
                           {payment.land?.location && (
                             <div className="text-xs text-gray-600">{payment.land.location}</div>
                           )}
                         </td>
-                        <td className="text-white">
+                        <td className="text-black">
                           <div className="font-medium">{payment.buyer?.name || 'Unknown'}</div>
                           {payment.buyer?.email && (
                             <div className="text-xs text-gray-600">{payment.buyer.email}</div>
                           )}
                         </td>
-                        <td className="text-white">PKR {payment.amount.toLocaleString()}</td>
-                        <td>
-                          <span className={`badge ${payment.paymentMode === 'crypto' ? 'badge-info' : 'badge-primary'}`}>
-                            {payment.paymentMode}
+                        <td className="text-black">PKR {payment.amount.toLocaleString()}</td>
+                        <td className="text-black">
+                          <span className={`badge ${payment.paymentMode === 'points' ? 'badge-info' : 'badge-primary'}`}>
+                            {payment.paymentMode === 'points' ? 'Points' : 'Bank'}
                           </span>
                         </td>
-                        <td>
+                        <td className="text-black">
                           {payment.proofCID ? (
                             <a
                               href={`http://localhost:3000/uploads/${payment.proofCID}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="link link-primary"
+                              className="link link-primary text-black"
                             >
                               View Proof
                             </a>
                           ) : (
-                            <span className="text-gray-400">No proof</span>
+                            <span className="text-gray-500">No proof</span>
                           )}
                         </td>
-                        <td className="text-white">{new Date(payment.dueDate).toLocaleDateString()}</td>
+                        <td className="text-black">{new Date(payment.dueDate).toLocaleDateString()}</td>
                         <td>
                           <div className="flex gap-2 items-center">
                             <button
@@ -333,24 +321,24 @@ export default function BuilderDashboard() {
                 </Link>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto text-black">
                 <table className="table">
                   <thead className="bg-transparent">
                     <tr>
-                      <th className="text-white">Title</th>
-                      <th className="text-white">Location</th>
-                      <th className="text-white">Price</th>
-                      <th className="text-white">Status</th>
-                      <th className="text-white">Actions</th>
+                      <th className="text-black">Title</th>
+                      <th className="text-black">Location</th>
+                      <th className="text-black">Price</th>
+                      <th className="text-black">Status</th>
+                      <th className="text-black">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {myLands.slice(0, 5).map((land) => (
-                      <tr key={land.id} className="text-white">
-                        <td className="text-white">{land.title}</td>
-                        <td className="text-white">{land.location}</td>
-                        <td className="text-white">PKR {land.price.toLocaleString()}</td>
-                        <td>
+                      <tr key={land.id}>
+                        <td className="text-black">{land.title}</td>
+                        <td className="text-black">{land.location}</td>
+                        <td className="text-black">PKR {land.price.toLocaleString()}</td>
+                        <td className="text-black">
                           <span
                             className={`badge ${
                               land.status === 'available'
@@ -363,9 +351,9 @@ export default function BuilderDashboard() {
                             {land.status}
                           </span>
                         </td>
-                        <td>
+                        <td className="text-black">
                           <Link
-                            to={`/land/${land.id}`}
+                            to={`/dashboard/builder/lands/${land.id}`}
                             className="btn btn-xs btn-primary text-white flex flex-row items-center gap-2 w-20"
                           >
                             View
@@ -442,34 +430,34 @@ export default function BuilderDashboard() {
                   View All
                 </Link>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto text-black">
                 <table className="table">
                   <thead>
-                    <tr className="text-white">
-                      <th className="text-white">Land</th>
-                      <th className="text-white">Buyer</th>
-                      <th className="text-white">Amount</th>
-                      <th className="text-white">Status</th>
-                      <th className="text-white">Due Date</th>
+                    <tr>
+                      <th className="text-black">Land</th>
+                      <th className="text-black">Buyer</th>
+                      <th className="text-black">Amount</th>
+                      <th className="text-black">Status</th>
+                      <th className="text-black">Due Date</th>
                     </tr>
                   </thead>
                   <tbody>
                     {payments.slice(0, 5).map((payment) => (
-                      <tr key={payment.id} className="text-white">
-                        <td className="text-white">
+                      <tr key={payment.id}>
+                        <td className="text-black">
                           <div className="font-medium">{payment.land?.title || payment.landId.slice(0, 8)}...</div>
                           {payment.land?.location && (
                             <div className="text-xs text-gray-600">{payment.land.location}</div>
                           )}
                         </td>
-                        <td className="text-white">
+                        <td className="text-black">
                           <div className="font-medium">{payment.buyer?.name || 'Unknown'}</div>
                           {payment.buyer?.email && (
                             <div className="text-xs text-gray-600">{payment.buyer.email}</div>
                           )}
                         </td>
-                        <td className="text-white">PKR {payment.amount.toLocaleString()}</td>
-                        <td>
+                        <td className="text-black">PKR {payment.amount.toLocaleString()}</td>
+                        <td className="text-black">
                           <span
                             className={`badge ${
                               payment.status === 'verified'
@@ -482,7 +470,7 @@ export default function BuilderDashboard() {
                             {payment.status}
                           </span>
                         </td>
-                        <td className="text-white">{new Date(payment.dueDate).toLocaleDateString()}</td>
+                        <td className="text-black">{new Date(payment.dueDate).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>

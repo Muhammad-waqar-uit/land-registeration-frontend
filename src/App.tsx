@@ -34,8 +34,11 @@ import Installments from './pages/dashboard/Installments';
 import CreateInstallments from './pages/dashboard/CreateInstallments';
 import ResaleRequests from './pages/dashboard/ResaleRequests';
 import CreateResaleRequest from './pages/dashboard/CreateResaleRequest';
-import MintTokens from './pages/dashboard/MintTokens';
+import RequestPoints from './pages/dashboard/RequestPoints';
+import MyPointsRequests from './pages/dashboard/MyPointsRequests';
+import AdminPointsRequests from './pages/dashboard/AdminPointsRequests';
 import BuyerPayments from './pages/dashboard/BuyerPayments';
+import { buyerNavItems, builderNavItems } from './constants/navigation';
 import BuyerPropertyRequests from './pages/dashboard/BuyerPropertyRequests';
 import BuyerMyProperties from './pages/dashboard/BuyerMyProperties';
 import BuyerAvailableLands from './pages/dashboard/BuyerAvailableLands';
@@ -46,6 +49,8 @@ import SellerBuyerProgress from './pages/dashboard/SellerBuyerProgress';
 import SellerPayments from './pages/dashboard/SellerPayments';
 import BuilderPendingVerifications from './pages/dashboard/BuilderPendingVerifications';
 import AdminPropertyRequests from './pages/dashboard/AdminPropertyRequests';
+import BuilderOwnershipDocuments from './pages/dashboard/BuilderOwnershipDocuments';
+import AdminOwnershipDocuments from './pages/dashboard/AdminOwnershipDocuments';
 
 // Other Pages
 import Home from './pages/Home';
@@ -100,10 +105,10 @@ function App() {
           }
         />
         <Route
-          path="/dashboard/admin/mint-tokens"
+          path="/dashboard/admin/points-requests"
           element={
             <ProtectedRoute allowedRoles={['admin']}>
-              <MintTokens />
+              <AdminPointsRequests />
             </ProtectedRoute>
           }
         />
@@ -145,6 +150,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminPropertyRequests />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin/ownership-documents"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminOwnershipDocuments />
             </ProtectedRoute>
           }
         />
@@ -406,6 +419,46 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['user']}>
               <CreateResaleRequest />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/request-points"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <RequestPoints navItems={buyerNavItems} backPath="/dashboard/buyer" backLabel="Buyer Dashboard" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/buyer/points-requests"
+          element={
+            <ProtectedRoute allowedRoles={['user']}>
+              <MyPointsRequests navItems={buyerNavItems} backPath="/dashboard/buyer" backLabel="Buyer Dashboard" requestPointsPath="/dashboard/buyer/request-points" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/builder/request-points"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <RequestPoints navItems={builderNavItems} backPath="/dashboard/builder" backLabel="Builder Dashboard" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/builder/points-requests"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <MyPointsRequests navItems={builderNavItems} backPath="/dashboard/builder" backLabel="Builder Dashboard" requestPointsPath="/dashboard/builder/request-points" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/builder/ownership-documents"
+          element={
+            <ProtectedRoute allowedRoles={['builder']}>
+              <BuilderOwnershipDocuments />
             </ProtectedRoute>
           }
         />

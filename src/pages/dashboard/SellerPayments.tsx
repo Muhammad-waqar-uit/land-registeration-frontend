@@ -12,7 +12,7 @@ import {
   XCircleIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
-import { paymentAPI, landAPI } from '../../services/api';
+import { paymentAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
 import type { Payment } from '../../types';
 import { getBlockExplorerTxUrl } from '../../utils/blockchain';
@@ -27,28 +27,15 @@ export default function SellerPayments() {
   const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
-      const [paymentsData, landsData] = await Promise.all([
-        paymentAPI.getByBuyer().catch(() => []),
-        landAPI.getAll().catch(() => []),
-      ]);
-
-      // Get all land IDs owned by the seller
-      const sellerLandIds = (landsData || [])
-        .filter((land) => land.ownerId === user?.id)
-        .map((land) => land.id);
-
-      // Filter payments for seller's lands
-      const sellerPayments = (paymentsData || []).filter((payment) =>
-        sellerLandIds.includes(payment.landId)
-      );
-
-      setPayments(sellerPayments);
+      const paymentsData = await paymentAPI.getByBuilder().catch(() => []);
+      const paymentsArray = Array.isArray(paymentsData) ? paymentsData : [];
+      setPayments(paymentsArray);
     } catch (error) {
       console.error('Failed to fetch payments:', error);
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, []);
 
   useEffect(() => {
     fetchPayments();
@@ -214,7 +201,7 @@ export default function SellerPayments() {
                   <tbody>
                     {filteredPayments.map((payment) => (
                       <tr key={payment.id} className="border-gray-700 hover:bg-gray-700/50">
-                        <td className="text-gray-300">
+                        <td className="text-black">
                           {new Date(payment?.createdAt ?? '').toLocaleDateString('en-IN', {
                             day: '2-digit',
                             month: 'short',
@@ -222,23 +209,23 @@ export default function SellerPayments() {
                           })}
                         </td>
                         <td>
-                          <div className="text-white font-semibold">
+                          <div className="text-black font-semibold">
                             {payment.buyer?.name || 'Unknown'}
                           </div>
-                          <div className="text-sm text-gray-400">
+                          <div className="text-sm text-black">
                             {payment.buyer?.email || 'N/A'}
                           </div>
                         </td>
                         <td>
-                          <div className="text-white font-semibold">
+                            <div className="text-black font-semibold">
                             {payment.land?.title || 'N/A'}
                           </div>
-                          <div className="text-sm text-gray-400">
+                          <div className="text-sm text-black">
                             {payment.land?.location || ''}
                           </div>
                         </td>
-                        <td className="text-white font-semibold">PKR {payment.amount.toLocaleString()}</td>
-                        <td className="text-gray-300 capitalize">{payment.paymentMode}</td>
+                        <td className="text-black font-semibold">PKR {payment.amount.toLocaleString()}</td>
+                        <td className="text-black">{payment.paymentMode === 'points' ? 'Points' : 'Bank'}</td>
                         <td>{getStatusBadge(payment.status)}</td>
                         <td>
                           {payment.transactionHash ? (
@@ -258,7 +245,7 @@ export default function SellerPayments() {
                         </td>
                         <td>
                           {payment.remarks ? (
-                            <span className="text-sm text-gray-300">{payment.remarks}</span>
+                                <span className="text-sm text-black truncate max-w-[120px] inline-block">{payment.remarks}</span>
                           ) : (
                             <span className="text-gray-500">-</span>
                           )}

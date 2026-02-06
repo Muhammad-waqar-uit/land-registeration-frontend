@@ -115,7 +115,7 @@ export interface Payment {
   amount: number;
   dueDate: string;
   status: 'pending' | 'verified' | 'rejected';
-  paymentMode: 'bank' | 'crypto';
+  paymentMode: 'bank' | 'points';
   proofCID?: string;
   transactionHash?: string | null;
   remarks?: string | null;
@@ -339,4 +339,63 @@ export interface BuyerProgressResponse {
   data: BuyerProgressItem[];
   total: number;
   stats: BuyerProgressStats;
+}
+
+// Token (points) request – user requests points, admin approves (mint on approve)
+export interface TokenRequest {
+  id: string;
+  userId: string;
+  amount: number;
+  notes: string | null;
+  screenshotUrl: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  adminResponse: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    walletAddress: string | null;
+  };
+  reviewer?: { id: string; name: string; email: string } | null;
+}
+
+// Ownership document – builder uploads after payment complete; admin approves → ownership transfer
+export type OwnershipDocumentStatus = 'pending_admin_approval' | 'approved' | 'rejected';
+
+export interface OwnershipDocumentFile {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileHash: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedAt: string;
+  ipfsHash?: string | null;
+}
+
+export interface OwnershipDocument {
+  id: string;
+  landId: string;
+  uploaderId: string;
+  buyerId: string;
+  documentType: string;
+  status: OwnershipDocumentStatus;
+  notes: string | null;
+  uploadedAt: string;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  adminNotes?: string | null;
+  rejectionReason?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  property?: { id: string; title: string; unitId?: string; location?: string; price?: number; size?: number; status?: string };
+  uploader?: { id: string; name: string; email: string };
+  buyer?: { id: string; name: string; email: string };
+  reviewer?: { id: string; name: string; email: string };
+  documents?: OwnershipDocumentFile[];
 }

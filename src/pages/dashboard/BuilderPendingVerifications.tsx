@@ -157,7 +157,7 @@ export default function BuilderPendingVerifications() {
                           </div>
                         </td>
                         <td className="text-white font-semibold">PKR {payment.amount.toLocaleString()}</td>
-                        <td className="text-white capitalize">{payment.paymentMode}</td>
+                        <td className="text-white">{payment.paymentMode === 'points' ? 'Points' : 'Bank'}</td>
                         <td>
                           {payment.transactionHash ? (
                             <a

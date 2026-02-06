@@ -198,21 +198,21 @@ export default function AdminDashboard() {
               <div className="overflow-x-auto">
                 <table className="table table-zebra">
                   <thead>
-                    <tr className="text-white">
-                      <th className="text-white">Title</th>
-                      <th className="text-white">Location</th>
-                      <th className="text-white">Size</th>
-                      <th className="text-white">Price</th>
-                      <th className="text-white">Status</th>
+                    <tr className="text-black">
+                      <th className="text-black">Title</th>
+                      <th className="text-black">Location</th>
+                      <th className="text-black">Size</th>
+                      <th className="text-black">Price</th>
+                      <th className="text-black">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {lands.slice(0, 5).map((land) => (
                       <tr key={land.id} className="text-white">
-                        <td className="font-medium text-white">{land.title}</td>
-                        <td className="text-gray-600">{land.location}</td>
-                        <td className="text-white">{land.size} sq ft</td>
-                        <td className="font-semibold text-white">PKR {land.price.toLocaleString()}</td>
+                        <td className="font-medium text-black">{land.title}</td>
+                        <td className="text-black">{land.location}</td>
+                        <td className="text-black">{land.size} sq ft</td>
+                        <td className="font-semibold text-black">PKR {land.price.toLocaleString()}</td>
                         <td>
                           <span
                             className={`badge ${
@@ -267,7 +267,7 @@ export default function AdminDashboard() {
                         <td className="font-mono text-sm">{payment.landId.slice(0, 8)}...</td>
                         <td className="font-semibold">PKR {payment.amount.toLocaleString()}</td>
                         <td>
-                          <span className="badge badge-outline">{payment.paymentMode}</span>
+                          <span className="badge badge-outline">{payment.paymentMode === 'points' ? 'Points' : 'Bank'}</span>
                         </td>
                         <td>{new Date(payment.dueDate).toLocaleDateString()}</td>
                         <td>

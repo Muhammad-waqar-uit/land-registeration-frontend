@@ -107,30 +107,30 @@ export default function BuyerPayments() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
-            <div className="stat-title text-gray-300">Total Payments</div>
-            <div className="stat-value text-blue-400">{stats.total}</div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 min-w-0">
+          <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700 min-w-0 overflow-hidden">
+            <div className="stat-title text-gray-300 truncate">Total Payments</div>
+            <div className="stat-value text-blue-400 text-lg truncate" title={String(stats.total)}>{stats.total}</div>
           </div>
 
-          <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
-            <div className="stat-title text-gray-300">Verified</div>
-            <div className="stat-value text-green-400">{stats.verified}</div>
+          <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700 min-w-0 overflow-hidden">
+            <div className="stat-title text-gray-300 truncate">Verified</div>
+            <div className="stat-value text-green-400 text-lg truncate" title={String(stats.verified)}>{stats.verified}</div>
           </div>
 
-          <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
-            <div className="stat-title text-gray-300">Pending</div>
-            <div className="stat-value text-yellow-400">{stats.pending}</div>
+          <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700 min-w-0 overflow-hidden">
+            <div className="stat-title text-gray-300 truncate">Pending</div>
+            <div className="stat-value text-yellow-400 text-lg truncate" title={String(stats.pending)}>{stats.pending}</div>
           </div>
 
-          <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
-            <div className="stat-title text-gray-300">Rejected</div>
-            <div className="stat-value text-red-400">{stats.rejected}</div>
+          <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700 min-w-0 overflow-hidden">
+            <div className="stat-title text-gray-300 truncate">Rejected</div>
+            <div className="stat-value text-red-400 text-lg truncate" title={String(stats.rejected)}>{stats.rejected}</div>
           </div>
 
-          <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700">
-            <div className="stat-title text-gray-300">Total Paid</div>
-            <div className="stat-value text-green-400">PKR {stats.totalAmount.toLocaleString()}</div>
+          <div className="stat bg-gray-800/90 rounded-lg shadow border border-gray-700 min-w-0 overflow-hidden">
+            <div className="stat-title text-gray-300 truncate">Total Paid</div>
+            <div className="stat-value text-green-400 text-lg truncate" title={`PKR ${stats.totalAmount.toLocaleString()}`}>PKR {stats.totalAmount.toLocaleString()}</div>
           </div>
         </div>
 
@@ -194,7 +194,7 @@ export default function BuyerPayments() {
                   <tbody>
                     {filteredPayments.map((payment) => (
                       <tr key={payment.id} className="border-gray-700 hover:bg-gray-700/50">
-                        <td className="text-gray-300">
+                        <td className="text-black">
                           {new Date(payment?.createdAt ?? '').toLocaleDateString('en-IN', {
                             day: '2-digit',
                             month: 'short',
@@ -202,15 +202,15 @@ export default function BuyerPayments() {
                           })}
                         </td>
                         <td>
-                          <div className="text-white flex item-center font-semibold">
+                          <div className="text-black flex item-center font-semibold">
                            Title: {payment.land?.title || 'N/A'}
                           </div>
-                          <div className="text-sm text-white">
+                          <div className="text-sm text-black">
                            Location: {payment.land?.location || ''}
                           </div>
                         </td>
-                        <td className="text-white font-semibold">PKR {payment.amount.toLocaleString()}</td>
-                        <td className="text-gray-300 capitalize">{payment.paymentMode}</td>
+                        <td className="text-black font-semibold">PKR {payment.amount.toLocaleString()}</td>
+                        <td className="text-gray-300">{payment.paymentMode === 'points' ? 'Points' : 'Bank'}</td>
                         <td className=''>{getStatusBadge(payment.status.replace('_',' '))}</td>
                         <td>
                           {payment.transactionHash ? (

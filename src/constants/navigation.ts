@@ -9,6 +9,7 @@ import {
   ClockIcon,
   BuildingOfficeIcon,
   MapPinIcon,
+  BanknotesIcon,
 } from '@heroicons/react/24/outline';
 
 export interface NavItem {
@@ -26,6 +27,8 @@ export const buyerNavItems: NavItem[] = [
   { name: 'Installments', path: '/dashboard/buyer/installments', icon: CurrencyDollarIcon },
   { name: 'Payment History', path: '/dashboard/buyer/payments', icon: CreditCardIcon },
   { name: 'My Properties', path: '/dashboard/buyer/properties', icon: BuildingOfficeIcon },
+  { name: 'Request Points', path: '/dashboard/buyer/request-points', icon: BanknotesIcon },
+  { name: 'My Points Requests', path: '/dashboard/buyer/points-requests', icon: BanknotesIcon },
 ];
 
 // Builder Navigation Items - Always show all items (single dashboard at /dashboard/builder)
@@ -39,6 +42,9 @@ export const builderNavItems: NavItem[] = [
   { name: 'Agreements', path: '/dashboard/builder/agreements', icon: DocumentTextIcon },
   { name: 'Resale Requests', path: '/dashboard/builder/resale-requests', icon: ArrowPathIcon },
   { name: 'Pending Verifications', path: '/dashboard/builder/pending', icon: ClockIcon },
+  { name: 'Request Points', path: '/dashboard/builder/request-points', icon: BanknotesIcon },
+  { name: 'My Points Requests', path: '/dashboard/builder/points-requests', icon: BanknotesIcon },
+  { name: 'Ownership Documents', path: '/dashboard/builder/ownership-documents', icon: DocumentTextIcon },
 ];
 
 // Admin Navigation Items - Always show all items
@@ -48,6 +54,7 @@ export const adminNavItems: NavItem[] = [
   { name: 'Approved Projects', path: '/dashboard/admin/approved-projects', icon: BuildingOfficeIcon },
   { name: 'All Lands', path: '/dashboard/admin/all-lands', icon: MapPinIcon },
   { name: 'Builder Verification', path: '/dashboard/admin/builders', icon: UserGroupIcon },
-  { name: 'Mint Tokens', path: '/dashboard/admin/mint-tokens', icon: CurrencyDollarIcon },
+  { name: 'Points Requests', path: '/dashboard/admin/points-requests', icon: BanknotesIcon },
   { name: 'Property Requests', path: '/dashboard/admin/property-requests', icon: DocumentTextIcon },
+  { name: 'Ownership Documents', path: '/dashboard/admin/ownership-documents', icon: DocumentTextIcon },
 ];

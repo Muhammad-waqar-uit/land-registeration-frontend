@@ -8,6 +8,7 @@ import {
   CreditCardIcon,
   CurrencyDollarIcon,
   HomeIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { agreementAPI, paymentAPI } from '../../services/api';
 import { useAppSelector } from '../../store/hooks';
@@ -28,7 +29,6 @@ export default function AgreementDetail() {
     totalAmount: number;
   } | null>(null);
   const [loadingPaymentSummary, setLoadingPaymentSummary] = useState(false);
-  const [transferringOwnership, setTransferringOwnership] = useState(false);
 
   const loadAgreement = useCallback(async () => {
     try {
@@ -111,50 +111,6 @@ export default function AgreementDetail() {
       alert(errorMessage || 'Failed to sign agreement');
     } finally {
       setSigning(false);
-    }
-  };
-
-  const handleTransferOwnership = async () => {
-    if (!agreement || !paymentSummary) return;
-
-    // Validate prerequisites
-    if (paymentSummary.remainingBalance > 0) {
-      alert(`Cannot transfer ownership. Remaining balance: PKR ${paymentSummary.remainingBalance.toLocaleString()}`);
-      return;
-    }
-
-    if (agreement.status !== 'signed') {
-      alert('Agreement must be signed before ownership transfer');
-      return;
-    }
-
-    // Confirm with builder
-    const confirmed = window.confirm(
-      'Are you sure you want to transfer ownership to the buyer?\n\n' +
-      'This will:\n' +
-      '• Generate final ownership document\n' +
-      '• Upload to IPFS\n' +
-      '• Transfer property ownership to buyer\n' +
-      '• Mark agreement as completed\n\n' +
-      'This action cannot be undone.'
-    );
-
-    if (!confirmed) return;
-
-    try {
-      setTransferringOwnership(true);
-      const result = await agreementAPI.transferOwnership(id!);
-      console.log('✅ Ownership transferred:', result);
-      await loadAgreement(); // Reload to get updated agreement status
-      alert('Ownership transferred successfully! The property is now owned by the buyer.');
-    } catch (error: unknown) {
-      console.error('Failed to transfer ownership:', error);
-      const errorMessage = error && typeof error === 'object' && 'response' in error
-        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-        : undefined;
-      alert(errorMessage || 'Failed to transfer ownership');
-    } finally {
-      setTransferringOwnership(false);
     }
   };
 
@@ -546,7 +502,10 @@ export default function AgreementDetail() {
                   {paymentSummary.remainingBalance === 0 && user?.role === 'user' && (
                     <div className="alert alert-success">
                       <CheckCircleIcon className="w-6 h-6" />
-                      <span>All payments completed! Waiting for builder to transfer ownership.</span>
+                      <div>
+                        <p className="font-medium">All payments completed!</p>
+                        <p className="text-sm mt-1">The builder will upload ownership documents. After admin approval, ownership will be transferred to you. You can check My Properties once it’s done.</p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -576,8 +535,8 @@ export default function AgreementDetail() {
                       <div className="alert alert-success">
                         <CheckCircleIcon className="w-6 h-6" />
                         <div>
-                          <h4 className="font-bold">✅ Ready for Ownership Transfer</h4>
-                          <p className="text-sm">All payments have been completed. You can now transfer ownership to the buyer.</p>
+                          <h4 className="font-bold">✅ Ready for ownership document</h4>
+                          <p className="text-sm">All payments are complete. Upload ownership documents for the buyer; admin will approve and then ownership will transfer.</p>
                         </div>
                       </div>
                       <div className="bg-base-200/50 rounded-lg p-4 space-y-2">
@@ -595,23 +554,13 @@ export default function AgreementDetail() {
                         </div>
                       </div>
                       <div className="card-actions justify-end mt-4">
-                        <button
-                          onClick={handleTransferOwnership}
+                        <Link
+                          to="/dashboard/builder/ownership-documents"
                           className="btn btn-success text-white border-white flex flex-row"
-                          disabled={transferringOwnership}
                         >
-                          {transferringOwnership ? (
-                            <>
-                              <span className="loading loading-spinner loading-sm"></span>
-                              <span className="ml-2">Transferring...</span>
-                            </>
-                          ) : (
-                            <>
-                              <HomeIcon className="w-5 h-5 mr-2" />
-                              Transfer Ownership
-                            </>
-                          )}
-                        </button>
+                          <DocumentTextIcon className="w-5 h-5 mr-2" />
+                          Go to Ownership Documents
+                        </Link>
                       </div>
                     </>
                   ) : (
@@ -621,7 +570,7 @@ export default function AgreementDetail() {
                         Remaining balance: <strong>PKR {paymentSummary.remainingBalance.toLocaleString()}</strong>
                       </p>
                       <p className="text-sm">
-                        All payments must be completed before ownership can be transferred.
+                        Complete all payments, then upload ownership documents from the Ownership Documents page. Admin approval will transfer ownership.
                       </p>
                     </div>
                   )}
@@ -633,7 +582,7 @@ export default function AgreementDetail() {
           </div>
         )}
 
-        {/* Completed Ownership Transfer Status */}
+        {/* Completed: ownership transferred via admin approval of ownership document */}
         {agreement && agreement.status === 'completed' && agreement.agreementType === 'final_ownership' && (
           <div className="card bg-gradient-to-r from-green-900/90 to-emerald-900/90 border border-green-500 shadow-xl">
             <div className="card-body">
@@ -644,9 +593,9 @@ export default function AgreementDetail() {
               <div className="alert alert-success">
                 <CheckCircleIcon className="w-6 h-6" />
                 <div>
-                  <h4 className="font-bold">✅ Ownership Successfully Transferred</h4>
+                  <h4 className="font-bold">✅ Ownership transferred</h4>
                   <p className="text-sm mt-1">
-                    This property has been transferred to the buyer. The final ownership agreement has been generated and stored.
+                    The ownership document was approved by admin. This property is now owned by the buyer.
                   </p>
                 </div>
               </div>
